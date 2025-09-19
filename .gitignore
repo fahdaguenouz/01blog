@@ -1,0 +1,65 @@
+# =========================
+# Java / Spring Boot
+# =========================
+
+# Compiled class files
+*.class
+*.war
+*.jar
+
+# Maven / Gradle
+target/
+build/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+
+# Logs
+*.log
+logs/
+spring.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# =========================
+# Angular / Frontend
+# =========================
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Build output
+dist/
+tmp/
+out-tsc/
+
+# Angular build cache
+.angular/
+
+# Environment files (if you keep secrets there)
+src/environments/environment*.ts
+
+# =========================
+# General
+# =========================
+
+# Coverage reports
+coverage/
+lcov-report/
+
+# Temp files
+*.tmp
+*.bak
+*.cache
+*.pid
+*.zip
+*.tar.gz
+*.rar
