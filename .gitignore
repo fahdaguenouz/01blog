@@ -2,22 +2,30 @@
 # Java / Spring Boot
 # =========================
 
-# Compiled class files
+# Compiled files
 *.class
 *.war
 *.jar
 
-# Maven / Gradle
+# Maven
 target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle (if ever used)
 build/
 
-# IDE
+# IDEs
 .idea/
 *.iml
 *.ipr
 *.iws
 .vscode/
 *.swp
+*.project
+*.classpath
+*.settings/
 
 # Logs
 *.log
@@ -27,6 +35,7 @@ spring.log
 # OS generated
 .DS_Store
 Thumbs.db
+
 
 # =========================
 # Angular / Frontend
@@ -44,8 +53,9 @@ out-tsc/
 # Angular build cache
 .angular/
 
-# Environment files (if you keep secrets there)
+# Environment files (if secrets stored there)
 src/environments/environment*.ts
+
 
 # =========================
 # General
@@ -55,11 +65,12 @@ src/environments/environment*.ts
 coverage/
 lcov-report/
 
-# Temp files
+# Temporary / backup files
 *.tmp
 *.bak
 *.cache
 *.pid
+*.seed
 *.zip
 *.tar.gz
 *.rar
