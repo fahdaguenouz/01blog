@@ -1,13 +1,15 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { NavbarComponent } from './shared/navabr/navbar.component';
 
 @Component({
   selector: 'app-root',
-   standalone: true,    
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  standalone: true,
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css'],
+  imports: [
+    RouterOutlet,
+    NavbarComponent // ✅ add this line
+  ]
 })
-export class App {
-  protected readonly title = signal('frontend');
-}
+export class App {}

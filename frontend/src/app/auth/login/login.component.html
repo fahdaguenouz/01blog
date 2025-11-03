@@ -1,22 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="auth-container">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Welcome Back 👋</mat-card-title>
+      <mat-card-subtitle>Login to continue your journey</mat-card-subtitle>
+    </mat-card-header>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-</head>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Email or Username</mat-label>
+          <input matInput formControlName="usernameOrEmail" />
+        </mat-form-field>
 
-<body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form class="login-form">
-            <input type="text" placeholder="Username" required />
-            <input type="password" placeholder="Password" required />
-            <button type="submit">Login</button>
-        </form>
-    </div>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" />
+          <button mat-icon-button matSuffix type="button" (click)="hide = !hide">
+            <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
 
-</body>
+        <button mat-raised-button color="primary" class="full">Login</button>
+      </form>
 
-</html>
+      <div class="link">
+        <a routerLink="/auth/register">Don’t have an account? Register</a>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

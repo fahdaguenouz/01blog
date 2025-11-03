@@ -1,0 +1,17 @@
+<mat-toolbar color="primary" class="navbar">
+  <span class="logo" routerLink="/">01Blog</span>
+
+  <span class="spacer"></span>
+
+  <!-- Show Home/Login/Register only when NOT on auth pages -->
+  <ng-container *ngIf="!isAuthPage; else goHome">
+    <a mat-button routerLink="/" routerLinkActive="active">Home</a>
+    <a mat-button routerLink="/auth/login" routerLinkActive="active">Login</a>
+    <a mat-button routerLink="/auth/register" routerLinkActive="active">Register</a>
+  </ng-container>
+
+  <!-- Template for auth pages -->
+  <ng-template #goHome>
+    <a mat-button routerLink="/">Go Home</a>
+  </ng-template>
+</mat-toolbar>
