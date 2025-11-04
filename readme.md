@@ -113,13 +113,3 @@ This project is evaluated through **peer-to-peer code review** and **functional 
 - Basic analytics for admins (number of posts, most reported users)
 - Markdown support for posts
 
-### Resources
-
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [Angular Official Documentation](https://angular.io/docs)
-- [Angular Material Documentation](https://material.angular.io/components/categories)
-- [Spring Boot File Upload](https://www.bezkoder.com/spring-boot-upload-file-database/)
-- [JWT Introduction – Auth0](https://auth0.com/learn/json-web-tokens/)
-- [Spring Security Basics – Java Guides](https://www.javaguides.net/2022/01/spring-security-tutorial.html)
-- [PostgreSQL Basics](https://www.postgresqltutorial.com/)
-- [JPA (Java Persistence API) Guide](https://www.baeldung.com/the-persistence-layer-with-spring-data-jpa)

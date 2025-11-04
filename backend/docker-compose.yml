@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: 01blog-postgres
+    environment:
+      POSTGRES_DB: 01blog
+      POSTGRES_USER: 01blog
+      POSTGRES_PASSWORD: 01blog
+    ports:
+      - "55432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Optional: mount init scripts to run once at first container startup
+      # - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U 01blog -d 01blog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:
