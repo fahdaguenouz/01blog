@@ -1,0 +1,16 @@
+.feed {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.feed h1 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.feed p {
+  color: #555;
+}
+
+

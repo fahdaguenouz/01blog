@@ -21,7 +21,7 @@ You are a **fullstack developer** working for a platform dedicated to helping st
 - Create tools for **moderation and administration**
 - Collaborate using **Git**, GitHub, and agile practices (issues, branches, commits)
 
-### Instructions
+### Instructions  
 
 #### Backend
 

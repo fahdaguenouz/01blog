@@ -1,31 +1,27 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { LoginResponse } from '../types/login-response.type';
+
 import { tap } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LoginService {
-  apiUrl: string = "http://localhost:8080/auth"
+  apiUrl: string = "http://localhost:8080/api/auth"
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(private httpClient: HttpClient, private authService: AuthService) { }
 
-  login(email: string, password: string){
-    return this.httpClient.post<LoginResponse>(this.apiUrl + "/login", { email, password }).pipe(
+  login(username: string, password: string){
+    return this.httpClient.post<any>(this.apiUrl + "/login", { username, password }).pipe(
       tap((value) => {
-        sessionStorage.setItem("auth-token", value.token)
-        sessionStorage.setItem("username", value.name)
+        this.authService.setAuth(value.token, value.user?.username || username)
       })
     )
   }
 
-  signup(name: string, email: string, password: string){
-    return this.httpClient.post<LoginResponse>(this.apiUrl + "/register", { name, email, password }).pipe(
-      tap((value) => {
-        sessionStorage.setItem("auth-token", value.token)
-        sessionStorage.setItem("username", value.name)
-      })
-    )
+  signup(username: string, email: string, password: string){
+    // backend returns User, no token
+    return this.httpClient.post<any>(this.apiUrl + "/register", { username, email, password })
   }
 }

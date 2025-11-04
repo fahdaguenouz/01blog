@@ -138,6 +138,17 @@ CREATE TABLE unseen_notifications (
     CONSTRAINT fk_unseen_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_unseen_notification FOREIGN KEY (notification_id) REFERENCES notifications(id)
 );
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE,
+    token TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
 
 CREATE INDEX idx_posts_user_created ON posts(user_id, created_at DESC);
 CREATE INDEX idx_comments_post_created ON comments(post_id, created_at DESC);

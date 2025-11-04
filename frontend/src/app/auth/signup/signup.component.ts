@@ -6,7 +6,7 @@ import { DefaultLoginLayoutComponent } from '../components/default-login-layout/
 import { LoginService } from '../services/login.service';
 import { ToastrService } from 'ngx-toastr';
 interface SignupForm {
-  name: FormControl,
+  username: FormControl,
   email: FormControl,
   password: FormControl,
   passwordConfirm: FormControl
@@ -35,7 +35,7 @@ export class SignUpComponent {
     private toastService: ToastrService
   ){
     this.signupForm = new FormGroup({
-      name: new FormControl('', [Validators.required, Validators.minLength(3)]),
+      username: new FormControl('', [Validators.required, Validators.minLength(3)]),
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)]),
       passwordConfirm: new FormControl('', [Validators.required, Validators.minLength(6)]),
@@ -43,8 +43,15 @@ export class SignUpComponent {
   }
 
   submit(){
-    this.loginService.signup(this.signupForm.value.name, this.signupForm.value.email, this.signupForm.value.password).subscribe({
-      next: () => this.toastService.success("Login feito com sucesso!"),
+    if(this.signupForm.value.password !== this.signupForm.value.passwordConfirm){
+      this.toastService.error("Passwords do not match");
+      return;
+    }
+    this.loginService.signup(this.signupForm.value.username, this.signupForm.value.email, this.signupForm.value.password).subscribe({
+      next: () => {
+        this.toastService.success("Account created. Please log in.");
+        this.router.navigate(["/auth/login"]);
+      },
       error: () => this.toastService.error("Erro inesperado! Tente novamente mais tarde")
     })
   }

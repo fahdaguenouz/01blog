@@ -6,6 +6,8 @@ import blog.dto.LoginRequest;
 import blog.dto.AuthResponse;
 import blog.models.User;
 import blog.repository.UserRepository;
+import blog.repository.SessionRepository;
+import blog.models.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,6 +20,7 @@ import java.time.OffsetDateTime;
 public class UserService {
   private final UserRepository users;
   private final JwtService jwtService;
+  private final SessionRepository sessions;
 
   public User register(RegisterRequest request) {
     if (users.existsByUsername(request.getUsername())) {
@@ -49,6 +52,27 @@ public class UserService {
     }
 
     String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole());
+
+    // Upsert single session per user
+    var existing = sessions.findByUserId(user.getId());
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime exp = now.plusDays(1);
+    if (existing.isPresent()) {
+      Session s = existing.get();
+      s.setToken(token);
+      s.setCreatedAt(now);
+      s.setExpiresAt(exp);
+      sessions.save(s);
+    } else {
+      Session s = Session.builder()
+          .userId(user.getId())
+          .token(token)
+          .createdAt(now)
+          .expiresAt(exp)
+          .build();
+      sessions.save(s);
+    }
+
     return new AuthResponse(token, user);
   }
 }

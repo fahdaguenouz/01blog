@@ -1,76 +1,41 @@
-// import { Injectable } from "@angular/core"
-// import type { HttpClient } from "@angular/common/http"
-// import { BehaviorSubject, type Observable } from "rxjs"
-// import { tap } from "rxjs/operators"
+import { Injectable } from "@angular/core";
 
-// export interface User {
-//   id: string
-//   email: string
-//   name: string
-//   avatar?: string
-//   bio?: string
-//   role: "USER" | "ADMIN"
-// }
+@Injectable({ providedIn: "root" })
+export class AuthService {
+  setAuth(token: string, username?: string): void {
+    sessionStorage.setItem("auth-token", token);
+    if (username) sessionStorage.setItem("username", username);
+    this.setCookie("auth-token", token, 1);
+    if (username) this.setCookie("username", username, 1);
+  }
 
-// export interface AuthResponse {
-//   token: string
-//   user: User
-// }
+  clearAuth(): void {
+    sessionStorage.removeItem("auth-token");
+    sessionStorage.removeItem("username");
+    this.deleteCookie("auth-token");
+    this.deleteCookie("username");
+  }
 
-// @Injectable({
-//   providedIn: "root",
-// })
-// export class AuthService {
-//   private apiUrl = "http://localhost:8080/api/auth"
-//   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage())
-//   public currentUser$ = this.currentUserSubject.asObservable()
+  getToken(): string | null {
+    return sessionStorage.getItem("auth-token") || this.getCookie("auth-token");
+  }
 
-//   constructor(private http: HttpClient) {}
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
 
-//   login(email: string, password: string): Observable<AuthResponse> {
-//     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
-//       tap((response) => {
-//         localStorage.setItem("token", response.token)
-//         localStorage.setItem("user", JSON.stringify(response.user))
-//         this.currentUserSubject.next(response.user)
-//       }),
-//     )
-//   }
+  private setCookie(name: string, value: string, days: number) {
+    const d = new Date();
+    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
+  }
 
-//   register(name: string, email: string, password: string): Observable<AuthResponse> {
-//     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, { name, email, password }).pipe(
-//       tap((response) => {
-//         localStorage.setItem("token", response.token)
-//         localStorage.setItem("user", JSON.stringify(response.user))
-//         this.currentUserSubject.next(response.user)
-//       }),
-//     )
-//   }
+  private getCookie(name: string): string | null {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
+  }
 
-//   logout(): void {
-//     localStorage.removeItem("token")
-//     localStorage.removeItem("user")
-//     this.currentUserSubject.next(null)
-//   }
-
-//   getToken(): string | null {
-//     return localStorage.getItem("token")
-//   }
-
-//   getCurrentUser(): User | null {
-//     return this.currentUserSubject.value
-//   }
-
-//   private getUserFromStorage(): User | null {
-//     const user = localStorage.getItem("user")
-//     return user ? JSON.parse(user) : null
-//   }
-
-//   isLoggedIn(): boolean {
-//     return !!this.getToken()
-//   }
-
-//   isAdmin(): boolean {
-//     return this.currentUserSubject.value?.role === "ADMIN"
-//   }
-// }
+  private deleteCookie(name: string) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+}
