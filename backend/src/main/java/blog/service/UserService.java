@@ -6,6 +6,8 @@ import blog.models.User;
 import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.OffsetDateTime;
 
@@ -15,6 +17,12 @@ public class UserService {
   private final UserRepository users;
 
   public User register(RegisterRequest request) {
+    if (users.existsByUsername(request.getUsername())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+    }
+    if (users.existsByEmail(request.getEmail())) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
+    }
     User user = User.builder()
         .username(request.getUsername())
         .name(request.getUsername())

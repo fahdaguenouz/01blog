@@ -1,6 +1,7 @@
 // blog/models/User.java
 package blog.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.OffsetDateTime;
@@ -21,6 +22,7 @@ public class User {
   private String email;
 
   @Column(nullable = false)
+  @JsonIgnore
   private String password;
 
   @Column(nullable = false)
