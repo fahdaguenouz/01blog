@@ -3,6 +3,8 @@ package blog.controller;
 
 import blog.models.User;
 import blog.dto.RegisterRequest; // ensure this package matches your code
+import blog.dto.LoginRequest;
+import blog.dto.AuthResponse;
 import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,5 +18,10 @@ public class AuthController {
   @PostMapping("/register")
   public User register(@RequestBody RegisterRequest request) {
     return userService.register(request);
+  }
+
+  @PostMapping("/login")
+  public AuthResponse login(@RequestBody LoginRequest request) {
+    return userService.authenticate(request);
   }
 }

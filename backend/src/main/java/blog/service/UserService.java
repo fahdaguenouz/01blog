@@ -2,6 +2,8 @@
 package blog.service;
 
 import blog.dto.RegisterRequest;
+import blog.dto.LoginRequest;
+import blog.dto.AuthResponse;
 import blog.models.User;
 import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import java.time.OffsetDateTime;
 @RequiredArgsConstructor
 public class UserService {
   private final UserRepository users;
+  private final JwtService jwtService;
 
   public User register(RegisterRequest request) {
     if (users.existsByUsername(request.getUsername())) {
@@ -33,5 +36,19 @@ public class UserService {
         .createdAt(OffsetDateTime.now())
         .build();
     return users.save(user);
+  }
+
+  public AuthResponse authenticate(LoginRequest request) {
+    // For now we allow username login only; extend to email if needed
+    User user = users.findByUsername(request.getUsername())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+    // Plain-text compare for testing only. Replace with BCrypt hashing later.
+    if (!user.getPassword().equals(request.getPassword())) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+    }
+
+    String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole());
+    return new AuthResponse(token, user);
   }
 }
