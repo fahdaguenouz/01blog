@@ -1,5 +1,3 @@
--- src/main/resources/db/migration/V1__init.sql
-
 -- Enable UUID and JSONB-ready schema objects
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -8,8 +6,6 @@ CREATE TABLE roles (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL
 );
-
-
 
 -- USERS first (without avatar FK to break the cycle)
 CREATE TABLE users (
@@ -26,7 +22,6 @@ CREATE TABLE users (
     readme TEXT,
     created_at TIMESTAMP NOT NULL
 );
-
 
 CREATE TABLE user_roles (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -144,9 +139,8 @@ CREATE TABLE unseen_notifications (
     CONSTRAINT fk_unseen_notification FOREIGN KEY (notification_id) REFERENCES notifications(id)
 );
 
-
 CREATE INDEX idx_posts_user_created ON posts(user_id, created_at DESC);
 CREATE INDEX idx_comments_post_created ON comments(post_id, created_at DESC);
 CREATE INDEX idx_likes_post ON likes(post_id);
-CREATE INDEX idx_subscriptions_follower ON subscriptions(follower_id);
+CREATE INDEX idx_subscriptions_subscriber ON subscriptions(subscriber_id);
 CREATE INDEX idx_notifications_user_created ON notifications(user_id, created_at DESC);

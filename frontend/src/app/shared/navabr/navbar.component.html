@@ -6,8 +6,8 @@
   <!-- Show Home/Login/Register only when NOT on auth pages -->
   <ng-container *ngIf="!isAuthPage; else goHome">
     <a mat-button routerLink="/" routerLinkActive="active">Home</a>
-    <a mat-button routerLink="/auth/login" routerLinkActive="active">Login</a>
-    <a mat-button routerLink="/auth/register" routerLinkActive="active">Register</a>
+    <a mat-button routerLink="/auth/login" routerLinkActive="active">Login/Signup</a>
+   
   </ng-container>
 
   <!-- Template for auth pages -->
