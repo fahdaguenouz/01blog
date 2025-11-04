@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
   providedIn: 'root'
 })
 export class LoginService {
-  apiUrl: string = "http://localhost:8080/api/auth"
+  apiUrl: string = "/api/auth"
 
   constructor(private httpClient: HttpClient, private authService: AuthService) { }
 
