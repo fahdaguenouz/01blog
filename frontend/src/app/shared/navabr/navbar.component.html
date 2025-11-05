@@ -6,6 +6,10 @@
       <a routerLink="/auth/login" routerLinkActive="active">Login</a>
       <a routerLink="/auth/signup" routerLinkActive="active">Sign up</a>
     </ng-container>
+    <ng-container *ngIf="isLoggedIn">
+      <span class="username">{{ username }}</span>
+      <button (click)="logout()" class="logout-btn">Logout</button>
+    </ng-container>
   </nav>
   <ng-template #goHome>
     <nav class="links">

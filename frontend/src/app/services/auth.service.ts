@@ -29,6 +29,10 @@ export class AuthService {
     d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
     document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
   }
+   getUsername(): string | null {
+    // ✅ Fixed: get from sessionStorage or cookie
+    return sessionStorage.getItem("username") || this.getCookie("username");
+  }
 
   private getCookie(name: string): string | null {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -38,4 +42,5 @@ export class AuthService {
   private deleteCookie(name: string) {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
   }
+
 }

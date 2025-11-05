@@ -9,7 +9,8 @@ import { NavbarComponent } from './shared/navabr/navbar.component';
   styleUrls: ['./app.css'],
   imports: [
     RouterOutlet,
-    NavbarComponent // ✅ add this line
+    NavbarComponent,
+    
   ]
 })
 export class App {}

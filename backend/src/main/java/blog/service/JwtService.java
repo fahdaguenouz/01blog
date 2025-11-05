@@ -23,7 +23,6 @@ public class JwtService {
       @Value("${jwt.secret}") String secret,
       @Value("${jwt.expirationMs}") long expirationMs
   ) {
-    // jjwt requires a sufficiently strong key; if short, pad via HMAC key factory
     this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     this.expirationMs = expirationMs;
   }
@@ -43,6 +42,8 @@ public class JwtService {
         .signWith(secretKey, SignatureAlgorithm.HS256)
         .compact();
   }
+
+  public SecretKey getSecretKey() {
+    return secretKey;
+  }
 }
-
-

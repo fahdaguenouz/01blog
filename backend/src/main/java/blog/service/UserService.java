@@ -75,4 +75,30 @@ public class UserService {
 
     return new AuthResponse(token, user);
   }
+   public void logout(String token) {
+    if (token == null || token.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
+    }
+
+    // Remove "Bearer " prefix if present
+    if (token.startsWith("Bearer ")) {
+      token = token.substring(7);
+    }
+
+    try {
+      // Extract user ID from token (optional validation)
+      var claims = Jwts.parserBuilder()
+          .setSigningKey(jwtService.getSecretKey())
+          .build()
+          .parseClaimsJws(token);
+      
+      String userId = (String) claims.getBody().get("uid");
+      UUID userUUID = UUID.fromString(userId);
+      
+      // Delete session from database
+      sessions.findByUserId(userUUID).ifPresent(sessions::delete);
+    } catch (JwtException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+    }
+  }
 }

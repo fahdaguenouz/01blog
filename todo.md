@@ -41,3 +41,17 @@ cd backend
 to run the frontend :
 cd frontend
 ng serve -o
+
+
+to run the database container :
+
+docker compose down -v
+docker compose up -d
+
+to run the new schema :
+
+cat src/main/resources/db/migration/V1__init.sql | docker exec -i 01blog-postgres psql -U 01blog -d 01blog
+
+List tables in the correct DB:
+
+docker exec -it 01blog-postgres psql -U 01blog -d 01blog -c "\dt"

@@ -51,3 +51,22 @@
   }
   .links a { margin-left: 0; margin-top: 8px; display: inline-block; }
 }
+.username {
+  margin-right: 16px;
+  font-weight: 500;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #ee5a52;
+}
