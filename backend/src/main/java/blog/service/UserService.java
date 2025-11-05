@@ -1,4 +1,3 @@
-// src/main/java/blog/service/UserService.java
 package blog.service;
 
 import blog.dto.RegisterRequest;
@@ -12,8 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;  // ✅ Add this import
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class UserService {
         .username(request.getUsername())
         .name(request.getUsername())
         .email(request.getEmail())
-        .password(request.getPassword()) // hash later
+        .password(request.getPassword())
         .status("active")
         .role("ROLE_USER")
         .createdAt(OffsetDateTime.now())
@@ -42,18 +44,15 @@ public class UserService {
   }
 
   public AuthResponse authenticate(LoginRequest request) {
-    // For now we allow username login only; extend to email if needed
     User user = users.findByUsername(request.getUsername())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
-    // Plain-text compare for testing only. Replace with BCrypt hashing later.
     if (!user.getPassword().equals(request.getPassword())) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
 
     String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole());
 
-    // Upsert single session per user
     var existing = sessions.findByUserId(user.getId());
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime exp = now.plusDays(1);
@@ -75,7 +74,8 @@ public class UserService {
 
     return new AuthResponse(token, user);
   }
-   public void logout(String token) {
+
+  public void logout(String token) {
     if (token == null || token.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
     }
@@ -86,19 +86,28 @@ public class UserService {
     }
 
     try {
-      // Extract user ID from token (optional validation)
+      // Parse and validate token
       var claims = Jwts.parserBuilder()
           .setSigningKey(jwtService.getSecretKey())
           .build()
           .parseClaimsJws(token);
       
+      // Extract user ID from token claims
       String userId = (String) claims.getBody().get("uid");
       UUID userUUID = UUID.fromString(userId);
       
       // Delete session from database
-      sessions.findByUserId(userUUID).ifPresent(sessions::delete);
+      var session = sessions.findByUserId(userUUID);
+      if (session.isPresent()) {
+        sessions.delete(session.get());  // ✅ Explicitly delete the session
+        System.out.println("Session deleted for user: " + userUUID);
+      } else {
+        System.out.println("No session found for user: " + userUUID);
+      }
     } catch (JwtException e) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
     }
   }
 }
