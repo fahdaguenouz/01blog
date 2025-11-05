@@ -1,19 +1,82 @@
-<header class="navbar">
-  <a class="logo" routerLink="/">01Blog</a>
-  <nav class="links" *ngIf="!isAuthPage; else goHome">
-    <a routerLink="/" routerLinkActive="active">Home</a>
+<mat-toolbar color="primary" class="navbar">
+  <button mat-icon-button [matMenuTriggerFor]="mobileMenu" class="menu-icon">
+    <mat-icon>menu</mat-icon>
+  </button>
+  
+  <a routerLink="/" class="logo">01Blog</a>
+  
+  <span class="spacer"></span>
+
+  <!-- Main navigation (hidden on small screens) -->
+  <nav class="nav-links" *ngIf="!isAuthPage">
+    <a mat-button routerLink="/" routerLinkActive="active">Home</a>
+    
     <ng-container *ngIf="!isLoggedIn">
-      <a routerLink="/auth/login" routerLinkActive="active">Login</a>
-      <a routerLink="/auth/signup" routerLinkActive="active">Sign up</a>
+      <a mat-button routerLink="/auth/login" routerLinkActive="active">Login</a>
+      <a mat-raised-button color="accent" routerLink="/auth/signup">Sign up</a>
     </ng-container>
+
     <ng-container *ngIf="isLoggedIn">
-      <span class="username">{{ username }}</span>
-      <button (click)="logout()" class="logout-btn">Logout</button>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+      </button>
     </ng-container>
   </nav>
+
+  <!-- Auth page navigation -->
   <ng-template #goHome>
-    <nav class="links">
-      <a routerLink="/">Go Home</a>
-    </nav>
+    <a mat-button routerLink="/">← Go Home</a>
   </ng-template>
-</header>
+</mat-toolbar>
+
+<!-- Mobile menu -->
+<mat-menu #mobileMenu="matMenu">
+  <a mat-menu-item routerLink="/">
+    <mat-icon>home</mat-icon>
+    <span>Home</span>
+  </a>
+  <ng-container *ngIf="!isLoggedIn">
+    <a mat-menu-item routerLink="/auth/login">
+      <mat-icon>login</mat-icon>
+      <span>Login</span>
+    </a>
+    <a mat-menu-item routerLink="/auth/signup">
+      <mat-icon>app_registration</mat-icon>
+      <span>Sign up</span>
+    </a>
+  </ng-container>
+  <ng-container *ngIf="isLoggedIn">
+    <a mat-menu-item routerLink="/profile">
+      <mat-icon>person</mat-icon>
+      <span>Profile</span>
+    </a>
+    <a mat-menu-item routerLink="/settings">
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </a>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </ng-container>
+</mat-menu>
+
+<!-- User dropdown menu (desktop only) -->
+<mat-menu #userMenu="matMenu">
+  <span mat-menu-item disabled class="username-label">{{ username }}</span>
+  <mat-divider></mat-divider>
+  <a mat-menu-item routerLink="/profile">
+    <mat-icon>person</mat-icon>
+    <span>Profile</span>
+  </a>
+  <a mat-menu-item routerLink="/settings">
+    <mat-icon>settings</mat-icon>
+    <span>Settings</span>
+  </a>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>

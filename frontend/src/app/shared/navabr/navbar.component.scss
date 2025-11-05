@@ -1,0 +1,71 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .menu-icon {
+    display: none;
+    margin-right: 16px;
+
+    @media (max-width: 768px) {
+      display: block;
+    }
+  }
+
+  .logo {
+    font-weight: 700;
+    font-size: 1.3rem;
+    text-decoration: none;
+    color: inherit;
+    margin-right: 32px;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    a,
+    button {
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &.active {
+        color: currentColor;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.username-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+  pointer-events: none;
+}
+
+
+::ng-deep {
+  .mat-mdc-menu-item {
+    mat-icon {
+      margin-right: 12px;
+    }
+  }
+}
