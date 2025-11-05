@@ -49,8 +49,12 @@ docker compose down -v
 docker compose up -d
 
 to run the new schema :
-# Drop the entire schema
+
+# Drop the entire schema just this engh for both 
 docker exec -it 01blog-postgres psql -U 01blog -d 01blog -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public;"
+
+
+
 
 # Now run V1 (schema)
 cat src/main/resources/db/migration/V1__init.sql | docker exec -i 01blog-postgres psql -U 01blog -d 01blog
