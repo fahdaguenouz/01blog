@@ -1,3 +1,4 @@
+<!-- src/app/shared/navabr/navbar.component.html -->
 <mat-sidenav-container class="sidenav-container">
   <!-- Sidebar -->
   <mat-sidenav #sidenav mode="side" class="sidenav" fixedInViewport>
@@ -21,7 +22,6 @@
 
       <a class="toolbar-title" routerLink="/">01Blog</a>
 
-
       <span class="spacer"></span>
 
       <ng-container *ngIf="!isAuthPage">
@@ -31,6 +31,12 @@
         </ng-container>
 
         <ng-container *ngIf="loggedIn">
+          <!-- Create Post Button -->
+          <button mat-raised-button color="accent" routerLink="/post/create" class="create-btn">
+            <mat-icon>edit</mat-icon>
+            Create Post
+          </button>
+
           <button mat-button [matMenuTriggerFor]="menu">
             <mat-icon>account_circle</mat-icon>
             {{ userName || 'Account' }}

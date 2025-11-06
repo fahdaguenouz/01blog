@@ -47,3 +47,19 @@
 .page-content {
   padding: 20px;
 }
+
+
+// Add to src/app/shared/navabr/navbar.component.scss
+.create-btn {
+  margin-right: 16px;
+}
+
+@media (max-width: 600px) {
+  .create-btn {
+    margin-right: 8px;
+  }
+
+  .create-btn mat-icon {
+    margin-right: 4px;
+  }
+}
