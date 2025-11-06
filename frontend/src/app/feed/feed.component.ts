@@ -1,4 +1,3 @@
-// src/app/feed/feed.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -24,29 +23,31 @@ import { Router } from '@angular/router';
   ],
   template: `
     <div class="feed-container">
+      <!-- Create post -->
       <mat-card class="create-post-card">
         <mat-card-content>
           <form [formGroup]="postForm" (ngSubmit)="createPost()">
-            <mat-form-field class="full-width">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>What's on your mind?</mat-label>
               <textarea
                 matInput
                 formControlName="description"
-                rows="4"
-                placeholder="Share your learning..."
+                rows="3"
+                placeholder="Share something..."
               ></textarea>
             </mat-form-field>
-            <input
-              type="file"
-              #fileInput
-              hidden
-              (change)="onFileSelected($event)"
-              accept="image/*,video/*"
-            />
+
             <div class="create-post-actions">
-              <button type="button" mat-icon-button (click)="fileInput.click()">
+              <button type="button" mat-icon-button (click)="fileInput.click()" aria-label="Attach file">
                 <mat-icon>attach_file</mat-icon>
               </button>
+              <input
+                type="file"
+                #fileInput
+                hidden
+                (change)="onFileSelected($event)"
+                accept="image/*,video/*"
+              />
               <button type="submit" mat-raised-button color="primary" [disabled]="postForm.invalid">
                 Post
               </button>
@@ -55,20 +56,20 @@ import { Router } from '@angular/router';
         </mat-card-content>
       </mat-card>
 
-      <!-- src/app/feed/feed.component.ts template posts list section -->
+      <!-- Feed posts -->
       <div class="posts-list">
         <mat-card
           *ngFor="let post of posts"
-          class="example-card"
+          class="post-card"
           appearance="outlined"
           (click)="open(post)"
         >
           <mat-card-header>
-            <div mat-card-avatar class="example-header-image"></div>
-            <mat-card-title>{{ post.title || post.username }}</mat-card-title>
-            <mat-card-subtitle
-              >{{ post.username }} • {{ post.createdAt | date : 'short' }}</mat-card-subtitle
-            >
+            <div mat-card-avatar class="avatar"></div>
+            <mat-card-title>{{ post.username }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ post.createdAt | date:'medium' }}
+            </mat-card-subtitle>
           </mat-card-header>
 
           <img
@@ -77,7 +78,11 @@ import { Router } from '@angular/router';
             [src]="post.mediaUrl"
             alt="Post media"
           />
-          <video *ngIf="post.mediaUrl && post.mediaType === 'video'" controls width="100%">
+          <video
+            *ngIf="post.mediaUrl && post.mediaType === 'video'"
+            controls
+            class="post-media"
+          >
             <source [src]="post.mediaUrl" />
           </video>
 
@@ -87,7 +92,7 @@ import { Router } from '@angular/router';
 
           <mat-card-actions>
             <button mat-button (click)="toggleLike(post); $event.stopPropagation()">
-              <mat-icon [color]="post.isLiked ? 'warn' : ''">
+              <mat-icon [color]="post.isLiked ? 'warn' : undefined">
                 {{ post.isLiked ? 'favorite' : 'favorite_border' }}
               </mat-icon>
               {{ post.likesCount }}
@@ -96,24 +101,66 @@ import { Router } from '@angular/router';
               <mat-icon>comment</mat-icon>
               {{ post.commentsCount }}
             </button>
-            <button mat-button (click)="$event.stopPropagation()">SHARE</button>
+            <button mat-button (click)="$event.stopPropagation()">
+              <mat-icon>share</mat-icon>
+            </button>
           </mat-card-actions>
         </mat-card>
       </div>
     </div>
   `,
- // src/app/feed/feed.component.ts (styles array - add/replace these lines)
   styles: [`
-    .feed-container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .create-post-card { margin-bottom: 24px; }
-    .full-width { width: 100%; }
-    .create-post-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px; }
-    .posts-list { display: flex; flex-direction: column; gap: 16px; }
-    .example-card { margin-bottom: 16px; cursor: pointer; }
-    .example-header-image { background-image: url('/assets/avatar-placeholder.png'); background-size: cover; }
-    img, video { width: 100%; border-radius: 8px; margin-top: 12px; max-height: 400px; object-fit: cover; }
-  `]
-
+    .feed-container {
+      max-width: 680px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .create-post-card {
+      margin-bottom: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .full-width {
+      width: 100%;
+    }
+    .create-post-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .posts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .post-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+    .post-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .avatar {
+      background-image: url('/assets/avatar-placeholder.png');
+      background-size: cover;
+      background-position: center;
+    }
+    .post-media, img {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 8px;
+      max-height: 400px;
+      object-fit: cover;
+    }
+    mat-card-actions {
+      display: flex;
+      justify-content: space-between;
+    }
+  `],
 })
 export class FeedComponent implements OnInit {
   posts: Post[] = [];
@@ -130,12 +177,8 @@ export class FeedComponent implements OnInit {
 
   loadFeed() {
     this.postService.getFeed().subscribe({
-      next: (posts: Post[]) => {
-        this.posts = posts;
-      },
-      error: () => {
-        /* show toast if you wire one */
-      },
+      next: (posts: Post[]) => this.posts = posts,
+      error: () => console.error('Error loading feed'),
     });
   }
 
@@ -148,34 +191,26 @@ export class FeedComponent implements OnInit {
   createPost() {
     if (this.postForm.invalid) return;
     const { description } = this.postForm.value;
-    this.postService
-      .createPost(description, description, this.selectedFile || undefined)
-      .subscribe({
-        next: () => {
-          this.postForm.reset();
-          this.selectedFile = null;
-          this.loadFeed();
-        },
-        error: () => {
-          /* toast */
-        },
-      });
+    this.postService.createPost(description, description, this.selectedFile || undefined).subscribe({
+      next: () => {
+        this.postForm.reset();
+        this.selectedFile = null;
+        this.loadFeed();
+      },
+      error: () => console.error('Error creating post'),
+    });
   }
 
   toggleLike(post: Post) {
     if (post.isLiked) {
-      this.postService.unlikePost(post.id).subscribe({
-        next: () => {
-          post.isLiked = false;
-          post.likesCount--;
-        },
+      this.postService.unlikePost(post.id).subscribe(() => {
+        post.isLiked = false;
+        post.likesCount--;
       });
     } else {
-      this.postService.likePost(post.id).subscribe({
-        next: () => {
-          post.isLiked = true;
-          post.likesCount++;
-        },
+      this.postService.likePost(post.id).subscribe(() => {
+        post.isLiked = true;
+        post.likesCount++;
       });
     }
   }
