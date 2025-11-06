@@ -1,71 +1,49 @@
-.navbar {
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
+.sidenav-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 220px;
+  .sidenav-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .mat-list-item.active {
+    background: rgba(0,0,0,0.08);
+  }
+}
+
+.top-toolbar {
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
 
-  .menu-icon {
-    display: none;
-    margin-right: 16px;
-
-    @media (max-width: 768px) {
-      display: block;
-    }
-  }
-
-  .logo {
-    font-weight: 700;
-    font-size: 1.3rem;
-    text-decoration: none;
-    color: inherit;
-    margin-right: 32px;
-    transition: opacity 0.2s ease;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-
-  .spacer {
-    flex: 1;
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    @media (max-width: 768px) {
-      display: none;
-    }
-
-    a,
-    button {
-      font-weight: 500;
-      transition: all 0.2s ease;
-
-      &.active {
-        color: currentColor;
-        text-decoration: underline;
-      }
-    }
+.toolbar-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-decoration: none;
+  color: white; // or inherit from toolbar
+  cursor: pointer;
+  &:hover {
+    opacity: 0.8;
   }
 }
 
-.username-label {
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-  pointer-events: none;
+
+.menu-icon {
+  display: none;
+  @media (max-width: 768px) {
+    display: inline-flex;
+  }
 }
 
+.spacer {
+  flex: 1;
+}
 
-::ng-deep {
-  .mat-mdc-menu-item {
-    mat-icon {
-      margin-right: 12px;
-    }
-  }
+.page-content {
+  padding: 20px;
 }
