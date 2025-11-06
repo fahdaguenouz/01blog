@@ -1,3 +1,4 @@
+// src/app/services/post.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -25,20 +26,20 @@ export interface Comment {
   createdAt: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PostService {
   private apiUrl = '/api/posts';
 
   constructor(private injector: Injector) {}
 
-  private getHttp(): HttpClient {
-    return this.injector.get(HttpClient);
-  }
+  private getHttp(): HttpClient { return this.injector.get(HttpClient); }
 
   getFeed(): Observable<Post[]> {
     return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`);
+  }
+
+  getById(postId: string): Observable<Post> {
+    return this.getHttp().get<Post>(`${this.apiUrl}/${postId}`);
   }
 
   getUserPosts(userId: string): Observable<Post[]> {
@@ -49,9 +50,7 @@ export class PostService {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
-    if (media) {
-      formData.append('media', media);
-    }
+    if (media) formData.append('media', media);
     return this.getHttp().post<Post>(this.apiUrl, formData);
   }
 

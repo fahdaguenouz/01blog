@@ -1,23 +1,17 @@
+// src/app/auth/services/guest-guard.service.ts
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class GuestGuard implements CanActivate {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private auth: AuthService) {}
 
   canActivate(): boolean {
-    const token = sessionStorage.getItem('auth-token') || this.getCookie('auth-token');
-    if (token) {
+    if (this.auth.isLoggedIn()) {
       this.router.navigate(['/feed']);
       return false;
     }
     return true;
   }
-
-  private getCookie(name: string): string | null {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-  }
 }
-
-

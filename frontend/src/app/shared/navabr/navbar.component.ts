@@ -1,16 +1,17 @@
-import { Component } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { NgIf } from '@angular/common';
+// src/app/shared/navabr/navbar.component.ts
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { NgIf, NgClass } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { LoginService } from '../../auth/services/login.service';
-import { NgClass } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -30,38 +31,55 @@ import { MatListModule } from '@angular/material/list';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   isAuthPage = false;
+  loggedIn = false;
+  userName: string | null = null;
+
+  private sub?: Subscription;
 
   constructor(
     private router: Router,
     private auth: AuthService,
     private loginService: LoginService,
     private toastr: ToastrService
-  ) {
-    this.router.events.subscribe(() => {
+  ) {}
+
+  ngOnInit(): void {
+    // Only use AuthService, which must be SSR-safe
+    this.refreshAuthState();
+
+    // Update flags on navigation end only (prevents extra SSR reads)
+    this.sub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => {
       this.isAuthPage = this.router.url.startsWith('/auth');
+      this.refreshAuthState();
     });
   }
 
-  get isLoggedIn(): boolean {
-    return this.auth.isLoggedIn();
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
-  get username(): string | null {
-    return this.auth.getUsername();
+  private refreshAuthState(): void {
+    // These calls must be safe on SSR (AuthService guards access internally)
+    this.loggedIn = this.auth.isLoggedIn();
+    this.userName = this.auth.getUsername();
   }
 
   logout(): void {
     this.loginService.logout().subscribe({
       next: () => {
         this.toastr.success('Logged out successfully');
+        this.auth.clearAuth();          // clear local state
+        this.refreshAuthState();
         this.router.navigate(['/auth/login']);
       },
-      error: (err:any) => {
+      error: () => {
         this.toastr.error('Error logging out');
-        // Still clear auth locally even if backend fails
         this.auth.clearAuth();
+        this.refreshAuthState();
         this.router.navigate(['/auth/login']);
       }
     });
