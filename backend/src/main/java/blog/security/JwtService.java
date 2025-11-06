@@ -1,4 +1,4 @@
-package blog.service;
+package blog.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

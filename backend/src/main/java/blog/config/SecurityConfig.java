@@ -1,11 +1,15 @@
 // src/main/java/blog/config/SecurityConfig.java
 package blog.config;
 
+import blog.security.JwtAuthFilter;
+import blog.security.JwtService;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.List;
 
@@ -13,16 +17,19 @@ import java.util.List;
 public class SecurityConfig {
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService) throws Exception {
     http
-      .csrf(csrf -> csrf.disable())               // stateless API; enable later if you use cookies
+      .csrf(csrf -> csrf.disable())
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
       .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/error").permitAll()
         .requestMatchers("/api/public/**").permitAll()
-        .requestMatchers("/api/auth/**").permitAll()   // allow register/login
-        .requestMatchers("/api/users/**").permitAll()  // allow user creation/list during testing
+        .requestMatchers("/api/auth/**").permitAll()
+        .requestMatchers("/api/users/**").permitAll()
         .anyRequest().authenticated()
-      );
+      )
+      .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+
     return http.build();
   }
 

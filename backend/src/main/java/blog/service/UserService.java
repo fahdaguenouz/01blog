@@ -5,6 +5,7 @@ import blog.dto.LoginRequest;
 import blog.dto.AuthResponse;
 import blog.models.User;
 import blog.repository.UserRepository;
+import blog.security.JwtService;
 import blog.repository.SessionRepository;
 import blog.models.Session;
 import lombok.RequiredArgsConstructor;
