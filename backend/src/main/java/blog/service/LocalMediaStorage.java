@@ -1,4 +1,3 @@
-// src/main/java/blog/service/LocalMediaStorage.java
 package blog.service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,23 +15,22 @@ public class LocalMediaStorage {
 
   public LocalMediaStorage(
       @Value("${media.upload.dir:uploads}") String uploadDir,
-      @Value("${media.public.base-url:http://localhost:8080/uploads}") String baseUrl
+      @Value("${media.public.base-url:/uploads}") String baseUrl // recommend relative
   ) {
     this.root = Paths.get(uploadDir).toAbsolutePath().normalize();
     this.publicBaseUrl = baseUrl;
-    try {
-      Files.createDirectories(root);
-    } catch (Exception ignored) {}
+    try { Files.createDirectories(root); } catch (Exception ignored) {}
   }
 
-  public String save(MultipartFile file) {
+  public SavedFile save(MultipartFile file) {
     if (file == null || file.isEmpty()) return null;
     String ext = getExt(file.getOriginalFilename());
     String name = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
     Path target = root.resolve(name);
     try {
       Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-      return publicBaseUrl + "/" + name; // URL to be used by frontend
+      String url = publicBaseUrl.endsWith("/") ? publicBaseUrl + name : publicBaseUrl + "/" + name;
+      return new SavedFile(url, (int) file.getSize(), file.getContentType());
     } catch (Exception e) {
       throw new RuntimeException("Failed to save media", e);
     }
@@ -43,4 +41,6 @@ public class LocalMediaStorage {
     int dot = fn.lastIndexOf('.');
     return dot > 0 ? fn.substring(dot + 1) : "";
   }
+
+  public record SavedFile(String url, Integer size, String contentType) {}
 }

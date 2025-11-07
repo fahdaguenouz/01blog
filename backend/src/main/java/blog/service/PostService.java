@@ -43,12 +43,13 @@ public class PostService {
     post.setBody(description);
     post.setStatus("active");
 
-    // Save optional media
     if (media != null && !media.isEmpty()) {
-      String url = mediaStorage.save(media);
-      post.setMediaUrl(url);
-      String mt = media.getContentType();
-      post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
+      var saved = mediaStorage.save(media); // SavedFile
+      if (saved != null) {
+        post.setMediaUrl(saved.url());
+        String mt = saved.contentType();
+        post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
+      }
     }
 
     posts.save(post);
@@ -84,9 +85,6 @@ public class PostService {
         .toList();
   }
 
-
- 
-
   // ✅ Like post
   public void likePost(String username, UUID postId) {
     Post post = posts.findById(postId)
@@ -102,24 +100,29 @@ public class PostService {
     post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
     posts.save(post);
   }
-public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
-  User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-  Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-  if (!post.getAuthor().getId().equals(user.getId())) throw new IllegalArgumentException("Forbidden");
 
-  post.setTitle(title);
-  post.setBody(description);
+  public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+    if (!post.getAuthor().getId().equals(user.getId()))
+      throw new IllegalArgumentException("Forbidden");
 
-  if (media != null && !media.isEmpty()) {
-    String url = mediaStorage.save(media);
-    post.setMediaUrl(url);
-    String mt = media.getContentType();
+    post.setTitle(title);
+    post.setBody(description);
+
+   if (media != null && !media.isEmpty()) {
+  var saved = mediaStorage.save(media); // SavedFile
+  if (saved != null) {
+    post.setMediaUrl(saved.url());
+    String mt = saved.contentType();
     post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
   }
-
-  posts.save(post);
-  return PostMapper.toDetail(post);
 }
+
+
+    posts.save(post);
+    return PostMapper.toDetail(post);
+  }
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));

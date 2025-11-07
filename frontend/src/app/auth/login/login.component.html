@@ -1,29 +1,24 @@
-<app-default-login-layout
-    title="Login into your account"
-    primaryBtnText="Login Now"
-    secondaryBtnText="Signup Now"
-    (submit)="submit()"
-    (navigate)="navigate()"
-    [disablePrimaryBtn]="!loginForm.valid"
->
-    <form [formGroup]="loginForm">
-        <app-primary-input
-            formControlName="username"
-            inputName="username"
-            type="text"
-            label="Username"
-            placeholder="johndoe"
-        >
-            <img src="assets/svg/email-icon.svg" alt="user icon"/>
-        </app-primary-input>
-        <app-primary-input
-            formControlName="password"
-            inputName="password"
-            type="password"
-            label="Your Password"
-        >
-        <img src="assets/svg/password-icon.svg" alt="password icon"/>
-    </app-primary-input>
-    <span>Forgot password?</span>
-    </form>
+<app-default-login-layout>
+  <form [formGroup]="loginForm" (ngSubmit)="submit()" class="auth-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Username</mat-label>
+      <input matInput formControlName="username" placeholder="Your username">
+      <mat-error *ngIf="loginForm.get('username')?.hasError('required')">Username is required.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Password</mat-label>
+      <input matInput [type]="hidePw ? 'password' : 'text'" formControlName="password" placeholder="Your password">
+      <button type="button" mat-icon-button matSuffix (click)="hidePw = !hidePw">
+        <mat-icon>{{ hidePw ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required.</mat-error>
+      <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">At least 6 characters.</mat-error>
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="navigate()">Create account</button>
+      <button mat-raised-button color="primary" type="submit">Log in</button>
+    </div>
+  </form>
 </app-default-login-layout>

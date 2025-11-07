@@ -1,45 +1,75 @@
-<app-default-login-layout
-    title="Sign in and start today!t"
-    primaryBtnText="Signup Now"
-    secondaryBtnText="Login Now"
-    (submit)="submit()"
-    (navigate)="navigate()"
-    [disablePrimaryBtn]="!signupForm.valid"
->
-    <form [formGroup]="signupForm">
-        <app-primary-input
-            formControlName="username"
-            inputName="username"
-            type="text"
-            label="Username"
-            placeholder="johndoe"
-        >
-            <img src="assets/svg/email-icon.svg" alt="user icon"/>
-        </app-primary-input>
-        <app-primary-input
-            formControlName="email"
-            inputName="email"
-            type="email"
-            label="Email"
-            placeholder="johndoe@gmail.com"
-        >
-            <img src="assets/svg/email-icon.svg" alt="email icon"/>
-        </app-primary-input>
-        <app-primary-input
-            formControlName="password"
-            inputName="password"
-            type="password"
-            label="Your Password"
-        >
-        <img src="assets/svg/password-icon.svg" alt="password icon"/>
-    </app-primary-input>
-    <app-primary-input
-        formControlName="passwordConfirm"
-        inputName="passwordConfirm"
-        type="password"
-        label="Confirm your Password"
-    >
-        <img src="assets/svg/password-icon.svg" alt="password icon"/>
-    </app-primary-input>
-    </form>
+<app-default-login-layout>
+  <form [formGroup]="signupForm" (ngSubmit)="submit()" class="auth-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Full name</mat-label>
+      <input matInput formControlName="name" placeholder="Your full name">
+      <mat-error *ngIf="signupForm.get('name')?.hasError('required')">Name is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('name')?.hasError('minlength')">At least 2 characters.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Username</mat-label>
+      <input matInput formControlName="username" placeholder="Your username">
+      <mat-error *ngIf="signupForm.get('username')?.hasError('required')">Username is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('username')?.hasError('minlength')">At least 3 characters.</mat-error>
+      <mat-error *ngIf="signupForm.get('username')?.hasError('taken')">This username is already in use.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" placeholder="you@example.com">
+      <mat-error *ngIf="signupForm.get('email')?.hasError('required')">Email is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('email')?.hasError('email')">Enter a valid email address.</mat-error>
+      <mat-error *ngIf="signupForm.get('email')?.hasError('taken')">This email is already registered.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Age</mat-label>
+      <input matInput type="number" formControlName="age" min="15" max="100" placeholder="Your age">
+      <mat-error *ngIf="signupForm.get('age')?.hasError('required')">Age is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('age')?.hasError('min') || signupForm.get('age')?.hasError('tooYoung')">
+        You must be at least 15 years old.
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Bio (optional)</mat-label>
+      <textarea matInput formControlName="bio" rows="3" placeholder="Tell people about yourself"></textarea>
+    </mat-form-field>
+
+    <div class="media-upload">
+      <input type="file" #avatarInput hidden (change)="onAvatar($event)" accept="image/*" />
+      <button type="button" mat-stroked-button (click)="avatarInput.click()">
+        <mat-icon>photo_camera</mat-icon>
+        Upload avatar (optional)
+      </button>
+      <span class="file-name" *ngIf="avatarName">{{ avatarName }}</span>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Password</mat-label>
+      <input matInput [type]="hidePw ? 'password' : 'text'" formControlName="password" placeholder="Minimum 6 characters">
+      <button type="button" mat-icon-button matSuffix (click)="hidePw = !hidePw" aria-label="Toggle password visibility">
+        <mat-icon>{{ hidePw ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="signupForm.get('password')?.hasError('required')">Password is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('password')?.hasError('minlength')">At least 6 characters.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Confirm Password</mat-label>
+      <input matInput [type]="hidePw2 ? 'password' : 'text'" formControlName="passwordConfirm" placeholder="Repeat your password">
+      <button type="button" mat-icon-button matSuffix (click)="hidePw2 = !hidePw2" aria-label="Toggle password visibility">
+        <mat-icon>{{ hidePw2 ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="signupForm.get('passwordConfirm')?.hasError('required')">Confirmation is required.</mat-error>
+      <mat-error *ngIf="signupForm.get('passwordConfirm')?.hasError('minlength')">At least 6 characters.</mat-error>
+      <mat-error *ngIf="signupForm.get('passwordConfirm')?.hasError('mismatch')">Passwords do not match.</mat-error>
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="navigate()">Back to login</button>
+      <button mat-raised-button color="primary" type="submit">Create account</button>
+    </div>
+  </form>
 </app-default-login-layout>

@@ -1,10 +1,10 @@
 package blog.dto;
 
-import lombok.Data;
-
-@Data
-public class RegisterRequest {
-    private String username;
-    private String email;
-    private String password;
-}
+public record RegisterRequest(
+  String name,
+  String username,
+  String email,
+  String password,
+  Integer age,
+  String bio // optional
+) {}

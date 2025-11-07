@@ -1,19 +1,21 @@
 package blog.service;
 
-import blog.dto.RegisterRequest;
-import blog.dto.LoginRequest;
 import blog.dto.AuthResponse;
+import blog.dto.LoginRequest;
+import blog.models.Media;
+import blog.models.Session;
 import blog.models.User;
+import blog.repository.MediaRepository;
+import blog.repository.SessionRepository;
 import blog.repository.UserRepository;
 import blog.security.JwtService;
-import blog.repository.SessionRepository;
-import blog.models.Session;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.JwtException;  // ✅ Add this import
+import io.jsonwebtoken.JwtException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -24,36 +26,63 @@ public class UserService {
   private final UserRepository users;
   private final JwtService jwtService;
   private final SessionRepository sessions;
+  private final LocalMediaStorage storage;
+  private final MediaRepository mediaRepo;
 
-  public User register(RegisterRequest request) {
-    if (users.existsByUsername(request.getUsername())) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
-    }
-    if (users.existsByEmail(request.getEmail())) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
-    }
+  public User registerMultipart(String name, String username, String email, String password, Integer age, String bio, MultipartFile avatar) {
+    // Validate required fields
+    if (name == null || name.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
+    if (username == null || username.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+    if (email == null || email.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
+    if (password == null || password.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+    if (age == null || age < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please provide a valid age");
+    if (age < 15) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must be at least 15 years old");
+
+    if (users.existsByUsername(username)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+    if (users.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
+
     User user = User.builder()
-        .username(request.getUsername())
-        .name(request.getUsername())
-        .email(request.getEmail())
-        .password(request.getPassword())
-        .status("active")
-        .role("ROLE_USER")
-        .createdAt(OffsetDateTime.now())
+      .name(name)
+      .username(username)
+      .email(email)
+      .password(password)
+      .bio(bio)
+      .age(age)
+      .status("active")
+      .role("ROLE_USER")
+      .impressionsCount(0)
+      .postsCount(0)
+      .createdAt(OffsetDateTime.now())
+      .build();
+
+    // Save user first to get id
+    user = users.save(user);
+
+    // Optional avatar
+    if (avatar != null && !avatar.isEmpty()) {
+      var saved = storage.save(avatar); // url, size, contentType
+      Media m = Media.builder()
+        .userId(user.getId())
+        .mediaType(saved.contentType() != null ? saved.contentType() : "image/*")
+        .size(saved.size() != null ? saved.size() : 0)
+        .url(saved.url()) // recommend relative: /uploads/xxxx
+        .uploadedAt(OffsetDateTime.now())
         .build();
-    return users.save(user);
+      m = mediaRepo.save(m);
+      user.setAvatarMediaId(m.getId());
+      user = users.save(user);
+    }
+
+    return user;
   }
 
   public AuthResponse authenticate(LoginRequest request) {
     User user = users.findByUsername(request.getUsername())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     if (!user.getPassword().equals(request.getPassword())) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
-
     String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole());
-
     var existing = sessions.findByUserId(user.getId());
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime exp = now.plusDays(1);
@@ -65,46 +94,24 @@ public class UserService {
       sessions.save(s);
     } else {
       Session s = Session.builder()
-          .userId(user.getId())
-          .token(token)
-          .createdAt(now)
-          .expiresAt(exp)
-          .build();
+        .userId(user.getId())
+        .token(token)
+        .createdAt(now)
+        .expiresAt(exp)
+        .build();
       sessions.save(s);
     }
-
     return new AuthResponse(token, user);
   }
 
   public void logout(String token) {
-    if (token == null || token.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
-    }
-
-    // Remove "Bearer " prefix if present
-    if (token.startsWith("Bearer ")) {
-      token = token.substring(7);
-    }
-
+    if (token == null || token.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
+    if (token.startsWith("Bearer ")) token = token.substring(7);
     try {
-      // Parse and validate token
-      var claims = Jwts.parserBuilder()
-          .setSigningKey(jwtService.getSecretKey())
-          .build()
-          .parseClaimsJws(token);
-      
-      // Extract user ID from token claims
+      var claims = Jwts.parserBuilder().setSigningKey(jwtService.getSecretKey()).build().parseClaimsJws(token);
       String userId = (String) claims.getBody().get("uid");
-      UUID userUUID = UUID.fromString(userId);
-      
-      // Delete session from database
-      var session = sessions.findByUserId(userUUID);
-      if (session.isPresent()) {
-        sessions.delete(session.get());  // ✅ Explicitly delete the session
-        System.out.println("Session deleted for user: " + userUUID);
-      } else {
-        System.out.println("No session found for user: " + userUUID);
-      }
+      UUID uid = UUID.fromString(userId);
+      sessions.findByUserId(uid).ifPresent(sessions::delete);
     } catch (JwtException e) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
     } catch (IllegalArgumentException e) {

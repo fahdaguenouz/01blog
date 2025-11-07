@@ -10,17 +10,19 @@ CREATE TABLE roles (
 -- USERS first (without avatar FK to break the cycle)
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR NOT NULL,
-    username VARCHAR NOT NULL UNIQUE,
-    email VARCHAR NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,                  -- Full name
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR NOT NULL,
-    status VARCHAR NOT NULL DEFAULT 'active',
-    role VARCHAR NOT NULL,
-    avatar_media_id UUID, -- FK added after media table
+    bio TEXT,                                    -- Optional bio
+    age INT  NOT NULL CHECK (age >= 0),                   
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
+    role VARCHAR(50) NOT NULL DEFAULT 'ROLE_USER',
+    avatar_media_id UUID,                        -- FK to media (added later)
     impressions_count INT DEFAULT 0,
     posts_count INT DEFAULT 0,
     readme TEXT,
-    created_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE user_roles (
