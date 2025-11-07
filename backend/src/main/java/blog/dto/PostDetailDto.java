@@ -11,8 +11,10 @@ public record PostDetailDto(
   String authorName,
   String authorUsername,
   UUID authorId,
-  Integer likes,
-  Integer comments,
-  Integer impressions,
-  Instant createdAt
+  int likes,
+  int comments,
+  int impressions,
+  Instant createdAt,
+  String mediaUrl,
+  String mediaType
 ) {}

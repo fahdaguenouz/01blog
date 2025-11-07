@@ -24,23 +24,48 @@ public class PostService {
   private final PostRepository posts;
   private final UserRepository users;
   private final CommentRepository comments;
-   public PostService(PostRepository posts, UserRepository users, CommentRepository comments) {
+  private final LocalMediaStorage mediaStorage;
+
+  public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
+      LocalMediaStorage mediaStorage) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
+    this.mediaStorage = mediaStorage;
+  }
+
+  public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+    Post post = new Post();
+    post.setAuthor(user);
+    post.setTitle(title);
+    post.setBody(description);
+    post.setStatus("active");
+
+    // Save optional media
+    if (media != null && !media.isEmpty()) {
+      String url = mediaStorage.save(media);
+      post.setMediaUrl(url);
+      String mt = media.getContentType();
+      post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
+    }
+
+    posts.save(post);
+    return PostMapper.toDetail(post);
   }
 
   // ✅ Public posts for guests
   public Page<PostSummaryDto> listPublic(String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByStatusOrderByCreatedAtDesc(status, pageable)
-                .map(PostMapper::toSummary);
+        .map(PostMapper::toSummary);
   }
 
   public Page<PostSummaryDto> listByAuthor(UUID userId, String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByAuthorIdAndStatus(userId, status, pageable)
-                .map(PostMapper::toSummary);
+        .map(PostMapper::toSummary);
   }
 
   public PostDetailDto getOne(UUID id) {
@@ -59,21 +84,8 @@ public class PostService {
         .toList();
   }
 
-  // ✅ Create a new post
-  public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
-    User user = users.findByUsername(username)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-    Post post = new Post();
-    post.setAuthor(user);
-    post.setTitle(title);
-    post.setBody(description);
-    post.setStatus("active");
-
-    // optional: save media handling later
-    posts.save(post);
-    return PostMapper.toDetail(post);
-  }
+ 
 
   // ✅ Like post
   public void likePost(String username, UUID postId) {
@@ -90,19 +102,24 @@ public class PostService {
     post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
     posts.save(post);
   }
+public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
+  User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+  Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+  if (!post.getAuthor().getId().equals(user.getId())) throw new IllegalArgumentException("Forbidden");
 
-  public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-    Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    if (!post.getAuthor().getId().equals(user.getId())) {
-      throw new IllegalArgumentException("Forbidden");
-    }
-    post.setTitle(title);
-    post.setBody(description);
-    // If media provided, handle replacement (store, set URL, or link)
-    posts.save(post);
-    return PostMapper.toDetail(post);
+  post.setTitle(title);
+  post.setBody(description);
+
+  if (media != null && !media.isEmpty()) {
+    String url = mediaStorage.save(media);
+    post.setMediaUrl(url);
+    String mt = media.getContentType();
+    post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
   }
+
+  posts.save(post);
+  return PostMapper.toDetail(post);
+}
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -130,11 +147,10 @@ public class PostService {
 
   public List<PostController.CommentDto> getComments(UUID postId) {
     return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
-      .map(c -> new PostController.CommentDto(
-        c.getId(), c.getPostId(), users.findById(c.getUserId()).map(User::getUsername).orElse("user"),
-        c.getText(), c.getCreatedAt().toString()
-      ))
-      .toList();
+        .map(c -> new PostController.CommentDto(
+            c.getId(), c.getPostId(), users.findById(c.getUserId()).map(User::getUsername).orElse("user"),
+            c.getText(), c.getCreatedAt().toString()))
+        .toList();
   }
 
   public void deleteComment(String username, UUID postId, UUID commentId) {

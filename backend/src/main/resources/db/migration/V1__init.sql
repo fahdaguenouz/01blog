@@ -46,16 +46,21 @@ ALTER TABLE users
 
 -- POSTS
 CREATE TABLE posts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL,
-    title VARCHAR NOT NULL,
-    body TEXT NOT NULL,
-    status VARCHAR NOT NULL DEFAULT 'active',
-    likes_count INT DEFAULT 0,
-    comments_count INT DEFAULT 0,
-    impressions_count INT DEFAULT 0,
-    created_at TIMESTAMP NOT NULL,
-    CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(id)
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL,
+  title VARCHAR NOT NULL,
+  body TEXT NOT NULL,
+  status VARCHAR NOT NULL DEFAULT 'active',
+  likes_count INT DEFAULT 0,
+  comments_count INT DEFAULT 0,
+  impressions_count INT DEFAULT 0,
+  created_at TIMESTAMP NOT NULL,
+
+  -- Optional single media on the post
+  media_url TEXT,                 -- absolute URL or path; NULL if no media
+  media_type VARCHAR(20),         -- 'image' or 'video'; NULL if no media
+
+  CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- POST_MEDIA
