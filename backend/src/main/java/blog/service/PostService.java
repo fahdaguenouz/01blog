@@ -1,16 +1,20 @@
 package blog.service;
 
+import blog.controller.PostController;
 import blog.dto.PostDetailDto;
 import blog.dto.PostSummaryDto;
 import blog.mapper.PostMapper;
+import blog.models.Comment;
 import blog.models.Post;
 import blog.models.User;
+import blog.repository.CommentRepository;
 import blog.repository.PostRepository;
 import blog.repository.UserRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,10 +23,11 @@ public class PostService {
 
   private final PostRepository posts;
   private final UserRepository users;
-
-  public PostService(PostRepository posts, UserRepository users) {
+  private final CommentRepository comments;
+   public PostService(PostRepository posts, UserRepository users, CommentRepository comments) {
     this.posts = posts;
     this.users = users;
+    this.comments = comments;
   }
 
   // ✅ Public posts for guests
@@ -84,5 +89,61 @@ public class PostService {
         .orElseThrow(() -> new IllegalArgumentException("Post not found"));
     post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
     posts.save(post);
+  }
+
+  public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+    if (!post.getAuthor().getId().equals(user.getId())) {
+      throw new IllegalArgumentException("Forbidden");
+    }
+    post.setTitle(title);
+    post.setBody(description);
+    // If media provided, handle replacement (store, set URL, or link)
+    posts.save(post);
+    return PostMapper.toDetail(post);
+  }
+
+  public void deletePost(String username, UUID id) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+    if (!post.getAuthor().getId().equals(user.getId())) {
+      throw new IllegalArgumentException("Forbidden");
+    }
+    // Optionally delete media and comments cascade by FK
+    posts.delete(post);
+  }
+
+  public void addComment(String username, UUID postId, String content) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+    Comment c = new Comment();
+    c.setId(UUID.randomUUID());
+    c.setPostId(post.getId());
+    c.setUserId(user.getId());
+    c.setText(content);
+    c.setCreatedAt(OffsetDateTime.now());
+    comments.save(c);
+    post.setCommentsCount((post.getCommentsCount() == null ? 0 : post.getCommentsCount()) + 1);
+    posts.save(post);
+  }
+
+  public List<PostController.CommentDto> getComments(UUID postId) {
+    return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
+      .map(c -> new PostController.CommentDto(
+        c.getId(), c.getPostId(), users.findById(c.getUserId()).map(User::getUsername).orElse("user"),
+        c.getText(), c.getCreatedAt().toString()
+      ))
+      .toList();
+  }
+
+  public void deleteComment(String username, UUID postId, UUID commentId) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    Comment c = comments.findById(commentId).orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+    if (!c.getUserId().equals(user.getId())) {
+      throw new IllegalArgumentException("Forbidden");
+    }
+    comments.delete(c);
+    // Optionally decrement post.comments_count
   }
 }

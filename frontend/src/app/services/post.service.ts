@@ -51,11 +51,17 @@ export class PostService {
     formData.append('title', title);
     formData.append('description', description);
     if (media) formData.append('media', media);
-    return this.getHttp().post<Post>(this.apiUrl, formData);
+    // Backend expects POST /api/posts
+    return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
 
-  updatePost(postId: string, title: string, description: string): Observable<Post> {
-    return this.getHttp().put<Post>(`${this.apiUrl}/${postId}`, { title, description });
+  updatePost(postId: string, title: string, description: string, media?: File): Observable<Post> {
+    // If supporting media replacement, a PUT with multipart is typical
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    if (media) formData.append('media', media);
+    return this.getHttp().put<Post>(`${this.apiUrl}/${postId}`, formData);
   }
 
   deletePost(postId: string): Observable<void> {
