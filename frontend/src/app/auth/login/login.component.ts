@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { SnackService } from '../../core/snack.service';
 import { toUserMessage } from '../../core/http-error.util';
 import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
 
 interface LoginForm {
   username: FormControl<string | null>,
@@ -21,6 +22,7 @@ interface LoginForm {
   selector: 'app-login',
   standalone: true,
   imports: [
+    CommonModule,
     DefaultLoginLayoutComponent,
     ReactiveFormsModule,
     PrimaryInputComponent,

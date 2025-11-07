@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SnackService } from '../../core/snack.service';
 import { toUserMessage } from '../../core/http-error.util';
+import { CommonModule } from '@angular/common';
 
 interface SignupForm {
   name: FormControl<string | null>;
@@ -32,7 +33,8 @@ interface SignupForm {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    CommonModule,
   ],
   providers: [LoginService],
   templateUrl: './signup.component.html',
