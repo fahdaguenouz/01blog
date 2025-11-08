@@ -1,8 +1,21 @@
 // src/app/services/auth.service.ts
 import { Injectable } from "@angular/core";
+import { BehaviorSubject, Observable } from "rxjs";
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
+  private _isLoggedIn$ = new BehaviorSubject<boolean>(this.hasToken());
+  private _authResolved$ = new BehaviorSubject<boolean>(false);
+public readonly authResolved$: Observable<boolean> = this._authResolved$.asObservable();
+
+  // Expose auth status as observable
+  public readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
+  constructor() {
+  // On service initialization, check token presence synchronously:
+  this._isLoggedIn$.next(this.hasToken());
+  // Emit resolved true immediately for now (implement API token verification if needed)
+  this._authResolved$.next(true);
+}
   setAuth(token: string, username?: string): void {
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem("auth-token", token);
@@ -10,6 +23,9 @@ export class AuthService {
     }
     this.setCookie("auth-token", token, 1);
     if (username) this.setCookie("username", username, 1);
+    this._isLoggedIn$.next(true);
+   
+  this._authResolved$.next(true);
   }
 
   clearAuth(): void {
@@ -19,6 +35,8 @@ export class AuthService {
     }
     this.deleteCookie("auth-token");
     this.deleteCookie("username");
+    this._isLoggedIn$.next(false);
+    this._authResolved$.next(true);
   }
 
   getToken(): string | null {
@@ -32,6 +50,10 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
+    return this._isLoggedIn$.value;
+  }
+
+  private hasToken(): boolean {
     return !!this.getToken();
   }
 
@@ -46,7 +68,7 @@ export class AuthService {
     if (typeof document === 'undefined') return null;
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? decodeURIComponent(match[2]) : null;
-    }
+  }
 
   private deleteCookie(name: string) {
     if (typeof document === 'undefined') return;

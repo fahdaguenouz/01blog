@@ -1,13 +1,20 @@
-// src/app/auth/services/auth-guard.service.ts
+// auth-guard.service.ts snippet
+
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   constructor(private router: Router, private auth: AuthService) {}
 
-  canActivate(_next: ActivatedRouteSnapshot, _state: RouterStateSnapshot): boolean | UrlTree {
-    return this.auth.isLoggedIn() ? true : this.router.parseUrl('/auth/login');
-  }
+  canActivate(): Observable<boolean | UrlTree> {
+  return this.auth.authResolved$.pipe(
+    switchMap(() => this.auth.isLoggedIn$),
+    map(loggedIn => (loggedIn ? true : this.router.parseUrl('/auth/login')))
+  );
+}
+
 }
