@@ -59,11 +59,20 @@ export class SignUpComponent {
 
   constructor(private router: Router, private loginService: LoginService, private snack: SnackService) {}
 
-  onAvatar(e: Event) {
-    const f = (e.target as HTMLInputElement).files?.[0] || null;
-    this.signupForm.get('avatar')?.setValue(f);
-    this.avatarName = f ? f.name : null;
+ MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB (set whatever limit matches your backend)
+
+onAvatar(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0] || null;
+  if (f && f.size > this.MAX_AVATAR_SIZE) {
+    this.snack.error('Selected image is too large (max 2 MB).');
+    this.signupForm.get('avatar')?.setValue(null);
+    this.avatarName = null;
+    return;
   }
+  this.signupForm.get('avatar')?.setValue(f);
+  this.avatarName = f ? f.name : null;
+}
+
 
   submit() {
     const v = this.signupForm.value;

@@ -30,24 +30,32 @@
           <button mat-button routerLink="/auth/signup">Sign Up</button>
         </ng-container>
 
+        <!-- Navbar toolbar snippet -->
         <ng-container *ngIf="loggedIn">
-          <!-- Create Post Button -->
           <button mat-raised-button color="accent" routerLink="/post/create" class="create-btn">
             <mat-icon>edit</mat-icon>
             Create Post
           </button>
-
-          <button mat-button [matMenuTriggerFor]="menu">
-            <mat-icon>account_circle</mat-icon>
+          <button mat-button [matMenuTriggerFor]="menu" class="user-menu-btn">
+            <img *ngIf="avatarUrl; else defaultIcon" [src]="avatarUrl" class="avatar-icon" alt="User Avatar" width="32"
+              height="32" />
+            <ng-template #defaultIcon>
+              <mat-icon>account_circle</mat-icon>
+            </ng-template>
             {{ userName || 'Account' }}
           </button>
           <mat-menu #menu="matMenu">
+            <button mat-menu-item routerLink="/profile">
+              <mat-icon>person</mat-icon>
+              See Profile
+            </button>
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon>
               Logout
             </button>
           </mat-menu>
         </ng-container>
+
       </ng-container>
     </mat-toolbar>
 

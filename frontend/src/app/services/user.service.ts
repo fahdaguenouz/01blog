@@ -30,6 +30,10 @@ export class UserService {
   getProfile(userId: string): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`${this.apiUrl}/${userId}`);
   }
+  getProfileByUsername(username: string): Observable<{ avatarUrl?: string, [key: string]: any }> {
+  return this.getHttp().get<{ avatarUrl?: string }>(`/api/users/by-username/${username}`);
+}
+
 
   getCurrentUser(): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`${this.apiUrl}/me`);

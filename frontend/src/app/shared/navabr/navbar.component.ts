@@ -12,6 +12,7 @@ import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { LoginService } from '../../auth/services/login.service';
+import { UserService } from '../../services/user.service';
 
 interface NavItem {
   label: string;
@@ -52,12 +53,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
     { label: 'Profile', icon: 'account_circle', route: '/profile' }
   ];
-
+avatarUrl: string | null = null;
   constructor(
     private router: Router,
     private auth: AuthService,
     private loginService: LoginService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
@@ -72,9 +74,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  private refreshAuthState(): void {
+ private refreshAuthState(): void {
     this.loggedIn = this.auth.isLoggedIn();
     this.userName = this.auth.getUsername();
+
+    if (this.loggedIn && this.userName) {
+      // Load user profile to get avatar URL
+      this.userService.getProfileByUsername(this.userName).subscribe({
+        next: user => {
+          this.avatarUrl = user.avatarUrl || null;
+        },
+        error: () => {
+          this.avatarUrl = null;
+        }
+      });
+    } else {
+      this.avatarUrl = null;
+    }
   }
 
   logout(): void {

@@ -48,6 +48,13 @@
   padding: 20px;
 }
 
+/* navbar.component.scss */
+.avatar-icon {
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  margin-top:15px ;
+}
 
 // Add to src/app/shared/navabr/navbar.component.scss
 .create-btn {
