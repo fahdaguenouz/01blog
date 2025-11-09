@@ -5,15 +5,20 @@ import { HttpClient } from '@angular/common/http';
 export interface PublicPostSummary {
   id: string;
   title: string;
-  excerpt: string;
   authorName: string | null;
   authorUsername: string | null;
+   body: string;
   authorId: string | null;
-  likes: number;
-  comments: number;
+  avatarUrl?: string;
+  likesCount?: number;
+  commentsCount?: number;
   impressions: number;
   createdAt: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video';
+  isLiked?: boolean;
 }
+
 
 export interface PublicPostDetail {
   id: string;

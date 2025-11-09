@@ -11,13 +11,7 @@ import { AuthService } from '../services/auth.service';
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <div *ngIf="!authResolved">
       <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
@@ -41,9 +35,7 @@ import { AuthService } from '../services/auth.service';
               mat-card-avatar
               class="post-avatar"
               [ngStyle]="{
-                'background-image': post.avatarUrl
-                  ? 'url(' + post.avatarUrl + ')'
-                  : 'none'
+                'background-image': post.avatarUrl ? 'url(' + post.avatarUrl + ')' : 'none'
               }"
             >
               <mat-icon *ngIf="!post.avatarUrl">account_circle</mat-icon>
@@ -79,7 +71,7 @@ import { AuthService } from '../services/auth.service';
 
           <!-- Post Content -->
           <mat-card-content class="post-content">
-            <p>{{ post.description }}</p>
+            <p>{{ post.excerpt }}</p>
           </mat-card-content>
 
           <!-- Post Actions -->
@@ -114,16 +106,20 @@ import { AuthService } from '../services/auth.service';
   styles: [
     `
       .feed-container {
-        max-width: 960px;
+        width: 90%;
         margin: 0 auto;
         padding: 20px;
       }
       .posts-list {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(4, 1fr); /* exactly 4 columns */
         gap: 20px;
       }
+
       .post-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -193,7 +189,12 @@ import { AuthService } from '../services/auth.service';
         color: #333;
         line-height: 1.6;
       }
+      .mat-card-content {
+        flex-grow: 1;
+      }
+
       .post-actions {
+        margin-top: auto;
         display: flex;
         justify-content: space-around;
         padding: 8px 0;
@@ -231,6 +232,23 @@ import { AuthService } from '../services/auth.service';
         }
         .post-content {
           padding: 12px;
+        }
+      }
+      @media (max-width: 1200px) {
+        .posts-list {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .posts-list {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .posts-list {
+          grid-template-columns: 1fr;
         }
       }
     `,

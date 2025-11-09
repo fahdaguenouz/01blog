@@ -38,7 +38,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
         <source [src]="post.mediaUrl" />
       </video>
 
-      <p>{{ post.description }}</p>
+      <p>{{ post.body }}</p>
 
       <mat-card-actions>
         <button mat-button (click)="toggleLike()">

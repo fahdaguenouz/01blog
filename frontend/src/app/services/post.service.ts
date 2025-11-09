@@ -9,7 +9,8 @@ export interface Post {
   username: string;
    avatarUrl?: string;
   title: string;
-  description: string;
+  excerpt: string; 
+   body?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   createdAt: string;

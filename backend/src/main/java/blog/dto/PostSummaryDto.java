@@ -17,5 +17,6 @@ public record PostSummaryDto(
   int impressions,
   Instant createdAt,
   String mediaUrl,
-  String mediaType
-) {}
+  String mediaType,
+  boolean isLiked
+){}

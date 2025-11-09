@@ -5,9 +5,11 @@ import blog.dto.PostDetailDto;
 import blog.dto.PostSummaryDto;
 import blog.mapper.PostMapper;
 import blog.models.Comment;
+import blog.models.Like;
 import blog.models.Post;
 import blog.models.User;
 import blog.repository.CommentRepository;
+import blog.repository.LikeRepository;
 import blog.repository.MediaRepository;
 import blog.repository.PostRepository;
 import blog.repository.UserRepository;
@@ -24,17 +26,19 @@ public class PostService {
 
   private final PostRepository posts;
   private final UserRepository users;
+   private final LikeRepository likes;
   private final MediaRepository mediaRepo;
   private final CommentRepository comments;
   private final LocalMediaStorage mediaStorage;
 
  public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
-                     MediaRepository mediaRepo, LocalMediaStorage mediaStorage) {
+                     MediaRepository mediaRepo,  LikeRepository likes,LocalMediaStorage mediaStorage) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
     this.mediaRepo = mediaRepo;                  
     this.mediaStorage = mediaStorage;
+     this.likes = likes;
   }
 
    public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
@@ -63,14 +67,14 @@ public class PostService {
 public Page<PostSummaryDto> listPublic(String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByStatusOrderByCreatedAtDesc(status, pageable)
-           .map(p -> PostMapper.toSummary(p, mediaRepo));  // Pass mediaRepo here
+          .map(p -> PostMapper.toSummary(p, mediaRepo, false));  // Pass mediaRepo here
   }
 
 
   public Page<PostSummaryDto> listByAuthor(UUID userId, String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByAuthorIdAndStatus(userId, status, pageable)
-           .map(p -> PostMapper.toSummary(p, mediaRepo));  // Pass mediaRepo here too
+          .map(p -> PostMapper.toSummary(p, mediaRepo, false));  // Pass mediaRepo here too
   }
 
  public PostDetailDto getOne(UUID id) {
@@ -79,26 +83,50 @@ public Page<PostSummaryDto> listPublic(String status, int page, int size) {
   }
 
   // ✅ FEED for logged-in users
-   public List<PostSummaryDto> getFeedForUser(String username) {
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-    return posts.findByStatusOrderByCreatedAtDesc("active", PageRequest.of(0, 20))
-                .stream()
-                .map(p -> PostMapper.toSummary(p, mediaRepo))  // Pass mediaRepo here
-                .toList();
-  }
+public List<PostSummaryDto> getFeedForUser(String username) {
+  User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+  UUID userId = user.getId();
+
+  return posts.findByStatusOrderByCreatedAtDesc("active", PageRequest.of(0, 20))
+      .stream()
+      .map(p -> {
+        boolean isLiked = likes.findByUserIdAndPostId(userId, p.getId()).isPresent();
+        return PostMapper.toSummary(p, mediaRepo, isLiked);
+      })
+      .toList();
+}
+
 
   // ✅ Like post
  public void likePost(String username, UUID postId) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    post.setLikesCount(post.getLikesCount() + 1);
+
+    boolean alreadyLiked = likes.findByUserIdAndPostId(user.getId(), postId).isPresent();
+    if (alreadyLiked) return; // prevent duplicates
+
+    Like like = new Like();
+    like.setUserId(user.getId());
+    like.setPostId(postId);
+    likes.save(like);
+
+    // update likes count cached in post entity
+    int newCount = likes.countByPostId(postId);
+    post.setLikesCount(newCount);
     posts.save(post);
   }
 
   // ✅ Unlike post
-   public void unlikePost(String username, UUID postId) {
+ public void unlikePost(String username, UUID postId) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
-    posts.save(post);
+
+    likes.findByUserIdAndPostId(user.getId(), postId).ifPresent(like -> {
+      likes.delete(like);
+      int newCount = likes.countByPostId(postId);
+      post.setLikesCount(newCount);
+      posts.save(post);
+    });
   }
 
   public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
@@ -134,19 +162,23 @@ public Page<PostSummaryDto> listPublic(String status, int page, int size) {
     posts.delete(post);
   }
 
-  public void addComment(String username, UUID postId, String content) {
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-    Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    Comment c = new Comment();
-    c.setId(UUID.randomUUID());
-    c.setPostId(post.getId());
-    c.setUserId(user.getId());
-    c.setText(content);
-    c.setCreatedAt(OffsetDateTime.now());
-    comments.save(c);
-    post.setCommentsCount((post.getCommentsCount() == null ? 0 : post.getCommentsCount()) + 1);
-    posts.save(post);
-  }
+public void addComment(String username, UUID postId, String content) {
+  User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+  Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+  Comment c = new Comment();
+  c.setId(UUID.randomUUID());
+  c.setPostId(post.getId());
+  c.setUserId(user.getId());
+  c.setText(content);
+  c.setCreatedAt(OffsetDateTime.now());
+  comments.save(c);
+
+  int newCommentsCount = (post.getCommentsCount() == null ? 0 : post.getCommentsCount()) + 1;
+  post.setCommentsCount(newCommentsCount);
+  posts.save(post);
+}
+
 
   public List<PostController.CommentDto> getComments(UUID postId) {
     return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()

@@ -1,6 +1,6 @@
 .feed {
-  max-width: 960px;
-  margin: 24px auto;
+   width: 100%; 
+  margin: 0px;
   padding: 0 16px;
 }
 
