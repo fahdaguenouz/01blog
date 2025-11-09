@@ -45,14 +45,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
           <mat-icon [color]="post.isLiked ? 'warn' : ''">
             {{ post.isLiked ? 'favorite' : 'favorite_border' }}
           </mat-icon>
-          {{ post.likesCount }}
+         {{ post.likes ?? 0 }}
         </button>
         <span>{{ comments.length }} Comments</span>
       </mat-card-actions>
 
       <div *ngFor="let comment of comments" class="comment">
         <strong>{{ comment.username }}</strong> <small>{{ comment.createdAt | date: 'short' }}</small>
-        <p>{{ comment.content }}</p>
+        <p>{{ comment.text }}</p>
       </div>
 
       <form (ngSubmit)="addComment()" #commentForm="ngForm">
@@ -109,14 +109,14 @@ export class PostDetailComponent implements OnInit {
       this.posts.unlikePost(this.post.id).subscribe(() => {
         if (this.post) {
           this.post.isLiked = false;
-          this.post.likesCount--;
+          this.post.likes--;
         }
       });
     } else {
       this.posts.likePost(this.post.id).subscribe(() => {
         if (this.post) {
           this.post.isLiked = true;
-          this.post.likesCount++;
+          this.post.likes++;
         }
       });
     }
@@ -127,7 +127,8 @@ export class PostDetailComponent implements OnInit {
     this.posts.addComment(this.post.id, this.newComment.trim()).subscribe({
       next: (comment) => {
         this.comments.unshift(comment);
-        if (this.post) this.post.commentsCount++;
+        this.loadComments(this.post!.id);
+        if (this.post) this.post.comments++;
         this.newComment = '';
       },
       error: () => alert('Failed to add comment'),

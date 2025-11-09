@@ -84,7 +84,7 @@ import { AuthService } from '../services/auth.service';
               <mat-icon [color]="post.isLiked ? 'warn' : ''">
                 {{ post.isLiked ? 'favorite' : 'favorite_border' }}
               </mat-icon>
-              <span class="action-count">{{ post.likesCount }}</span>
+              <span class="action-count">{{ post.likes ?? 0 }}</span>
             </button>
             <button
               mat-button
@@ -92,12 +92,9 @@ import { AuthService } from '../services/auth.service';
               (click)="goToPostDetail(post); $event.stopPropagation()"
             >
               <mat-icon>comment</mat-icon>
-              <span class="action-count">{{ post.commentsCount }}</span>
+              <span class="action-count">{{ post.comments ?? 0 }}</span>
             </button>
-            <button mat-button class="action-btn" (click)="$event.stopPropagation()">
-              <mat-icon>share</mat-icon>
-              <span>Share</span>
-            </button>
+           
           </mat-card-actions>
         </mat-card>
       </div>
@@ -289,19 +286,20 @@ export class FeedComponent implements OnInit {
     });
   }
 
-  toggleLike(post: Post) {
-    if (post.isLiked) {
-      this.postService.unlikePost(post.id).subscribe(() => {
-        post.isLiked = false;
-        post.likesCount--;
-      });
-    } else {
-      this.postService.likePost(post.id).subscribe(() => {
-        post.isLiked = true;
-        post.likesCount++;
-      });
-    }
+toggleLike(post: Post) {
+  if (post.isLiked) {
+    this.postService.unlikePost(post.id).subscribe(() => {
+      post.isLiked = false;
+      post.likes = Math.max((post.likes ?? 1) - 1, 0);  // Never go below 0
+    });
+  } else {
+    this.postService.likePost(post.id).subscribe(() => {
+      post.isLiked = true;
+      post.likes = (post.likes ?? 0) + 1;
+    });
   }
+}
+
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);

@@ -14,8 +14,8 @@ export interface Post {
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   createdAt: string;
-  likesCount: number;
-  commentsCount: number;
+ likes: number;        
+  comments: number; 
   isLiked?: boolean;
 }
 
@@ -24,7 +24,7 @@ export interface Comment {
   postId: string;
   userId: string;
   username: string;
-  content: string;
+ text: string; 
   createdAt: string;
 }
 
