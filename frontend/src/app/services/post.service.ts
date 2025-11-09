@@ -7,6 +7,7 @@ export interface Post {
   id: string;
   userId: string;
   username: string;
+   avatarUrl?: string;
   title: string;
   description: string;
   mediaUrl?: string;

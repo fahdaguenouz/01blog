@@ -9,6 +9,7 @@ public record PostSummaryDto(
   String title,
   String excerpt,
   String authorName,
+  String avatarUrl,
   String authorUsername,
   UUID authorId,
   int likes,

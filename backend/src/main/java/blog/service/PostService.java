@@ -8,6 +8,7 @@ import blog.models.Comment;
 import blog.models.Post;
 import blog.models.User;
 import blog.repository.CommentRepository;
+import blog.repository.MediaRepository;
 import blog.repository.PostRepository;
 import blog.repository.UserRepository;
 import org.springframework.data.domain.*;
@@ -23,18 +24,20 @@ public class PostService {
 
   private final PostRepository posts;
   private final UserRepository users;
+  private final MediaRepository mediaRepo;
   private final CommentRepository comments;
   private final LocalMediaStorage mediaStorage;
 
-  public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
-      LocalMediaStorage mediaStorage) {
+ public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
+                     MediaRepository mediaRepo, LocalMediaStorage mediaStorage) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
+    this.mediaRepo = mediaRepo;                  
     this.mediaStorage = mediaStorage;
   }
 
-  public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
+   public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
     Post post = new Post();
@@ -44,7 +47,7 @@ public class PostService {
     post.setStatus("active");
 
     if (media != null && !media.isEmpty()) {
-      var saved = mediaStorage.save(media); // SavedFile
+      var saved = mediaStorage.save(media);
       if (saved != null) {
         post.setMediaUrl(saved.url());
         String mt = saved.contentType();
@@ -57,46 +60,43 @@ public class PostService {
   }
 
   // ✅ Public posts for guests
-  public Page<PostSummaryDto> listPublic(String status, int page, int size) {
+public Page<PostSummaryDto> listPublic(String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByStatusOrderByCreatedAtDesc(status, pageable)
-        .map(PostMapper::toSummary);
+           .map(p -> PostMapper.toSummary(p, mediaRepo));  // Pass mediaRepo here
   }
+
 
   public Page<PostSummaryDto> listByAuthor(UUID userId, String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByAuthorIdAndStatus(userId, status, pageable)
-        .map(PostMapper::toSummary);
+           .map(p -> PostMapper.toSummary(p, mediaRepo));  // Pass mediaRepo here too
   }
 
-  public PostDetailDto getOne(UUID id) {
+ public PostDetailDto getOne(UUID id) {
     Post p = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     return PostMapper.toDetail(p);
   }
 
   // ✅ FEED for logged-in users
-  public List<PostSummaryDto> getFeedForUser(String username) {
-    User user = users.findByUsername(username)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
-    // For now, return all posts (you can later filter by followed users, etc.)
+   public List<PostSummaryDto> getFeedForUser(String username) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     return posts.findByStatusOrderByCreatedAtDesc("active", PageRequest.of(0, 20))
-        .stream()
-        .map(PostMapper::toSummary)
-        .toList();
+                .stream()
+                .map(p -> PostMapper.toSummary(p, mediaRepo))  // Pass mediaRepo here
+                .toList();
   }
 
   // ✅ Like post
-  public void likePost(String username, UUID postId) {
-    Post post = posts.findById(postId)
-        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+ public void likePost(String username, UUID postId) {
+    Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     post.setLikesCount(post.getLikesCount() + 1);
     posts.save(post);
   }
 
   // ✅ Unlike post
-  public void unlikePost(String username, UUID postId) {
-    Post post = posts.findById(postId)
-        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+   public void unlikePost(String username, UUID postId) {
+    Post post = posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
     posts.save(post);
   }

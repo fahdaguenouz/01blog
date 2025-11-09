@@ -1,19 +1,28 @@
-// src/app/post/post-detail.component.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { PostService, Post } from '../services/post.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { PostService, Post, Comment } from '../services/post.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   standalone: true,
   selector: 'app-post-detail',
-  imports: [CommonModule, MatCardModule],
+  imports: [
+    CommonModule, 
+    MatCardModule, 
+    MatButtonModule, 
+    MatIconModule, 
+    FormsModule,
+  MatFormFieldModule,   // add this
+    FormsModule ],
   template: `
- 
     <mat-card *ngIf="post">
       <h2>{{ post.title }}</h2>
-      <small>{{ post.createdAt | date : 'medium' }}</small>
+      <small>{{ post.createdAt | date:'medium' }}</small>
 
       <img
         *ngIf="post.mediaUrl && post.mediaType === 'image'"
@@ -30,18 +39,98 @@ import { PostService, Post } from '../services/post.service';
       </video>
 
       <p>{{ post.description }}</p>
+
+      <mat-card-actions>
+        <button mat-button (click)="toggleLike()">
+          <mat-icon [color]="post.isLiked ? 'warn' : ''">
+            {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+          </mat-icon>
+          {{ post.likesCount }}
+        </button>
+        <span>{{ comments.length }} Comments</span>
+      </mat-card-actions>
+
+      <div *ngFor="let comment of comments" class="comment">
+        <strong>{{ comment.username }}</strong> <small>{{ comment.createdAt | date: 'short' }}</small>
+        <p>{{ comment.content }}</p>
+      </div>
+
+      <form (ngSubmit)="addComment()" #commentForm="ngForm">
+        <mat-form-field appearance="fill" class="full-width">
+          <textarea
+            matInput
+            placeholder="Write a comment..."
+            [(ngModel)]="newComment"
+            name="comment"
+            required
+          ></textarea>
+        </mat-form-field>
+        <button mat-raised-button type="submit" [disabled]="commentForm.invalid">Add Comment</button>
+      </form>
     </mat-card>
   `,
+  styles: [`
+    .comment {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .full-width {
+      width: 100%;
+    }
+  `],
 })
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private posts = inject(PostService);
+
   post: Post | null = null;
+  comments: Comment[] = [];
+  newComment = '';
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.posts.getById(id).subscribe((p: Post) => {
-      this.post = p;
+    this.loadPost(id);
+    this.loadComments(id);
+  }
+
+  loadPost(id: string) {
+    this.posts.getById(id).subscribe((p) => (this.post = p));
+  }
+
+  loadComments(postId: string) {
+    this.posts.getComments(postId).subscribe((comments) => (this.comments = comments));
+  }
+
+  toggleLike() {
+    if (!this.post) return;
+    if (this.post.isLiked) {
+      this.posts.unlikePost(this.post.id).subscribe(() => {
+        if (this.post) {
+          this.post.isLiked = false;
+          this.post.likesCount--;
+        }
+      });
+    } else {
+      this.posts.likePost(this.post.id).subscribe(() => {
+        if (this.post) {
+          this.post.isLiked = true;
+          this.post.likesCount++;
+        }
+      });
+    }
+  }
+
+  addComment() {
+    if (!this.post || !this.newComment.trim()) return;
+    this.posts.addComment(this.post.id, this.newComment.trim()).subscribe({
+      next: (comment) => {
+        this.comments.unshift(comment);
+        if (this.post) this.post.commentsCount++;
+        this.newComment = '';
+      },
+      error: () => alert('Failed to add comment'),
     });
   }
 }
