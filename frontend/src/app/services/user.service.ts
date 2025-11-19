@@ -13,6 +13,7 @@ export interface UserProfile {
   postsCount: number;
   subscribersCount: number;
   isSubscribed?: boolean;
+  age?: number | null; 
 }
 
 @Injectable({
@@ -27,13 +28,9 @@ export class UserService {
     return this.injector.get(HttpClient);
   }
 
-  getProfile(userId: string): Observable<UserProfile> {
-    return this.getHttp().get<UserProfile>(`${this.apiUrl}/${userId}`);
-  }
-  getProfileByUsername(username: string): Observable<{ avatarUrl?: string, [key: string]: any }> {
-  return this.getHttp().get<{ avatarUrl?: string }>(`/api/users/by-username/${username}`);
+ getProfileByUsername(username: string): Observable<UserProfile> {
+  return this.getHttp().get<UserProfile>(`/api/users/by-username/${username}`);
 }
-
 
   getCurrentUser(): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`${this.apiUrl}/me`);

@@ -45,8 +45,8 @@
             {{ userName || 'Account' }}
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item routerLink="/profile">
-              <mat-icon>person</mat-icon>
+            <button mat-menu-item (click)="goToMyProfile()">
+              <mat-icon>account_circle</mat-icon>
               See Profile
             </button>
             <button mat-menu-item (click)="logout()">

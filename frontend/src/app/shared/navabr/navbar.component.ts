@@ -92,6 +92,13 @@ avatarUrl: string | null = null;
       this.avatarUrl = null;
     }
   }
+  goToMyProfile(): void {
+  if (this.userName) {
+  
+    this.router.navigate(['/profile', this.userName]);
+  }
+}
+
 
   logout(): void {
     this.loginService.logout().subscribe({

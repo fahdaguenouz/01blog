@@ -1,0 +1,31 @@
+<mat-card class="profile-card" *ngIf="user; else errTpl">
+  <div class="profile-header">
+    <img
+      *ngIf="user.avatarUrl; else defaultAvatar"
+      [src]="user.avatarUrl"
+      alt="Avatar"
+      class="profile-avatar"
+    />
+    <ng-template #defaultAvatar>
+      <span class="avatar-placeholder">
+        <mat-icon>account_circle</mat-icon>
+      </span>
+    </ng-template>
+    <div class="profile-info">
+      <h2>{{ user.name }}</h2>
+      <div class="username">@{{ user.username }}</div>
+      <div class="profile-meta">
+        <span *ngIf="user.age !== null">Age: {{ user.age }}</span>
+        <span class="email" *ngIf="user.email">{{ user.email }}</span>
+      </div>
+      <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
+    </div>
+  </div>
+</mat-card>
+
+<ng-template #errTpl>
+  <mat-card class="profile-card error">
+    <p *ngIf="error">{{ error }}</p>
+    <mat-spinner *ngIf="loading"></mat-spinner>
+  </mat-card>
+</ng-template>
