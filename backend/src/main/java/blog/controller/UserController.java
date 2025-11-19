@@ -67,6 +67,34 @@ public class UserController {
       avatarUrl
     );
   }
+    @GetMapping("/me")
+  public UserProfileDto getMe(Authentication auth) {
+    if (auth == null || !auth.isAuthenticated()) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+    }
+
+    String username = auth.getName();
+    User user = repo.findByUsername(username)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    String avatarUrl = null;
+    if (user.getAvatarMediaId() != null) {
+      Media media = mediaRepo.findById(user.getAvatarMediaId()).orElse(null);
+      if (media != null) {
+        avatarUrl = media.getUrl();
+      }
+    }
+
+    return new UserProfileDto(
+        user.getId(),
+        user.getUsername(),
+        user.getName(),
+        user.getEmail(),
+        user.getBio(),
+        user.getAge(),
+        avatarUrl
+    );
+  }
   @PutMapping("/me")
   public UserProfileDto updateProfile(@RequestBody Map<String, Object> updates, Authentication auth) {
     String username = auth.getName();

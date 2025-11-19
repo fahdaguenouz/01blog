@@ -19,18 +19,18 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService) throws Exception {
     http
-      .csrf(csrf -> csrf.disable())
-      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/error").permitAll()
-        .requestMatchers("/uploads/**").permitAll()
-        .requestMatchers("/api/public/**").permitAll()
-        .requestMatchers("/api/auth/**").permitAll()
-        .requestMatchers("/api/users/**").permitAll()
-         .requestMatchers("/api/posts/**").authenticated()
-        .anyRequest().authenticated()
-      )
-      .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/uploads/**").permitAll()
+            .requestMatchers("/api/public/**").permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
+             .requestMatchers("/api/users/by-username/**").permitAll()
+            .requestMatchers("/api/users/me/**").authenticated()
+            .requestMatchers("/api/posts/**").authenticated()
+            .anyRequest().authenticated())
+        .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
@@ -39,8 +39,8 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration cfg = new CorsConfiguration();
     cfg.setAllowedOrigins(List.of("http://localhost:4200"));
-    cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-    cfg.setAllowedHeaders(List.of("Authorization","Content-Type"));
+    cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    cfg.setAllowedHeaders(List.of("Authorization", "Content-Type"));
     cfg.setAllowCredentials(true);
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", cfg);

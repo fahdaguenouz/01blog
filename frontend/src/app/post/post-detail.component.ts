@@ -7,6 +7,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PostService, Post, Comment } from '../services/post.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { UserProfile, UserService } from '../services/user.service';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatInputModule } from '@angular/material/input';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { EditPostData, EditPostDialogComponent } from './edit-post-component';
 
 @Component({
   standalone: true,
@@ -17,11 +23,30 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MatButtonModule,
     MatIconModule,
     FormsModule,
-    MatFormFieldModule, // add this
+    MatFormFieldModule, 
     FormsModule,
+    MatMenuModule,
+     MatDialogModule,   // dialog
+    MatInputModule
   ],
   template: `
     <mat-card *ngIf="post">
+      <div *ngIf="currentUser && post?.userId === currentUser.id" style="float:right;">
+        <button mat-icon-button [matMenuTriggerFor]="menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="onEditPost()">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+          <button mat-menu-item (click)="onDeletePost()">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </mat-menu>
+      </div>
+
       <h2>{{ post.title }}</h2>
       <small>{{ post.createdAt | date : 'medium' }}</small>
 
@@ -91,20 +116,38 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private posts = inject(PostService);
-
+private userService = inject(UserService);
   post: Post | null = null;
   comments: Comment[] = [];
   newComment = '';
+  currentUser: UserProfile | null = null;
+   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
-  ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.loadPost(id);
-    this.loadComments(id);
-  }
 
-  loadPost(id: string) {
-    this.posts.getById(id).subscribe((p) => (this.post = p));
-  }
+ngOnInit() {
+  const id = this.route.snapshot.paramMap.get('id')!;
+  this.loadPost(id);
+  this.loadComments(id);
+
+  this.userService.getCurrentUser().subscribe({
+    next: user => {
+      console.log('currentUser', user);
+      this.currentUser = user;
+    },
+    error: err => {
+      console.error('getCurrentUser error', err);
+      this.currentUser = null;
+    },
+  });
+}
+
+loadPost(id: string) {
+  this.posts.getById(id).subscribe((p) => {
+    console.log('loaded post', p);
+    this.post = p;
+  });
+}
 
   loadComments(postId: string) {
     this.posts.getComments(postId).subscribe((comments) => (this.comments = comments));
@@ -139,6 +182,43 @@ export class PostDetailComponent implements OnInit {
         this.newComment = '';
       },
       error: () => alert('Failed to add comment'),
+    });
+  }
+  onEditPost() {
+    if (!this.post) return;
+
+    const dialogRef = this.dialog.open<EditPostDialogComponent, EditPostData, EditPostData>(
+      EditPostDialogComponent,
+      {
+        width: '500px',
+        data: {
+          title: this.post.title,
+          body: this.post.body ?? '',
+        },
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result || !this.post) return;
+
+      this.posts
+        .updatePost(this.post.id, result.title, result.body)
+        .subscribe((updated) => {
+          this.post = { ...this.post!, title: updated.title, body: updated.body };
+        });
+    });
+  }
+
+  onDeletePost() {
+    if (!this.post) return;
+
+    const confirmed = window.confirm(
+      'Do you really want to delete your post?\n\nWarning: all comments and likes will be removed.'
+    );
+    if (!confirmed) return;
+
+    this.posts.deletePost(this.post.id).subscribe(() => {
+      this.router.navigate(['/']); // or profile/feed route
     });
   }
 }
