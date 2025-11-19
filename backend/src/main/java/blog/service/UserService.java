@@ -2,6 +2,7 @@ package blog.service;
 
 import blog.dto.AuthResponse;
 import blog.dto.LoginRequest;
+import blog.dto.UserProfileDto;
 import blog.models.Media;
 import blog.models.Session;
 import blog.models.User;
@@ -10,6 +11,7 @@ import blog.repository.SessionRepository;
 import blog.repository.UserRepository;
 import blog.security.JwtService;
 import io.jsonwebtoken.Jwts;
+import jakarta.transaction.Transactional;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -118,4 +121,61 @@ public class UserService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
     }
   }
+
+  @Transactional
+public UserProfileDto updateProfileByUsername(String username, Map<String,Object> updates) {
+  User user = users.findByUsername(username)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+  if (updates.containsKey("name")) {
+    user.setName((String) updates.get("name"));
+  }
+  if (updates.containsKey("email")) {
+    user.setEmail((String) updates.get("email"));
+  }
+  if (updates.containsKey("bio")) {
+    user.setBio((String) updates.get("bio"));
+  }
+  if (updates.containsKey("age")) {
+    Integer age = (Integer) updates.get("age");
+    if (age != null && age >= 15) user.setAge(age);
+  }
+
+  // Save updated user
+  user = users.save(user);
+
+  
+  String avatarUrl = null;
+  // if (user.getAvatarMediaId() != null) {
+  //   Media media = mediaRepo.findById(user.getAvatarMediaId()).orElse(null);
+  //   if (media != null) {
+  //     avatarUrl = media.getUrl();
+  //   }
+  // }
+
+  return new UserProfileDto(
+    user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+    user.getBio(), user.getAge(), avatarUrl
+  );
+}
+@Transactional
+public void updateAvatar(String username, MultipartFile avatar) {
+    User user = users.findByUsername(username)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    var saved = storage.save(avatar); 
+
+    Media media = Media.builder()
+        .userId(user.getId())
+        .mediaType(saved.contentType() != null ? saved.contentType() : "image/*")
+        .size(saved.size() != null ? saved.size() : 0)
+        .url(saved.url())
+        .uploadedAt(OffsetDateTime.now())
+        .build();
+    media = mediaRepo.save(media);
+
+    user.setAvatarMediaId(media.getId());
+    users.save(user);
+}
+
 }

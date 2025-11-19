@@ -55,4 +55,8 @@ export class UserService {
   searchUsers(query: string): Observable<UserProfile[]> {
     return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/search`, { params: { q: query } });
   }
+  uploadAvatar(formData: FormData): Observable<void> {
+  return this.getHttp().post<void>(`${this.apiUrl}/me/avatar`, formData);
+}
+
 }

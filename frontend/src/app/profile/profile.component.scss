@@ -64,3 +64,17 @@
   color: #b00020;
   text-align: center;
 }
+
+.edit-profile-btn {
+  margin-top: 20px;
+  display: block;
+  width: 100%;
+}
+.avatar-upload {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+}

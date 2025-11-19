@@ -5,12 +5,19 @@ import blog.models.Media;
 import blog.models.User;
 import blog.repository.MediaRepository;
 import blog.repository.UserRepository;
+import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,6 +26,7 @@ import java.util.UUID;
 public class UserController {
   private final UserRepository repo;
   private final MediaRepository mediaRepo;
+  private final UserService userService;
 
   @GetMapping
   public List<User> all() {
@@ -58,5 +66,16 @@ public class UserController {
       user.getAge(),
       avatarUrl
     );
+  }
+  @PutMapping("/me")
+  public UserProfileDto updateProfile(@RequestBody Map<String, Object> updates, Authentication auth) {
+    String username = auth.getName();
+    return userService.updateProfileByUsername(username, updates);
+  }
+   @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Void> uploadAvatar(@RequestPart("avatar") MultipartFile avatar, Authentication auth) {
+    String username = auth.getName();
+    userService.updateAvatar(username, avatar);
+    return ResponseEntity.ok().build();
   }
 }

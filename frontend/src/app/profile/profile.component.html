@@ -21,6 +21,9 @@
       <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
     </div>
   </div>
+  <button mat-stroked-button class="edit-profile-btn" (click)="editProfile()">
+    Edit Profile
+  </button>
 </mat-card>
 
 <ng-template #errTpl>
