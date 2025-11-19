@@ -12,24 +12,26 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   standalone: true,
   selector: 'app-post-detail',
   imports: [
-    CommonModule, 
-    MatCardModule, 
-    MatButtonModule, 
-    MatIconModule, 
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
     FormsModule,
-  MatFormFieldModule,   // add this
-    FormsModule ],
+    MatFormFieldModule, // add this
+    FormsModule,
+  ],
   template: `
     <mat-card *ngIf="post">
       <h2>{{ post.title }}</h2>
-      <small>{{ post.createdAt | date:'medium' }}</small>
+      <small>{{ post.createdAt | date : 'medium' }}</small>
 
       <img
         *ngIf="post.mediaUrl && post.mediaType === 'image'"
         [src]="post.mediaUrl"
         alt="Post media"
-        style="width:100%;max-height:500px;object-fit:cover;margin:12px 0;"
+        style="display:block;margin:12px auto;max-width:440px;width:100%;height:auto;object-fit:cover;border-radius:10px;"
       />
+
       <video
         *ngIf="post.mediaUrl && post.mediaType === 'video'"
         controls
@@ -45,13 +47,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
           <mat-icon [color]="post.isLiked ? 'warn' : ''">
             {{ post.isLiked ? 'favorite' : 'favorite_border' }}
           </mat-icon>
-         {{ post.likes ?? 0 }}
+          {{ post.likes ?? 0 }}
         </button>
         <span>{{ comments.length }} Comments</span>
       </mat-card-actions>
 
       <div *ngFor="let comment of comments" class="comment">
-        <strong>{{ comment.username }}</strong> <small>{{ comment.createdAt | date: 'short' }}</small>
+        <strong>{{ comment.username }}</strong>
+        <small>{{ comment.createdAt | date : 'short' }}</small>
         <p>{{ comment.text }}</p>
       </div>
 
@@ -65,21 +68,25 @@ import { MatFormFieldModule } from '@angular/material/form-field';
             required
           ></textarea>
         </mat-form-field>
-        <button mat-raised-button type="submit" [disabled]="commentForm.invalid">Add Comment</button>
+        <button mat-raised-button type="submit" [disabled]="commentForm.invalid">
+          Add Comment
+        </button>
       </form>
     </mat-card>
   `,
-  styles: [`
-    .comment {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      background: #f0f0f0;
-      border-radius: 4px;
-    }
-    .full-width {
-      width: 100%;
-    }
-  `],
+  styles: [
+    `
+      .comment {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        background: #f0f0f0;
+        border-radius: 4px;
+      }
+      .full-width {
+        width: 100%;
+      }
+    `,
+  ],
 })
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
