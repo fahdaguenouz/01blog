@@ -50,6 +50,11 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
       <h2>{{ post.title }}</h2>
       <small>{{ post.createdAt | date : 'medium' }}</small>
 
+      <div *ngIf="post.categories?.length" style="margin: 8px 0;">
+        <span *ngFor="let cat of post.categories" style="margin-right: 6px;" class="category-chip">
+          #{{ cat.name }}
+        </span>
+      </div>
       <img
         *ngIf="post.mediaUrl && post.mediaType === 'image'"
         [src]="post.mediaUrl"
@@ -183,38 +188,45 @@ export class PostDetailComponent implements OnInit {
       error: () => alert('Failed to add comment'),
     });
   }
- onEditPost() {
-  if (!this.post) return;
+  onEditPost() {
+    if (!this.post) return;
 
-  const dialogRef = this.dialog.open<
-    EditPostDialogComponent,
-    EditPostData,
-    EditPostData
-  >(EditPostDialogComponent, {
-    width: '500px',
-    data: {
-      title: this.post.title,
-      body: this.post.body ?? '',
-      media: null, // no file selected initially
-    },
-  });
+    const dialogRef = this.dialog.open<EditPostDialogComponent, EditPostData, EditPostData>(
+      EditPostDialogComponent,
+      {
+        width: '500px',
+        data: {
+          title: this.post.title,
+          body: this.post.body ?? '',
+          media: null,
+          categoryIds: (this.post.categories || []).map((c) => c.id),
+        },
+      }
+    );
 
-  dialogRef.afterClosed().subscribe((result) => {
-    if (!result || !this.post) return;
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result || !this.post) return;
 
-    this.posts
-      .updatePost(this.post.id, result.title, result.body, result.media ?? undefined)
-      .subscribe((updated) => {
-        this.post = {
-          ...this.post!,
-          title: updated.title,
-          body: updated.body,
-          mediaUrl: updated.mediaUrl,
-          mediaType: updated.mediaType,
-        };
-      });
-  });
-}
+      this.posts
+        .updatePost(
+          this.post.id,
+          result.title,
+          result.body,
+          result.media ?? undefined,
+          result.categoryIds || []
+        )
+        .subscribe((updated) => {
+          this.post = {
+            ...this.post!,
+            title: updated.title,
+            body: updated.body,
+            mediaUrl: updated.mediaUrl,
+            mediaType: updated.mediaType,
+            categories: updated.categories,
+          };
+        });
+    });
+  }
 
   onDeletePost() {
     if (!this.post) return;

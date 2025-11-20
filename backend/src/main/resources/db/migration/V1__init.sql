@@ -46,6 +46,13 @@ CREATE TABLE media (
 ALTER TABLE users
   ADD CONSTRAINT fk_avatar_media FOREIGN KEY (avatar_media_id) REFERENCES media(id);
 
+-- CATEGORIES (for posts)
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(150) NOT NULL UNIQUE,
+    description TEXT
+);
 -- POSTS
 CREATE TABLE posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -64,7 +71,17 @@ CREATE TABLE posts (
 
   CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
+-- Junction: a post can have many categories, a category can be on many posts
+CREATE TABLE post_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID NOT NULL,
+    category_id UUID NOT NULL,
+    CONSTRAINT fk_post_categories_post
+      FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_categories_category
+      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+    CONSTRAINT uq_post_category UNIQUE (post_id, category_id)
+);
 -- POST_MEDIA
 CREATE TABLE post_media (
     post_id UUID NOT NULL,
@@ -162,3 +179,5 @@ CREATE INDEX idx_comments_post_created ON comments(post_id, created_at DESC);
 CREATE INDEX idx_likes_post ON likes(post_id);
 CREATE INDEX idx_subscriptions_subscriber ON subscriptions(subscriber_id);
 CREATE INDEX idx_notifications_user_created ON notifications(user_id, created_at DESC);
+CREATE INDEX idx_post_categories_post ON post_categories(post_id);
+CREATE INDEX idx_post_categories_category ON post_categories(category_id);

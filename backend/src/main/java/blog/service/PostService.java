@@ -8,6 +8,12 @@ import blog.models.Comment;
 import blog.models.Like;
 import blog.models.Post;
 import blog.models.User;
+import blog.dto.CategoryDto;
+import blog.models.PostCategory;
+import blog.repository.CategoryRepository;
+import blog.repository.PostCategoryRepository;
+import java.util.Objects;
+
 import blog.repository.CommentRepository;
 import blog.repository.LikeRepository;
 import blog.repository.MediaRepository;
@@ -31,18 +37,25 @@ public class PostService {
   private final MediaRepository mediaRepo;
   private final CommentRepository comments;
   private final LocalMediaStorage mediaStorage;
+  private final CategoryRepository categories;
+  private final PostCategoryRepository postCategories;
 
-  public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
-      MediaRepository mediaRepo, LikeRepository likes, LocalMediaStorage mediaStorage) {
-    this.posts = posts;
-    this.users = users;
-    this.comments = comments;
-    this.mediaRepo = mediaRepo;
-    this.mediaStorage = mediaStorage;
-    this.likes = likes;
-  }
+ public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
+                   MediaRepository mediaRepo, LikeRepository likes,
+                   LocalMediaStorage mediaStorage,
+                   CategoryRepository categories,
+                   PostCategoryRepository postCategories) {
+  this.posts = posts;
+  this.users = users;
+  this.comments = comments;
+  this.mediaRepo = mediaRepo;
+  this.mediaStorage = mediaStorage;
+  this.likes = likes;
+  this.categories = categories;
+  this.postCategories = postCategories;
+}
 
-  public PostDetailDto createPost(String username, String title, String description, MultipartFile media) {
+  public PostDetailDto createPost(String username, String title, String description, MultipartFile media, List<UUID> categoryIds) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
     Post post = new Post();
@@ -61,7 +74,22 @@ public class PostService {
     }
 
     posts.save(post);
-    return PostMapper.toDetail(post);
+    if (categoryIds != null) {
+    for (UUID cid : categoryIds) {
+      if (!categories.existsById(cid)) continue;
+      PostCategory pc = new PostCategory();
+      pc.setPostId(post.getId());
+      pc.setCategoryId(cid);
+      postCategories.save(pc);
+    }
+  }
+   List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+      .map(pc -> categories.findById(pc.getCategoryId())
+          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+          .orElse(null))
+      .filter(Objects::nonNull)
+      .toList();
+  return PostMapper.toDetail(post, categoryDtos);
   }
 
   // ✅ Public posts for guests
@@ -77,10 +105,20 @@ public class PostService {
         .map(p -> PostMapper.toSummary(p, mediaRepo, false)); // Pass mediaRepo here too
   }
 
-  public PostDetailDto getOne(UUID id) {
-    Post p = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    return PostMapper.toDetail(p);
-  }
+public PostDetailDto getOne(UUID id) {
+  Post p = posts.findById(id)
+      .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+  List<CategoryDto> categoryDtos = postCategories.findByPostId(p.getId()).stream()
+      .map(pc -> categories.findById(pc.getCategoryId())
+          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+          .orElse(null))
+      .filter(Objects::nonNull)
+      .toList();
+
+  return PostMapper.toDetail(p, categoryDtos);
+}
+
 
   // ✅ FEED for logged-in users
   public List<PostSummaryDto> getFeedForUser(String username) {
@@ -131,7 +169,12 @@ public class PostService {
     });
   }
 
-  public PostDetailDto updatePost(String username, UUID id, String title, String description, MultipartFile media) {
+  public PostDetailDto updatePost(String username,
+                                UUID id,
+                                String title,
+                                String description,
+                                MultipartFile media,
+                                List<UUID> categoryIds) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId()))
@@ -150,7 +193,24 @@ public class PostService {
     }
 
     posts.save(post);
-    return PostMapper.toDetail(post);
+    postCategories.deleteByPostId(post.getId());
+  if (categoryIds != null) {
+    for (UUID cid : categoryIds) {
+      if (!categories.existsById(cid)) continue;
+      PostCategory pc = new PostCategory();
+      pc.setPostId(post.getId());
+      pc.setCategoryId(cid);
+      postCategories.save(pc);
+    }
+  }
+
+  List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+      .map(pc -> categories.findById(pc.getCategoryId())
+          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+          .orElse(null))
+      .filter(Objects::nonNull)
+      .toList();
+  return PostMapper.toDetail(post, categoryDtos);
   }
  @Transactional
   public void deletePost(String username, UUID id) {

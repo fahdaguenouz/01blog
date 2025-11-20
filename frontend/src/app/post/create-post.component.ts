@@ -8,8 +8,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PostService } from '../services/post.service';
+import { Category, PostService } from '../services/post.service';
 import { ToastrService } from 'ngx-toastr';
+import { CategoryService } from '../services/category.service';
+import { MatOptionModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-create-post',
@@ -22,6 +25,8 @@ import { ToastrService } from 'ngx-toastr';
     MatInputModule,
     MatFormFieldModule,
     ReactiveFormsModule,
+     MatSelectModule,   // <-- add
+    MatOptionModule
   ],
   template: `
     <div class="create-post-container">
@@ -36,8 +41,10 @@ import { ToastrService } from 'ngx-toastr';
             <!-- Title Field -->
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Post Title</mat-label>
-              <input matInput formControlName="title" placeholder="Give your post a title...">
-              <mat-error *ngIf="postForm.get('title')?.hasError('required')">Title is required</mat-error>
+              <input matInput formControlName="title" placeholder="Give your post a title..." />
+              <mat-error *ngIf="postForm.get('title')?.hasError('required')"
+                >Title is required</mat-error
+              >
             </mat-form-field>
 
             <!-- Description Field -->
@@ -49,7 +56,18 @@ import { ToastrService } from 'ngx-toastr';
                 rows="8"
                 placeholder="Share your thoughts, insights, or learning journey..."
               ></textarea>
-              <mat-error *ngIf="postForm.get('description')?.hasError('required')">Description is required</mat-error>
+              <mat-error *ngIf="postForm.get('description')?.hasError('required')"
+                >Description is required</mat-error
+              >
+                 <!-- Category multi-select --> 
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Categories</mat-label>
+              <mat-select formControlName="categoryIds" multiple>
+                <mat-option *ngFor="let cat of allCategories" [value]="cat.id">
+                  {{ cat.name }}
+                </mat-option>
+              </mat-select>
             </mat-form-field>
 
             <!-- Media Upload -->
@@ -74,7 +92,12 @@ import { ToastrService } from 'ngx-toastr';
             <!-- Actions -->
             <div class="form-actions">
               <button type="button" mat-button (click)="cancel()">Cancel</button>
-              <button type="submit" mat-raised-button color="primary" [disabled]="postForm.invalid || isSubmitting">
+              <button
+                type="submit"
+                mat-raised-button
+                color="primary"
+                [disabled]="postForm.invalid || isSubmitting"
+              >
                 <span *ngIf="!isSubmitting">Publish Post</span>
                 <span *ngIf="isSubmitting">Publishing...</span>
               </button>
@@ -84,120 +107,128 @@ import { ToastrService } from 'ngx-toastr';
       </mat-card>
     </div>
   `,
-  styles: [`
-    .create-post-container {
-      max-width: 700px;
-      margin: 32px auto;
-      padding: 16px;
-    }
-
-    .create-post-card {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-      border-radius: 8px;
-    }
-
-    .create-post-card mat-card-header {
-      margin-bottom: 24px;
-    }
-
-    .create-post-card mat-card-title {
-      font-size: 1.5rem;
-      margin: 0;
-    }
-
-    .create-post-card mat-card-subtitle {
-      font-size: 0.95rem;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    mat-card-content {
-      padding: 24px;
-    }
-
-    .full-width {
-      width: 100%;
-      margin-bottom: 20px;
-    }
-
-    .media-section {
-      margin: 20px 0;
-      padding: 16px;
-      background-color: #f5f5f5;
-      border-radius: 6px;
-    }
-
-    .media-label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 12px;
-      color: #333;
-    }
-
-    .media-upload {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .file-name {
-      font-size: 0.9rem;
-      color: #666;
-      word-break: break-word;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .form-actions button {
-      min-width: 120px;
-    }
-
-    @media (max-width: 600px) {
+  styles: [
+    `
       .create-post-container {
-        margin: 16px auto;
-        padding: 8px;
-      }
-
-      mat-card-content {
+        max-width: 700px;
+        margin: 32px auto;
         padding: 16px;
       }
 
+      .create-post-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+      }
+
+      .create-post-card mat-card-header {
+        margin-bottom: 24px;
+      }
+
+      .create-post-card mat-card-title {
+        font-size: 1.5rem;
+        margin: 0;
+      }
+
+      .create-post-card mat-card-subtitle {
+        font-size: 0.95rem;
+        color: #666;
+        margin-top: 4px;
+      }
+
+      mat-card-content {
+        padding: 24px;
+      }
+
       .full-width {
-        margin-bottom: 16px;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      .media-section {
+        margin: 20px 0;
+        padding: 16px;
+        background-color: #f5f5f5;
+        border-radius: 6px;
+      }
+
+      .media-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 12px;
+        color: #333;
+      }
+
+      .media-upload {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .file-name {
+        font-size: 0.9rem;
+        color: #666;
+        word-break: break-word;
       }
 
       .form-actions {
-        flex-direction: column;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
       }
 
       .form-actions button {
-        width: 100%;
+        min-width: 120px;
       }
-    }
-  `]
+
+      @media (max-width: 600px) {
+        .create-post-container {
+          margin: 16px auto;
+          padding: 8px;
+        }
+
+        mat-card-content {
+          padding: 16px;
+        }
+
+        .full-width {
+          margin-bottom: 16px;
+        }
+
+        .form-actions {
+          flex-direction: column;
+        }
+
+        .form-actions button {
+          width: 100%;
+        }
+      }
+    `,
+  ],
 })
 export class CreatePostComponent {
   postForm: FormGroup;
   selectedFile: File | null = null;
   selectedFileName: string | null = null;
   isSubmitting = false;
+  allCategories: Category[] = [];
 
   constructor(
     private postService: PostService,
     private fb: FormBuilder,
+    private categoryService: CategoryService,
     private router: Router,
     private toastr: ToastrService
-  ) {
+  ){
     this.postForm = this.fb.group({
       title: ['', Validators.required],
-      description: ['', Validators.required]
+      description: ['', Validators.required],
+      categoryIds: [[]]  // multi select
     });
+
+    this.categoryService.list().subscribe(cats => this.allCategories = cats);
   }
+
 
   onFileSelected(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -212,9 +243,9 @@ export class CreatePostComponent {
     if (this.postForm.invalid) return;
 
     this.isSubmitting = true;
-    const { title, description } = this.postForm.value;
+    const { title, description,categoryIds } = this.postForm.value;
 
-    this.postService.createPost(title, description, this.selectedFile || undefined).subscribe({
+    this.postService.createPost(title, description, this.selectedFile || undefined, categoryIds || []).subscribe({
       next: () => {
         this.toastr.success('Post published successfully!');
         this.router.navigate(['/feed']);
@@ -222,7 +253,7 @@ export class CreatePostComponent {
       error: () => {
         this.toastr.error('Error publishing post');
         this.isSubmitting = false;
-      }
+      },
     });
   }
 

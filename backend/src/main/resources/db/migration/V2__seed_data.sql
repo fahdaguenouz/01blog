@@ -1,7 +1,23 @@
 -- Seed data for 01Blog
+INSERT INTO categories (id, name, slug, description) VALUES
+  ('c10e8400-e29b-41d4-a716-446655440001', 'Technology',      'technology',      'Posts about technology and innovation'),
+  ('c10e8400-e29b-41d4-a716-446655440002', 'Programming',     'programming',     'Code, languages and software development'),
+  ('c10e8400-e29b-41d4-a716-446655440003', 'Design',          'design',          'UI/UX, product and graphic design'),
+  ('c10e8400-e29b-41d4-a716-446655440004', 'Science',         'science',         'Scientific topics and discoveries'),
+  ('c10e8400-e29b-41d4-a716-446655440005', 'Business',        'business',        'Business, startups and entrepreneurship'),
+  ('c10e8400-e29b-41d4-a716-446655440006', 'Lifestyle',       'lifestyle',       'Lifestyle, habits and daily life'),
+  ('c10e8400-e29b-41d4-a716-446655440007', 'Education',       'education',       'Learning, study tips and teaching'),
+  ('c10e8400-e29b-41d4-a716-446655440008', 'Health',          'health',          'Health, fitness and wellbeing'),
+  ('c10e8400-e29b-41d4-a716-446655440009', 'Finance',         'finance',         'Money, investing and personal finance'),
+  ('c10e8400-e29b-41d4-a716-44665544000a', 'Travel',          'travel',          'Travel stories and guides'),
+  ('c10e8400-e29b-41d4-a716-44665544000b', 'Tutorial',        'tutorial',        'Step-by-step tutorials and how-tos'),
+  ('c10e8400-e29b-41d4-a716-44665544000c', 'Opinion',         'opinion',         'Personal opinions and commentary'),
+  ('c10e8400-e29b-41d4-a716-44665544000d', 'News',            'news',            'News and recent events'),
+  ('c10e8400-e29b-41d4-a716-44665544000e', 'Guides',          'guides',          'In-depth guides and walkthroughs'),
+  ('c10e8400-e29b-41d4-a716-44665544000f', 'Tips & Tricks',   'tips-and-tricks', 'Short tips and productivity tricks'),
+  ('c10e8400-e29b-41d4-a716-446655440010', 'Reviews',         'reviews',         'Reviews of tools, books, products'),
+  ('c10e8400-e29b-41d4-a716-446655440011', 'Announcements',   'announcements',   'Platform or user announcements');
 
--- 1. Insert test users
--- Seed data for 01Blog
 
 -- 1. Insert test users
 INSERT INTO users (id, name, username, email, password, bio, age, status, role, impressions_count, posts_count, readme, created_at) VALUES
@@ -38,6 +54,45 @@ INSERT INTO post_media (post_id, media_id, created_at) VALUES
   ('770e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440004', CURRENT_TIMESTAMP - INTERVAL '2 days'),
   ('770e8400-e29b-41d4-a716-446655440005', '660e8400-e29b-41d4-a716-446655440005', CURRENT_TIMESTAMP - INTERVAL '1 day');
 
+
+-- Getting Started with React Hooks (React → Tech + Programming + Tutorial)
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440001', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
+  ('770e8400-e29b-41d4-a716-446655440001', 'c10e8400-e29b-41d4-a716-446655440002'), -- Programming
+  ('770e8400-e29b-41d4-a716-446655440001', 'c10e8400-e29b-41d4-a716-44665544000b'); -- Tutorial
+
+-- Building REST APIs with Spring Boot → Technology + Programming + Guides
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440002', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
+  ('770e8400-e29b-41d4-a716-446655440002', 'c10e8400-e29b-41d4-a716-446655440002'), -- Programming
+  ('770e8400-e29b-41d4-a716-446655440002', 'c10e8400-e29b-41d4-a716-44665544000e'); -- Guides
+
+-- Angular Routing: A Complete Guide → Technology + Programming + Guides
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440003', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
+  ('770e8400-e29b-41d4-a716-446655440003', 'c10e8400-e29b-41d4-a716-446655440002'), -- Programming
+  ('770e8400-e29b-41d4-a716-446655440003', 'c10e8400-e29b-41d4-a716-44665544000e'); -- Guides
+
+-- Data Structures: Arrays vs Linked Lists → Programming + Education
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440004', 'c10e8400-e29b-41d4-a716-446655440002'), -- Programming
+  ('770e8400-e29b-41d4-a716-446655440004', 'c10e8400-e29b-41d4-a716-446655440007'); -- Education
+
+-- Full Stack Development Tips & Tricks → Technology + Tips & Tricks
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440005', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
+  ('770e8400-e29b-41d4-a716-446655440005', 'c10e8400-e29b-41d4-a716-44665544000f'); -- Tips & Tricks
+
+-- TypeScript Generics Explained → Programming + Tutorial
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440006', 'c10e8400-e29b-41d4-a716-446655440002'), -- Programming
+  ('770e8400-e29b-41d4-a716-446655440006', 'c10e8400-e29b-41d4-a716-44665544000b'); -- Tutorial
+
+-- Database Design Best Practices → Technology + Business + Guides
+INSERT INTO post_categories (post_id, category_id) VALUES
+  ('770e8400-e29b-41d4-a716-446655440007', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
+  ('770e8400-e29b-41d4-a716-446655440007', 'c10e8400-e29b-41d4-a716-446655440005'), -- Business
+  ('770e8400-e29b-41d4-a716-446655440007', 'c10e8400-e29b-41d4-a716-44665544000e'); -- Guides
 -- 5. Insert comments
 INSERT INTO comments (id, user_id, post_id, text, created_at) VALUES
   ('880e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440001', 'Great explanation of hooks! I will definitely use this in my next project.', CURRENT_TIMESTAMP - INTERVAL '6 days'),

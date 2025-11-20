@@ -40,25 +40,30 @@ public class PostController {
   public PostDetailDto create(
       @RequestParam String title,
       @RequestParam String description,
-      @RequestParam(required = false) MultipartFile media) {
+      @RequestParam(required = false) MultipartFile media,
+    @RequestParam(required = false) List<UUID> categoryIds ) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth == null || !auth.isAuthenticated())
       throw new RuntimeException("Unauthorized");
-    return postService.createPost(auth.getName(), title, description, media);
+   return postService.createPost(auth.getName(), title, description, media, categoryIds);
   }
 
   // Update (multipart to allow media change)
-  @PutMapping("/{id}")
-  public PostDetailDto update(
-      @PathVariable UUID id,
-      @RequestParam String title,
-      @RequestParam String description,
-      @RequestParam(required = false) MultipartFile media) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !auth.isAuthenticated())
-      throw new RuntimeException("Unauthorized");
-    return postService.updatePost(auth.getName(), id, title, description, media);
-  }
+
+@PutMapping("/{id}")
+public PostDetailDto update(
+    @PathVariable UUID id,
+    @RequestParam String title,
+    @RequestParam String description,
+    @RequestParam(required = false) MultipartFile media,
+    @RequestParam(required = false) List<UUID> categoryIds
+) {
+  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+  if (auth == null || !auth.isAuthenticated())
+    throw new RuntimeException("Unauthorized");
+  return postService.updatePost(auth.getName(), id, title, description, media, categoryIds);
+}
+
 
   // Delete
   @DeleteMapping("/{id}")

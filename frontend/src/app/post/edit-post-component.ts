@@ -4,20 +4,33 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { Category } from '../services/post.service';
+import { CategoryService } from '../services/category.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
 
 export interface EditPostData {
   title: string;
   body: string;
   media?: File | null;
+  categoryIds: string[];
 }
 
 @Component({
   standalone: true,
   selector: 'app-edit-post-dialog',
-  imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule,MatDialogModule,   // dialog
-    MatInputModule,],
+  imports: [
+    FormsModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDialogModule, 
+    MatInputModule,
+    MatSelectModule,   
+    MatOptionModule
+  ],
   template: `
-   <h2 mat-dialog-title>Edit post</h2>
+    <h2 mat-dialog-title>Edit post</h2>
 
     <mat-dialog-content>
       <mat-form-field class="full-width">
@@ -30,30 +43,39 @@ export interface EditPostData {
         <textarea matInput rows="5" [(ngModel)]="data.body"></textarea>
       </mat-form-field>
 
+      <mat-form-field class="full-width">
+        <mat-label>Categories</mat-label>
+        <mat-select [(ngModel)]="data.categoryIds" multiple>
+          <mat-option *ngFor="let cat of categories" [value]="cat.id">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <div style="margin-top: 12px;">
         <label>Media (optional)</label>
         <input type="file" (change)="onFileSelected($event)" />
-        <div *ngIf="selectedFileName">
-          Current selection: {{ selectedFileName }}
-        </div>
+        <div *ngIf="selectedFileName">Current selection: {{ selectedFileName }}</div>
       </div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="dialogRef.close()">Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSave()">
-        Save
-      </button>
+      <button mat-raised-button color="primary" (click)="onSave()">Save</button>
     </mat-dialog-actions>
   `,
 })
 export class EditPostDialogComponent {
   selectedFileName = '';
+   categories: Category[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<EditPostDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: EditPostData
-  ) {}
+    @Inject(MAT_DIALOG_DATA) public data: EditPostData,
+    private categoryService: CategoryService
+  ) {
+    this.categoryService.list().subscribe(cats => this.categories = cats);
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;

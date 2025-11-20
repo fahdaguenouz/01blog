@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs';
 
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 export interface Post {
   id: string;
   authorId: string;
@@ -18,6 +24,7 @@ export interface Post {
   likes: number;
   comments: number;
   isLiked?: boolean;
+  categories?: Category[]; 
 }
 
 
@@ -50,21 +57,21 @@ export class PostService {
     return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}`);
   }
 
-  createPost(title: string, description: string, media?: File): Observable<Post> {
+  createPost(title: string, description: string, media?: File, categoryIds: string[] = []): Observable<Post> {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
     if (media) formData.append('media', media);
-    // Backend expects POST /api/posts
+    categoryIds.forEach(id => formData.append('categoryIds', id));
     return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
 
-  updatePost(postId: string, title: string, description: string, media?: File): Observable<Post> {
-    // If supporting media replacement, a PUT with multipart is typical
+  updatePost(postId: string, title: string, description: string, media?:File, categoryIds: string[] = []): Observable<Post> {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
     if (media) formData.append('media', media);
+    categoryIds.forEach(id => formData.append('categoryIds', id));
     return this.getHttp().put<Post>(`${this.apiUrl}/${postId}`, formData);
   }
 

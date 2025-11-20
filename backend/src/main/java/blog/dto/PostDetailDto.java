@@ -16,5 +16,6 @@ public record PostDetailDto(
   int impressions,
   Instant createdAt,
   String mediaUrl,
-  String mediaType
+  String mediaType,
+  java.util.List<CategoryDto> categories
 ) {}
