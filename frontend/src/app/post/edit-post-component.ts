@@ -8,6 +8,7 @@ import { Category } from '../services/post.service';
 import { CategoryService } from '../services/category.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { CommonModule } from '@angular/common';
 
 export interface EditPostData {
   title: string;
@@ -24,10 +25,11 @@ export interface EditPostData {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatDialogModule, 
+    MatDialogModule,
     MatInputModule,
-    MatSelectModule,   
-    MatOptionModule
+    MatSelectModule,
+    MatOptionModule,
+    CommonModule, 
   ],
   template: `
     <h2 mat-dialog-title>Edit post</h2>
@@ -67,14 +69,22 @@ export interface EditPostData {
 })
 export class EditPostDialogComponent {
   selectedFileName = '';
-   categories: Category[] = [];
+  categories: Category[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<EditPostDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: EditPostData,
     private categoryService: CategoryService
   ) {
-    this.categoryService.list().subscribe(cats => this.categories = cats);
+    this.categoryService.list().subscribe({
+      next: (cats) => {
+        console.log('edit dialog categories', cats);
+        this.categories = cats;
+      },
+      error: (err) => {
+        console.error('edit dialog category load error', err);
+      },
+    });
   }
 
   onFileSelected(event: Event) {
