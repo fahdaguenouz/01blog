@@ -183,28 +183,39 @@ export class PostDetailComponent implements OnInit {
       error: () => alert('Failed to add comment'),
     });
   }
-  onEditPost() {
-    if (!this.post) return;
+ onEditPost() {
+  if (!this.post) return;
 
-    const dialogRef = this.dialog.open<EditPostDialogComponent, EditPostData, EditPostData>(
-      EditPostDialogComponent,
-      {
-        width: '500px',
-        data: {
-          title: this.post.title,
-          body: this.post.body ?? '',
-        },
-      }
-    );
+  const dialogRef = this.dialog.open<
+    EditPostDialogComponent,
+    EditPostData,
+    EditPostData
+  >(EditPostDialogComponent, {
+    width: '500px',
+    data: {
+      title: this.post.title,
+      body: this.post.body ?? '',
+      media: null, // no file selected initially
+    },
+  });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result || !this.post) return;
+  dialogRef.afterClosed().subscribe((result) => {
+    if (!result || !this.post) return;
 
-      this.posts.updatePost(this.post.id, result.title, result.body).subscribe((updated) => {
-        this.post = { ...this.post!, title: updated.title, body: updated.body };
+    this.posts
+      .updatePost(this.post.id, result.title, result.body, result.media ?? undefined)
+      .subscribe((updated) => {
+        this.post = {
+          ...this.post!,
+          title: updated.title,
+          body: updated.body,
+          mediaUrl: updated.mediaUrl,
+          mediaType: updated.mediaType,
+        };
       });
-    });
-  }
+  });
+}
+
   onDeletePost() {
     if (!this.post) return;
 
