@@ -175,6 +175,13 @@ public PostDetailDto getOne(UUID id) {
                                 String description,
                                 MultipartFile media,
                                 List<UUID> categoryIds) {
+                                  // System.out.println("=== updatePost ===");
+  // System.out.println("username = " + username);
+  // System.out.println("postId   = " + id);
+  // System.out.println("title    = " + title);
+  // System.out.println("descr    = " + description);
+  // System.out.println("media    = " + (media != null ? media.getOriginalFilename() : "null"));
+  // System.out.println("categoryIds = " + categoryIds);
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId()))
@@ -193,16 +200,20 @@ public PostDetailDto getOne(UUID id) {
     }
 
     posts.save(post);
-    postCategories.deleteByPostId(post.getId());
+  // System.out.println("before deleteByPostId");
+postCategories.deleteByPostId(post.getId());
+// System.out.println("after deleteByPostId");
+
   if (categoryIds != null) {
-    for (UUID cid : categoryIds) {
-      if (!categories.existsById(cid)) continue;
-      PostCategory pc = new PostCategory();
-      pc.setPostId(post.getId());
-      pc.setCategoryId(cid);
-      postCategories.save(pc);
-    }
-  }
+  categoryIds.stream().distinct().forEach(cid -> {
+    if (!categories.existsById(cid)) return;
+    PostCategory pc = new PostCategory();
+    pc.setPostId(post.getId());
+    pc.setCategoryId(cid);
+    postCategories.save(pc);
+  });
+}
+
 
   List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
       .map(pc -> categories.findById(pc.getCategoryId())

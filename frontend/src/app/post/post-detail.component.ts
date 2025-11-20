@@ -206,7 +206,7 @@ export class PostDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (!result || !this.post) return;
-
+      console.log('update categoryIds', result.categoryIds);
       this.posts
         .updatePost(
           this.post.id,
