@@ -16,12 +16,13 @@ import blog.repository.UserRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class PostService {
 
   private final PostRepository posts;
@@ -151,14 +152,18 @@ public class PostService {
     posts.save(post);
     return PostMapper.toDetail(post);
   }
-
+ @Transactional
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId())) {
       throw new IllegalArgumentException("Forbidden");
     }
-    // Optionally delete media and comments cascade by FK
+     // 1) delete likes for this post
+  likes.deleteByPostId(post.getId());
+
+  // 2) delete comments for this post (recommended)
+  comments.deleteByPostId(post.getId());
     posts.delete(post);
   }
 

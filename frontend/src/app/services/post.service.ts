@@ -5,19 +5,21 @@ import { Observable } from 'rxjs';
 
 export interface Post {
   id: string;
-  userId: string;
-  username: string;
-   avatarUrl?: string;
+  authorId: string;
+  authorUsername: string;
+  authorName: string;
+  avatarUrl?: string;
   title: string;
-  excerpt: string; 
-   body?: string;
+  excerpt: string;
+  body?: string;
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   createdAt: string;
- likes: number;        
-  comments: number; 
+  likes: number;
+  comments: number;
   isLiked?: boolean;
 }
+
 
 export interface Comment {
   id: string;

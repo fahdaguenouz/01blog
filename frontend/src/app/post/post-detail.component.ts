@@ -23,15 +23,15 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
     MatButtonModule,
     MatIconModule,
     FormsModule,
-    MatFormFieldModule, 
+    MatFormFieldModule,
     FormsModule,
     MatMenuModule,
-     MatDialogModule,   // dialog
-    MatInputModule
+    MatDialogModule, // dialog
+    MatInputModule,
   ],
   template: `
     <mat-card *ngIf="post">
-      <div *ngIf="currentUser && post?.userId === currentUser.id" style="float:right;">
+      <div *ngIf="currentUser && post?.authorId === currentUser.id" style="float:right;">
         <button mat-icon-button [matMenuTriggerFor]="menu">
           <mat-icon>more_vert</mat-icon>
         </button>
@@ -116,38 +116,37 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private posts = inject(PostService);
-private userService = inject(UserService);
+  private userService = inject(UserService);
   post: Post | null = null;
   comments: Comment[] = [];
   newComment = '';
   currentUser: UserProfile | null = null;
-   private dialog = inject(MatDialog);
+  private dialog = inject(MatDialog);
   private router = inject(Router);
 
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.loadPost(id);
+    this.loadComments(id);
 
-ngOnInit() {
-  const id = this.route.snapshot.paramMap.get('id')!;
-  this.loadPost(id);
-  this.loadComments(id);
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        console.log('currentUser', user);
+        this.currentUser = user;
+      },
+      error: (err) => {
+        console.error('getCurrentUser error', err);
+        this.currentUser = null;
+      },
+    });
+  }
 
-  this.userService.getCurrentUser().subscribe({
-    next: user => {
-      console.log('currentUser', user);
-      this.currentUser = user;
-    },
-    error: err => {
-      console.error('getCurrentUser error', err);
-      this.currentUser = null;
-    },
-  });
-}
-
-loadPost(id: string) {
-  this.posts.getById(id).subscribe((p) => {
-    console.log('loaded post', p);
-    this.post = p;
-  });
-}
+  loadPost(id: string) {
+    this.posts.getById(id).subscribe((p) => {
+      console.log('loaded post', p);
+      this.post = p;
+    });
+  }
 
   loadComments(postId: string) {
     this.posts.getComments(postId).subscribe((comments) => (this.comments = comments));
@@ -201,14 +200,11 @@ loadPost(id: string) {
     dialogRef.afterClosed().subscribe((result) => {
       if (!result || !this.post) return;
 
-      this.posts
-        .updatePost(this.post.id, result.title, result.body)
-        .subscribe((updated) => {
-          this.post = { ...this.post!, title: updated.title, body: updated.body };
-        });
+      this.posts.updatePost(this.post.id, result.title, result.body).subscribe((updated) => {
+        this.post = { ...this.post!, title: updated.title, body: updated.body };
+      });
     });
   }
-
   onDeletePost() {
     if (!this.post) return;
 
@@ -217,8 +213,12 @@ loadPost(id: string) {
     );
     if (!confirmed) return;
 
-    this.posts.deletePost(this.post.id).subscribe(() => {
-      this.router.navigate(['/']); // or profile/feed route
+    this.posts.deletePost(this.post.id).subscribe({
+      next: () => this.router.navigate(['/feed']),
+      error: (err) => {
+        console.error('Delete failed', err);
+        alert('Failed to delete post: ' + (err.status || 'unknown error'));
+      },
     });
   }
 }

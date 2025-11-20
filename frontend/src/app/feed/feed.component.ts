@@ -45,7 +45,7 @@ import { AuthService } from '../services/auth.service';
                 {{ post.title || 'Untitled' }}
               </mat-card-title>
               <mat-card-subtitle class="post-subtitle">
-                <span class="author">{{ post.username }}</span>
+                <span class="author">{{ post.authorUsername }}</span>
                 <span class="separator">•</span>
                 <span class="date">{{ post.createdAt | date : 'short' }}</span>
               </mat-card-subtitle>
