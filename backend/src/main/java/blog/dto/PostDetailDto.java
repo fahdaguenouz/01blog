@@ -17,5 +17,7 @@ public record PostDetailDto(
   Instant createdAt,
   String mediaUrl,
   String mediaType,
-  java.util.List<CategoryDto> categories
+  java.util.List<CategoryDto> categories,
+  boolean isLiked,    // add this if not present
+  boolean isSaved 
 ) {}

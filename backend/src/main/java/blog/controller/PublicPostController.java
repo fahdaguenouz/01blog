@@ -39,6 +39,6 @@ public class PublicPostController {
 
   @GetMapping("/{id}")
   public PostDetailDto get(@PathVariable UUID id) {
-    return postService.getOne(id);
+    return postService.getOne(id, null);
   }
 }

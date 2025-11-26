@@ -29,6 +29,19 @@
   gap: 16px;
 }
 
+.post-media-preview {
+  width: 50%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin: 0 0 12px 0;
+}
+
 .post-card {
-  padding: 8px 12px;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.post-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }

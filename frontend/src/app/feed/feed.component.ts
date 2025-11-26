@@ -94,7 +94,15 @@ import { AuthService } from '../services/auth.service';
               <mat-icon>comment</mat-icon>
               <span class="action-count">{{ post.comments ?? 0 }}</span>
             </button>
-           
+            <button
+              mat-button
+              class="action-btn"
+              (click)="toggleSave(post); $event.stopPropagation()"
+            >
+              <mat-icon [color]="post.isSaved ? 'primary' : ''">
+                {{ post.isSaved ? 'bookmark' : 'bookmark_border' }}
+              </mat-icon>
+            </button>
           </mat-card-actions>
         </mat-card>
       </div>
@@ -275,6 +283,18 @@ export class FeedComponent implements OnInit {
     });
   }
 
+  toggleSave(post: Post) {
+    if (post.isSaved) {
+      this.postService.unsavePost(post.id).subscribe(() => {
+        post.isSaved = false;
+      });
+    } else {
+      this.postService.savePost(post.id).subscribe(() => {
+        post.isSaved = true;
+      });
+    }
+  }
+
   loadFeed() {
     this.loading = true;
     this.postService.getFeed().subscribe({
@@ -286,20 +306,19 @@ export class FeedComponent implements OnInit {
     });
   }
 
-toggleLike(post: Post) {
-  if (post.isLiked) {
-    this.postService.unlikePost(post.id).subscribe(() => {
-      post.isLiked = false;
-      post.likes = Math.max((post.likes ?? 1) - 1, 0);  // Never go below 0
-    });
-  } else {
-    this.postService.likePost(post.id).subscribe(() => {
-      post.isLiked = true;
-      post.likes = (post.likes ?? 0) + 1;
-    });
+  toggleLike(post: Post) {
+    if (post.isLiked) {
+      this.postService.unlikePost(post.id).subscribe(() => {
+        post.isLiked = false;
+        post.likes = Math.max((post.likes ?? 1) - 1, 0); // Never go below 0
+      });
+    } else {
+      this.postService.likePost(post.id).subscribe(() => {
+        post.isLiked = true;
+        post.likes = (post.likes ?? 0) + 1;
+      });
+    }
   }
-}
-
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);

@@ -24,6 +24,7 @@ export interface Post {
   likes: number;
   comments: number;
   isLiked?: boolean;
+   isSaved?: boolean; 
   categories?: Category[]; 
 }
 
@@ -105,4 +106,11 @@ getSavedPosts(userId: string): Observable<Post[]> {
   deleteComment(postId: string, commentId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/comments/${commentId}`);
   }
+  savePost(postId: string): Observable<void> {
+  return this.getHttp().post<void>(`${this.apiUrl}/${postId}/save`, {});
+}
+
+unsavePost(postId: string): Observable<void> {
+  return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/save`);
+}
 }

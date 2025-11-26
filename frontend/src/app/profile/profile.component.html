@@ -55,22 +55,41 @@
 <!-- POSTS GRID: each post is its own card -->
 <div class="posts-section" *ngIf="user">
   <mat-spinner *ngIf="loadingPosts"></mat-spinner>
+<div class="posts-grid" *ngIf="!loadingPosts && posts.length">
+  <mat-card class="post-card" *ngFor="let post of posts" (click)="goToPostDetail(post)">
+    <mat-card-header>
+      <mat-card-title>{{ post.title }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ post.createdAt | date: 'short' }} ·
+        {{ post.likes }} likes · {{ post.comments }} comments
+      </mat-card-subtitle>
+    </mat-card-header>
 
-  <div class="posts-grid" *ngIf="!loadingPosts && posts.length">
-    <mat-card class="post-card" *ngFor="let post of posts">
-      <mat-card-header>
-        <mat-card-title>{{ post.title }}</mat-card-title>
-        <mat-card-subtitle>
-          {{ post.createdAt | date: 'short' }} ·
-          {{ post.likes }} likes · {{ post.comments }} comments
-        </mat-card-subtitle>
-      </mat-card-header>
+    <!-- Media preview -->
+    <ng-container *ngIf="post.mediaUrl">
+      <img
+        *ngIf="post.mediaType === 'image'"
+        mat-card-image
+        [src]="post.mediaUrl"
+        alt="Post image"
+        class="post-media-preview"
+      />
+      <video 
+        *ngIf="post.mediaType === 'video'"
+        mat-card-image
+        [src]="post.mediaUrl"
+        class="post-media-preview"
+        muted
+        preload="metadata"
+      ></video>
+    </ng-container>
 
-      <mat-card-content>
-        <p>{{ post.excerpt }}</p>
-      </mat-card-content>
-    </mat-card>
-  </div>
+    <mat-card-content>
+      <p>{{ post.excerpt }}</p>
+    </mat-card-content>
+  </mat-card>
+</div>
+
 
   <p *ngIf="!loadingPosts && !posts.length">
     No posts to show.

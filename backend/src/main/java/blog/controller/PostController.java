@@ -5,7 +5,9 @@ import blog.dto.PostDetailDto;
 import blog.dto.PostSummaryDto;
 import blog.mapper.PostMapper;
 import blog.models.Post;
+import blog.models.User;
 import blog.repository.MediaRepository;
+import blog.repository.UserRepository;
 import blog.service.PostService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
@@ -21,10 +23,12 @@ public class PostController {
 
   private final PostService postService;
   private final MediaRepository mediaRepository;
+private final UserRepository userRepository;
 
-  public PostController(PostService postService, MediaRepository mediaRepository) {
+   public PostController(PostService postService, MediaRepository mediaRepository, UserRepository userRepository) {
     this.postService = postService;
     this.mediaRepository = mediaRepository;
+    this.userRepository = userRepository;
   }
 
   @GetMapping("/feed")
@@ -80,8 +84,9 @@ public PostDetailDto update(
     String username = authentication.getName();
     postService.likePost(username, postId);
     Post post = postService.findPostById(postId);
+     boolean isSaved = false;
     boolean isLiked = postService.isPostLikedByUser(postId, username);
-    return PostMapper.toSummary(post, mediaRepository, isLiked);
+     return PostMapper.toSummary(post, mediaRepository, isLiked, isSaved);
   }
 
   @DeleteMapping("/{postId}/like")
@@ -90,7 +95,8 @@ public PostDetailDto update(
     postService.unlikePost(username, postId);
     Post post = postService.findPostById(postId);
     boolean isLiked = postService.isPostLikedByUser(postId, username);
-    return PostMapper.toSummary(post, mediaRepository, isLiked);
+     boolean isSaved = false;
+    return PostMapper.toSummary(post, mediaRepository, isLiked, isSaved);
   }
 
 
@@ -107,6 +113,17 @@ public List<PostSummaryDto> getUserLikedPosts(@PathVariable UUID userId) {
 @GetMapping("/user/{userId}/saved")
 public List<PostSummaryDto> getUserSavedPosts(@PathVariable UUID userId) {
   return postService.getSavedPostsForUser(userId);
+}
+@PostMapping("/{postId}/save")
+public void savePost(@PathVariable UUID postId, Authentication authentication) {
+  String username = authentication.getName();
+  postService.savePost(username, postId);
+}
+
+@DeleteMapping("/{postId}/save")
+public void unsavePost(@PathVariable UUID postId, Authentication authentication) {
+  String username = authentication.getName();
+  postService.unsavePost(username, postId);
 }
 
 
@@ -137,10 +154,20 @@ public List<PostSummaryDto> getUserSavedPosts(@PathVariable UUID userId) {
   }
 
   // Detail
-  @GetMapping("/{id}")
-  public PostDetailDto getOne(@PathVariable UUID id) {
-    return postService.getOne(id);
+@GetMapping("/{id}")
+public PostDetailDto getOne(@PathVariable UUID id, Authentication authentication) {
+  UUID currentUserId = null;
+  if (authentication != null && authentication.isAuthenticated()) {
+    String username = authentication.getName();
+    User user = userRepository.findByUsername(username).orElse(null);  // use instance here
+    if (user != null) {
+      currentUserId = user.getId();
+    }
   }
+  return postService.getOne(id, currentUserId);
+}
+
+
 
   // Simple DTOs for comment endpoints
   public record CommentReq(String content) {

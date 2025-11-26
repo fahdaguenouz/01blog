@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UserService, UserProfile } from '../services/user.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -37,7 +37,8 @@ export class ProfileComponent implements OnInit {
     private userService: UserService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private postService: PostService
+    private postService: PostService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -64,6 +65,9 @@ export class ProfileComponent implements OnInit {
       },
     });
   }
+  goToPostDetail(post: Post) {
+    this.router.navigate(['/post', post.id]);
+  }
   onTabChange(tab: 'my' | 'saved' | 'liked') {
     if (this.selectedTab === tab) return;
     this.selectedTab = tab;
@@ -83,14 +87,14 @@ export class ProfileComponent implements OnInit {
     }
 
     obs.subscribe({
-      next: posts => {
+      next: (posts) => {
         this.posts = posts;
         this.loadingPosts = false;
       },
       error: () => {
         this.posts = [];
         this.loadingPosts = false;
-      }
+      },
     });
   }
   editProfile() {

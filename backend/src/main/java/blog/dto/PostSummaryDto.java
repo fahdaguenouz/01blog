@@ -18,5 +18,6 @@ public record PostSummaryDto(
   Instant createdAt,
   String mediaUrl,
   String mediaType,
-  boolean isLiked
+  boolean isLiked,
+  boolean isSaved 
 ){}

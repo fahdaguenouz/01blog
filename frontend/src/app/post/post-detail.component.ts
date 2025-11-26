@@ -79,6 +79,13 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
           </mat-icon>
           {{ post.likes ?? 0 }}
         </button>
+        <button mat-button (click)="toggleSave()" [color]="post?.isSaved ? 'primary' : ''">
+          <mat-icon>
+            {{ post?.isSaved ? 'bookmark' : 'bookmark_border' }}
+          </mat-icon>
+          Save
+        </button>
+
         <span>{{ comments.length }} Comments</span>
       </mat-card-actions>
 
@@ -175,6 +182,20 @@ export class PostDetailComponent implements OnInit {
       });
     }
   }
+toggleSave() {
+  if (!this.post) return;
+
+  if (this.post.isSaved) {
+    this.posts.unsavePost(this.post.id).subscribe(() => {
+      if (this.post) this.post.isSaved = false;
+    });
+  } else {
+    this.posts.savePost(this.post.id).subscribe(() => {
+      if (this.post) this.post.isSaved = true;
+    });
+  }
+}
+
 
   addComment() {
     if (!this.post || !this.newComment.trim()) return;
