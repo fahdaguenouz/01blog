@@ -1,6 +1,120 @@
-<section class="feed">
-  <h1>Your feed</h1>
-  <p>Welcome! This is where posts from profiles you follow will appear.</p>
-</section>
+ <div *ngIf="!authResolved">
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </div>
 
+    <div *ngIf="authResolved && loading">
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </div>
 
+    <div *ngIf="authResolved && !loading" class="feed-container">
+      <div class="filter-bar">
+        <mat-form-field appearance="fill" class="category-field">
+          <mat-label>Category</mat-label>
+          <mat-select
+            [value]="selectedCategoryId"
+            (selectionChange)="onCategoryChange($event.value)"
+          >
+            <mat-option value="all">All</mat-option>
+            <mat-option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-button-toggle-group
+          [value]="sort"
+          (change)="onSortChange($event.value)"
+          aria-label="Sort posts"
+          class="sort-toggle"
+        >
+          <mat-button-toggle value="new">Newest</mat-button-toggle>
+          <mat-button-toggle value="likes">Most liked</mat-button-toggle>
+          <mat-button-toggle value="saved">Most saved</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
+      <div class="posts-list">
+        <mat-card
+          *ngFor="let post of posts"
+          class="post-card"
+          appearance="outlined"
+          (click)="open(post)"
+        >
+          <!-- Post Header with Avatar or icon -->
+          <mat-card-header class="post-header">
+            <div
+              mat-card-avatar
+              class="post-avatar"
+              [ngStyle]="{
+                'background-image': post.avatarUrl ? 'url(' + post.avatarUrl + ')' : 'none'
+              }"
+            >
+              <mat-icon *ngIf="!post.avatarUrl">account_circle</mat-icon>
+            </div>
+            <div class="header-info">
+              <mat-card-title class="post-title">
+                {{ post.title || 'Untitled' }}
+              </mat-card-title>
+              <mat-card-subtitle class="post-subtitle">
+                <span class="author">{{ post.authorUsername }}</span>
+                <span class="separator">•</span>
+                <span class="date">{{ post.createdAt | date : 'short' }}</span>
+              </mat-card-subtitle>
+            </div>
+          </mat-card-header>
+
+          <!-- Post Media -->
+          <img
+            *ngIf="post.mediaUrl && post.mediaType === 'image'"
+            mat-card-image
+            [src]="post.mediaUrl"
+            alt="Post media"
+            class="post-image"
+          />
+          <video
+            *ngIf="post.mediaUrl && post.mediaType === 'video'"
+            mat-card-image
+            controls
+            class="post-video"
+          >
+            <source [src]="post.mediaUrl" />
+          </video>
+
+          <!-- Post Content -->
+          <mat-card-content class="post-content">
+            <p>{{ post.excerpt }}</p>
+          </mat-card-content>
+
+          <!-- Post Actions -->
+          <mat-card-actions class="post-actions">
+            <button
+              mat-button
+              class="action-btn"
+              (click)="toggleLike(post); $event.stopPropagation()"
+            >
+              <mat-icon [color]="post.isLiked ? 'warn' : ''">
+                {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+              </mat-icon>
+              <span class="action-count">{{ post.likes ?? 0 }}</span>
+            </button>
+            <button
+              mat-button
+              class="action-btn"
+              (click)="goToPostDetail(post); $event.stopPropagation()"
+            >
+              <mat-icon>comment</mat-icon>
+              <span class="action-count">{{ post.comments ?? 0 }}</span>
+            </button>
+            <button
+              mat-button
+              class="action-btn"
+              (click)="toggleSave(post); $event.stopPropagation()"
+            >
+              <mat-icon [color]="post.isSaved ? 'primary' : ''">
+                {{ post.isSaved ? 'bookmark' : 'bookmark_border' }}
+              </mat-icon>
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
