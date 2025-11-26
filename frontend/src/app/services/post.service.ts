@@ -82,6 +82,13 @@ export class PostService {
   likePost(postId: string): Observable<void> {
     return this.getHttp().post<void>(`${this.apiUrl}/${postId}/like`, {});
   }
+  getLikedPosts(userId: string): Observable<Post[]> {
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`);
+}
+
+getSavedPosts(userId: string): Observable<Post[]> {
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`);
+}
 
   unlikePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/like`);

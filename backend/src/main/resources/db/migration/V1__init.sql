@@ -170,6 +170,17 @@ CREATE TABLE sessions (
     expires_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE TABLE saved_posts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL,
+  post_id UUID NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, post_id),
+  CONSTRAINT fk_saved_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_saved_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_saved_posts_user_created ON saved_posts(user_id, created_at DESC);
 
 
 

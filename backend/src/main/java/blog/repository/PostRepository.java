@@ -11,8 +11,15 @@ import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
   Page<Post> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
+
   Page<Post> findByAuthorIdAndStatus(UUID userId, String status, Pageable pageable);
+
   List<Post> findByAuthorId(UUID userId);
+
+  List<Post> findByAuthorIdAndStatusOrderByCreatedAtDesc(UUID userId, String status);
+
+  List<Post> findByIdInAndStatusOrderByCreatedAtDesc(List<UUID> ids, String status);
+
   @Modifying
   @Query("delete from PostCategory pc where pc.postId = :postId")
   void deleteByPostId(UUID postId);

@@ -93,6 +93,27 @@ public PostDetailDto update(
     return PostMapper.toSummary(post, mediaRepository, isLiked);
   }
 
+
+@GetMapping("/user/{userId}")
+public List<PostSummaryDto> getUserPosts(@PathVariable UUID userId) {
+  return postService.getPostsByAuthor(userId);
+}
+
+@GetMapping("/user/{userId}/liked")
+public List<PostSummaryDto> getUserLikedPosts(@PathVariable UUID userId) {
+  return postService.getLikedPostsForUser(userId);
+}
+
+@GetMapping("/user/{userId}/saved")
+public List<PostSummaryDto> getUserSavedPosts(@PathVariable UUID userId) {
+  return postService.getSavedPostsForUser(userId);
+}
+
+
+
+
+
+
   // Comments (basic)
   @PostMapping("/{postId}/comments")
   public void addComment(@PathVariable UUID postId, @RequestBody CommentReq req) {

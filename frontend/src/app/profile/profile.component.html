@@ -1,3 +1,6 @@
+<!-- profile.component.html -->
+
+<!-- Profile card only for user info -->
 <mat-card class="profile-card" *ngIf="user; else errTpl">
   <div class="profile-header">
     <img
@@ -11,6 +14,7 @@
         <mat-icon>account_circle</mat-icon>
       </span>
     </ng-template>
+
     <div class="profile-info">
       <h2>{{ user.name }}</h2>
       <div class="username">@{{ user.username }}</div>
@@ -21,14 +25,54 @@
       <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
     </div>
   </div>
+
   <button mat-stroked-button class="edit-profile-btn" (click)="editProfile()">
     Edit Profile
   </button>
 </mat-card>
 
+<!-- Error template -->
 <ng-template #errTpl>
   <mat-card class="profile-card error">
     <p *ngIf="error">{{ error }}</p>
     <mat-spinner *ngIf="loading"></mat-spinner>
   </mat-card>
 </ng-template>
+
+<!-- MENU OUTSIDE CARD -->
+<div class="profile-menu" *ngIf="user">
+  <button mat-button [class.active]="selectedTab === 'my'" (click)="onTabChange('my')">
+    My posts
+  </button>
+  <button mat-button [class.active]="selectedTab === 'saved'" (click)="onTabChange('saved')">
+    Saved
+  </button>
+  <button mat-button [class.active]="selectedTab === 'liked'" (click)="onTabChange('liked')">
+    Liked
+  </button>
+</div>
+
+<!-- POSTS GRID: each post is its own card -->
+<div class="posts-section" *ngIf="user">
+  <mat-spinner *ngIf="loadingPosts"></mat-spinner>
+
+  <div class="posts-grid" *ngIf="!loadingPosts && posts.length">
+    <mat-card class="post-card" *ngFor="let post of posts">
+      <mat-card-header>
+        <mat-card-title>{{ post.title }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ post.createdAt | date: 'short' }} ·
+          {{ post.likes }} likes · {{ post.comments }} comments
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p>{{ post.excerpt }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <p *ngIf="!loadingPosts && !posts.length">
+    No posts to show.
+  </p>
+</div>

@@ -10,6 +10,7 @@ import blog.models.Post;
 import blog.models.User;
 import blog.dto.CategoryDto;
 import blog.models.PostCategory;
+import blog.models.SavedPost;
 import blog.repository.CategoryRepository;
 import blog.repository.PostCategoryRepository;
 import java.util.Objects;
@@ -18,6 +19,7 @@ import blog.repository.CommentRepository;
 import blog.repository.LikeRepository;
 import blog.repository.MediaRepository;
 import blog.repository.PostRepository;
+import blog.repository.SavedPostRepository;
 import blog.repository.UserRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -39,23 +41,27 @@ public class PostService {
   private final LocalMediaStorage mediaStorage;
   private final CategoryRepository categories;
   private final PostCategoryRepository postCategories;
+  private final SavedPostRepository savedPosts;
 
- public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
-                   MediaRepository mediaRepo, LikeRepository likes,
-                   LocalMediaStorage mediaStorage,
-                   CategoryRepository categories,
-                   PostCategoryRepository postCategories) {
-  this.posts = posts;
-  this.users = users;
-  this.comments = comments;
-  this.mediaRepo = mediaRepo;
-  this.mediaStorage = mediaStorage;
-  this.likes = likes;
-  this.categories = categories;
-  this.postCategories = postCategories;
-}
+  public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
+      MediaRepository mediaRepo, LikeRepository likes,
+      LocalMediaStorage mediaStorage,
+      CategoryRepository categories,
+      PostCategoryRepository postCategories,
+      SavedPostRepository savedPosts) {
+    this.posts = posts;
+    this.users = users;
+    this.comments = comments;
+    this.mediaRepo = mediaRepo;
+    this.mediaStorage = mediaStorage;
+    this.likes = likes;
+    this.categories = categories;
+    this.postCategories = postCategories;
+    this.savedPosts = savedPosts;
+  }
 
-  public PostDetailDto createPost(String username, String title, String description, MultipartFile media, List<UUID> categoryIds) {
+  public PostDetailDto createPost(String username, String title, String description, MultipartFile media,
+      List<UUID> categoryIds) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
     Post post = new Post();
@@ -75,21 +81,22 @@ public class PostService {
 
     posts.save(post);
     if (categoryIds != null) {
-    for (UUID cid : categoryIds) {
-      if (!categories.existsById(cid)) continue;
-      PostCategory pc = new PostCategory();
-      pc.setPostId(post.getId());
-      pc.setCategoryId(cid);
-      postCategories.save(pc);
+      for (UUID cid : categoryIds) {
+        if (!categories.existsById(cid))
+          continue;
+        PostCategory pc = new PostCategory();
+        pc.setPostId(post.getId());
+        pc.setCategoryId(cid);
+        postCategories.save(pc);
+      }
     }
-  }
-   List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
-      .map(pc -> categories.findById(pc.getCategoryId())
-          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-          .orElse(null))
-      .filter(Objects::nonNull)
-      .toList();
-  return PostMapper.toDetail(post, categoryDtos);
+    List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+        .map(pc -> categories.findById(pc.getCategoryId())
+            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+            .orElse(null))
+        .filter(Objects::nonNull)
+        .toList();
+    return PostMapper.toDetail(post, categoryDtos);
   }
 
   // ✅ Public posts for guests
@@ -105,20 +112,19 @@ public class PostService {
         .map(p -> PostMapper.toSummary(p, mediaRepo, false)); // Pass mediaRepo here too
   }
 
-public PostDetailDto getOne(UUID id) {
-  Post p = posts.findById(id)
-      .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+  public PostDetailDto getOne(UUID id) {
+    Post p = posts.findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
-  List<CategoryDto> categoryDtos = postCategories.findByPostId(p.getId()).stream()
-      .map(pc -> categories.findById(pc.getCategoryId())
-          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-          .orElse(null))
-      .filter(Objects::nonNull)
-      .toList();
+    List<CategoryDto> categoryDtos = postCategories.findByPostId(p.getId()).stream()
+        .map(pc -> categories.findById(pc.getCategoryId())
+            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+            .orElse(null))
+        .filter(Objects::nonNull)
+        .toList();
 
-  return PostMapper.toDetail(p, categoryDtos);
-}
-
+    return PostMapper.toDetail(p, categoryDtos);
+  }
 
   // ✅ FEED for logged-in users
   public List<PostSummaryDto> getFeedForUser(String username) {
@@ -150,7 +156,7 @@ public PostDetailDto getOne(UUID id) {
 
     // update likes count cached in post entity
     int newCount = likes.countByPostId(postId);
-   post.setLikesCount(Math.max(newCount, 0));
+    post.setLikesCount(Math.max(newCount, 0));
     posts.save(post);
     posts.flush();
   }
@@ -170,18 +176,19 @@ public PostDetailDto getOne(UUID id) {
   }
 
   public PostDetailDto updatePost(String username,
-                                UUID id,
-                                String title,
-                                String description,
-                                MultipartFile media,
-                                List<UUID> categoryIds) {
-                                  // System.out.println("=== updatePost ===");
-  // System.out.println("username = " + username);
-  // System.out.println("postId   = " + id);
-  // System.out.println("title    = " + title);
-  // System.out.println("descr    = " + description);
-  // System.out.println("media    = " + (media != null ? media.getOriginalFilename() : "null"));
-  // System.out.println("categoryIds = " + categoryIds);
+      UUID id,
+      String title,
+      String description,
+      MultipartFile media,
+      List<UUID> categoryIds) {
+    // System.out.println("=== updatePost ===");
+    // System.out.println("username = " + username);
+    // System.out.println("postId = " + id);
+    // System.out.println("title = " + title);
+    // System.out.println("descr = " + description);
+    // System.out.println("media = " + (media != null ? media.getOriginalFilename()
+    // : "null"));
+    // System.out.println("categoryIds = " + categoryIds);
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId()))
@@ -200,41 +207,42 @@ public PostDetailDto getOne(UUID id) {
     }
 
     posts.save(post);
-  // System.out.println("before deleteByPostId");
-postCategories.deleteByPostId(post.getId());
-// System.out.println("after deleteByPostId");
+    // System.out.println("before deleteByPostId");
+    postCategories.deleteByPostId(post.getId());
+    // System.out.println("after deleteByPostId");
 
-  if (categoryIds != null) {
-  categoryIds.stream().distinct().forEach(cid -> {
-    if (!categories.existsById(cid)) return;
-    PostCategory pc = new PostCategory();
-    pc.setPostId(post.getId());
-    pc.setCategoryId(cid);
-    postCategories.save(pc);
-  });
-}
+    if (categoryIds != null) {
+      categoryIds.stream().distinct().forEach(cid -> {
+        if (!categories.existsById(cid))
+          return;
+        PostCategory pc = new PostCategory();
+        pc.setPostId(post.getId());
+        pc.setCategoryId(cid);
+        postCategories.save(pc);
+      });
+    }
 
-
-  List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
-      .map(pc -> categories.findById(pc.getCategoryId())
-          .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-          .orElse(null))
-      .filter(Objects::nonNull)
-      .toList();
-  return PostMapper.toDetail(post, categoryDtos);
+    List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+        .map(pc -> categories.findById(pc.getCategoryId())
+            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+            .orElse(null))
+        .filter(Objects::nonNull)
+        .toList();
+    return PostMapper.toDetail(post, categoryDtos);
   }
- @Transactional
+
+  @Transactional
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId())) {
       throw new IllegalArgumentException("Forbidden");
     }
-     // 1) delete likes for this post
-  likes.deleteByPostId(post.getId());
+    // 1) delete likes for this post
+    likes.deleteByPostId(post.getId());
 
-  // 2) delete comments for this post (recommended)
-  comments.deleteByPostId(post.getId());
+    // 2) delete comments for this post (recommended)
+    comments.deleteByPostId(post.getId());
     posts.delete(post);
   }
 
@@ -249,11 +257,11 @@ postCategories.deleteByPostId(post.getId());
     c.setText(content);
     c.setCreatedAt(OffsetDateTime.now());
     comments.saveAndFlush(c);
-   ;
+    ;
 
     int currentCommentsCount = post.getCommentsCount() == null ? 0 : post.getCommentsCount();
     post.setCommentsCount(currentCommentsCount + 1);
-  posts.saveAndFlush(post);
+    posts.saveAndFlush(post);
   }
 
   public List<PostController.CommentDto> getComments(UUID postId) {
@@ -274,12 +282,47 @@ postCategories.deleteByPostId(post.getId());
     // Optionally decrement post.comments_count
   }
 
-   public Post findPostById(UUID postId) {
-        return posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    }
+  public Post findPostById(UUID postId) {
+    return posts.findById(postId).orElseThrow(() -> new IllegalArgumentException("Post not found"));
+  }
 
-    public boolean isPostLikedByUser(UUID postId, String username) {
-        User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return likes.findByUserIdAndPostId(user.getId(), postId).isPresent();
-    }
+  public boolean isPostLikedByUser(UUID postId, String username) {
+    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    return likes.findByUserIdAndPostId(user.getId(), postId).isPresent();
+  }
+
+  public List<PostSummaryDto> getPostsByAuthor(UUID userId) {
+    return posts.findByAuthorIdAndStatusOrderByCreatedAtDesc(userId, "active")
+        .stream()
+        .map(p -> PostMapper.toSummary(p, mediaRepo, false))
+        .toList();
+  }
+
+  public List<PostSummaryDto> getLikedPostsForUser(UUID userId) {
+    var liked = likes.findByUserId(userId); // see next section
+    var postIds = liked.stream().map(Like::getPostId).toList();
+    if (postIds.isEmpty())
+      return List.of();
+
+    return posts.findByIdInAndStatusOrderByCreatedAtDesc(postIds, "active")
+        .stream()
+        .map(p -> PostMapper.toSummary(p, mediaRepo, true))
+        .toList();
+  }
+
+  public List<PostSummaryDto> getSavedPostsForUser(UUID userId) {
+    var saved = savedPosts.findByUserId(userId); // see section 3
+    var postIds = saved.stream().map(SavedPost::getPostId).toList();
+    if (postIds.isEmpty())
+      return List.of();
+
+    return posts.findByIdInAndStatusOrderByCreatedAtDesc(postIds, "active")
+        .stream()
+        .map(p -> {
+          boolean isLiked = likes.findByUserIdAndPostId(userId, p.getId()).isPresent();
+          return PostMapper.toSummary(p, mediaRepo, isLiked);
+        })
+        .toList();
+  }
+
 }
