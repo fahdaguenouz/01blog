@@ -31,13 +31,17 @@ private final UserRepository userRepository;
     this.userRepository = userRepository;
   }
 
-  @GetMapping("/feed")
-  public List<PostSummaryDto> getFeed() {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !auth.isAuthenticated())
-      throw new RuntimeException("Unauthorized");
-    return postService.getFeedForUser(auth.getName());
-  }
+ @GetMapping("/feed")
+public List<PostSummaryDto> getFeed(
+    @RequestParam(required = false) UUID categoryId,
+    @RequestParam(defaultValue = "new") String sort
+) {
+  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+  if (auth == null || !auth.isAuthenticated())
+    throw new RuntimeException("Unauthorized");
+  return postService.getFeedForUser(auth.getName(), categoryId, sort);
+}
+
 
   // Create
   @PostMapping

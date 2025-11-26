@@ -46,9 +46,11 @@ export class PostService {
 
   private getHttp(): HttpClient { return this.injector.get(HttpClient); }
 
-  getFeed(): Observable<Post[]> {
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`);
-  }
+getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observable<Post[]> {
+  const params: any = { sort };
+  if (categoryId) params.categoryId = categoryId;
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`, { params });
+}
 
   getById(postId: string): Observable<Post> {
     return this.getHttp().get<Post>(`${this.apiUrl}/${postId}`);
@@ -113,4 +115,7 @@ getSavedPosts(userId: string): Observable<Post[]> {
 unsavePost(postId: string): Observable<void> {
   return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/save`);
 }
+
+
+
 }

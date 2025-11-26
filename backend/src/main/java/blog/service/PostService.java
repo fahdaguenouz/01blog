@@ -131,19 +131,47 @@ public PostDetailDto getOne(UUID id, UUID currentUserId) {
 
 
   // ✅ FEED for logged-in users
-  public List<PostSummaryDto> getFeedForUser(String username) {
+public List<PostSummaryDto> getFeedForUser(String username, UUID categoryId, String sort) {
   User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
   UUID userId = user.getId();
 
-  return posts.findByStatusOrderByCreatedAtDesc("active", PageRequest.of(0, 20))
-      .stream()
+  // Basic query: active posts
+  List<Post> base;
+  if (categoryId != null) {
+    // posts by category via join table
+    base = posts.findByCategoryAndStatus(categoryId, "active");
+  } else {
+    base = posts.findByStatus("active");
+  }
+
+  // sort
+  Comparator<Post> comparator;
+switch (sort) {
+  case "likes":
+    comparator = Comparator.comparing(
+        p -> Optional.ofNullable(p.getLikesCount()).orElse(0), Comparator.reverseOrder());
+    break;
+  case "saved":
+    comparator = Comparator.comparing(
+        p -> savedPosts.countByPostId(p.getId()), Comparator.reverseOrder());
+    break;
+  case "new":
+  default:
+    comparator = Comparator.comparing(Post::getCreatedAt).reversed();
+    break;
+}
+
+  base.sort(comparator);
+
+  return base.stream()
       .map(p -> {
         boolean isLiked = likes.findByUserIdAndPostId(userId, p.getId()).isPresent();
-        boolean isSaved = savedPosts.findByUserIdAndPostId(userId, p.getId()).isPresent();  // check saved status
+        boolean isSaved = savedPosts.findByUserIdAndPostId(userId, p.getId()).isPresent();
         return PostMapper.toSummary(p, mediaRepo, isLiked, isSaved);
       })
       .toList();
 }
+
 
 
   // ✅ Like post

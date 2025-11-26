@@ -4,14 +4,25 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PostService, Post } from '../services/post.service';
+import { PostService, Post, Category } from '../services/post.service';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { CategoryService } from '../services/category.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [ CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    MatButtonToggleModule
+ 
+      ],
   template: `
     <div *ngIf="!authResolved">
       <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
@@ -22,6 +33,32 @@ import { AuthService } from '../services/auth.service';
     </div>
 
     <div *ngIf="authResolved && !loading" class="feed-container">
+      <div class="filter-bar">
+        <mat-form-field appearance="fill" class="category-field">
+          <mat-label>Category</mat-label>
+          <mat-select
+            [value]="selectedCategoryId"
+            (selectionChange)="onCategoryChange($event.value)"
+          >
+            <mat-option value="all">All</mat-option>
+            <mat-option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-button-toggle-group
+          [value]="sort"
+          (change)="onSortChange($event.value)"
+          aria-label="Sort posts"
+          class="sort-toggle"
+        >
+          <mat-button-toggle value="new">Newest</mat-button-toggle>
+          <mat-button-toggle value="likes">Most liked</mat-button-toggle>
+          <mat-button-toggle value="saved">Most saved</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+
       <div class="posts-list">
         <mat-card
           *ngFor="let post of posts"
@@ -114,6 +151,19 @@ import { AuthService } from '../services/auth.service';
         width: 90%;
         margin: 0 auto;
         padding: 20px;
+      }
+      .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        gap: 16px;
+      }
+      .category-field {
+        min-width: 220px;
+      }
+      .sort-toggle {
+        white-space: nowrap;
       }
       .posts-list {
         display: grid;
@@ -263,11 +313,14 @@ export class FeedComponent implements OnInit {
   posts: Post[] = [];
   loading = true;
   authResolved = false;
-
+  categories: Category[] = [];
+  selectedCategoryId: string | 'all' = 'all';
+  sort: 'new' | 'likes' | 'saved' = 'new';
   constructor(
     private postService: PostService,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private categoryService: CategoryService
   ) {}
 
   ngOnInit() {
@@ -275,11 +328,18 @@ export class FeedComponent implements OnInit {
       this.authResolved = resolved;
       if (resolved) {
         if (this.auth.isLoggedIn()) {
+          this.loadCategories();
           this.loadFeed();
         } else {
           this.router.navigate(['/auth/login']);
         }
       }
+    });
+  }
+  loadCategories() {
+    this.categoryService.list().subscribe({
+      next: (cats) => (this.categories = cats),
+      error: () => (this.categories = []),
     });
   }
 
@@ -297,13 +357,24 @@ export class FeedComponent implements OnInit {
 
   loadFeed() {
     this.loading = true;
-    this.postService.getFeed().subscribe({
+    const categoryId = this.selectedCategoryId === 'all' ? undefined : this.selectedCategoryId;
+
+    this.postService.getFeed(categoryId, this.sort).subscribe({
       next: (posts) => {
         this.posts = posts;
         this.loading = false;
       },
       error: () => (this.loading = false),
     });
+  }
+  onCategoryChange(id: string) {
+    this.selectedCategoryId = id as any;
+    this.loadFeed();
+  }
+
+  onSortChange(sort: 'new' | 'likes' | 'saved') {
+    this.sort = sort;
+    this.loadFeed();
   }
 
   toggleLike(post: Post) {

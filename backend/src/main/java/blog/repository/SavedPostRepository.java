@@ -12,4 +12,6 @@ public interface SavedPostRepository extends JpaRepository<SavedPost, UUID> {
   List<SavedPost> findByUserId(UUID userId);
   Optional<SavedPost> findByUserIdAndPostId(UUID userId, UUID postId);
   void deleteByUserIdAndPostId(UUID userId, UUID postId);
+  int countByPostId(UUID postId);
+
 }
