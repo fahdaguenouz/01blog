@@ -28,6 +28,7 @@ export class UserService {
   private getHttp(): HttpClient {
     return this.injector.get(HttpClient);
   }
+  
 
   getProfileByUsername(username: string): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`/api/users/by-username/${username}`);

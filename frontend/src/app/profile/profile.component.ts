@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EditProfileDialogComponent } from './edit-profile.component';
 import { Post, PostService } from '../services/post.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -39,32 +40,36 @@ export class ProfileComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private postService: PostService,
-    private router: Router
+    private router: Router,
+    private auth: AuthService
   ) {}
 
-  ngOnInit(): void {
-    // ✅ Get current user ID first
-    this.userService.getCurrentUser().subscribe({
-      next: (currentUser) => {
-        this.currentUserId = currentUser.id;
-      },
-      error: (e) => {
-        // Not logged in or error, set to null
-        this.error = 'No username provided.';
-        console.error(e);
-        
-        this.currentUserId = null;
-      },
-    });
-
-    const username = this.route.snapshot.paramMap.get('username');
-    if (username) {
-      this.loadUser(username);
-    } else {
-      this.error = 'No username provided.';
-      this.loading = false;
+ngOnInit(): void {
+  this.userService.getCurrentUser().subscribe({
+    next: (currentUser) => {
+      this.currentUserId = currentUser?.id ?? null;
+      this.loadProfileFromRoute();
+    },
+    error: () => {
+      this.currentUserId = null;
+      this.loadProfileFromRoute();
     }
+  });
+}
+
+
+private loadProfileFromRoute() {
+  const username = this.route.snapshot.paramMap.get('username');
+
+  if (!username) {
+    this.error = 'No username provided.';
+    this.loading = false;
+    return;
   }
+
+  this.loadUser(username);
+}
+
 
   loadUser(username: string) {
     this.loading = true;
@@ -81,39 +86,51 @@ export class ProfileComponent implements OnInit {
     });
   }
 toggleFollow() {
-  if (!this.user || !this.currentUserId) return;
-  
-  const snackBarRef = this.snackBar.open(
-    this.user.isSubscribed ? 'Unfollowing...' : 'Following...', 
-    'Cancel', 
-    { duration: 4000 }
-  );
-  
-  if (this.user.isSubscribed) {
+  if (!this.user) return;
+
+  // Prevent self-follow in the UI
+  if (this.currentUserId && this.currentUserId === this.user.id) return;
+
+  const wasSubscribed = !!this.user.isSubscribed;
+  // optionally set loading state: this.user.isSubscribed = undefined;
+
+  if (wasSubscribed) {
     this.userService.unsubscribe(this.user.id).subscribe({
       next: () => {
-        this.user!.isSubscribed = false;
-        this.user!.subscribersCount = Math.max(0, (this.user!.subscribersCount || 1) - 1);
+        this.loadUser(this.user!.username); // refresh server truth
         this.snackBar.open('Unfollowed successfully', 'Close', { duration: 3000 });
       },
       error: (err) => {
         console.error('Unfollow failed:', err);
+        // reload profile to sync state
+        this.reloadProfile();
         this.snackBar.open('Failed to unfollow', 'Close', { duration: 3000 });
       }
     });
   } else {
     this.userService.subscribe(this.user.id).subscribe({
       next: () => {
-        this.user!.isSubscribed = true;
-        this.user!.subscribersCount = (this.user!.subscribersCount || 0) + 1;
+        this.loadUser(this.user!.username);
         this.snackBar.open('Followed successfully', 'Close', { duration: 3000 });
       },
       error: (err) => {
         console.error('Follow failed:', err);
+        // If server says "Already following" (400) or other mismatch, reload profile to sync
+        if (err?.status === 400 || err?.status === 409) {
+          this.reloadProfile();
+        }
         this.snackBar.open('Failed to follow', 'Close', { duration: 3000 });
       }
     });
   }
+}
+
+private reloadProfile() {
+  if (!this.user) return;
+  this.userService.getProfileByUsername(this.user.username).subscribe({
+    next: (u) => this.user = u,
+    error: (e) => console.error('Failed to reload profile', e)
+  });
 }
 
   goToPostDetail(post: Post) {

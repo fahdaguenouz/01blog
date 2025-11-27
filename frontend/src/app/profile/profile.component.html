@@ -32,7 +32,7 @@
   
  <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
     <button mat-flat-button color="primary" (click)="toggleFollow()" class="follow-btn">
-      {{ user.isSubscribed ? 'Unfollow' : 'Follow' }}
+      {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
     </button>
   </div>
 
