@@ -15,7 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +43,13 @@ public List<PostSummaryDto> getFeed(
   if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required for feed");
   }
-  return postService.getFeedForUser(auth.getName(), categoryId, sort);
+  try {
+    return postService.getFeedForUser(auth.getName(), categoryId, sort);
+  } catch (Exception ex) {
+    System.err.printf("Error while building feed for user {} (category={}, sort={})", auth.getName(), categoryId, sort, ex);
+    // rethrow as 500 with a clear message — stack trace is in the logs
+    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to build feed: " + ex.getMessage());
+  }
 }
 
 

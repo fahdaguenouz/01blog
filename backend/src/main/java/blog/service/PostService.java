@@ -145,31 +145,32 @@ public List<PostSummaryDto> getFeedForUser(String username, UUID categoryId, Str
   }
 
   // sort
-  Comparator<Post> comparator;
-switch (sort) {
-  case "likes":
-    comparator = Comparator.comparing(
-        p -> Optional.ofNullable(p.getLikesCount()).orElse(0), Comparator.reverseOrder());
-    break;
-  case "saved":
-    comparator = Comparator.comparing(
-        p -> savedPosts.countByPostId(p.getId()), Comparator.reverseOrder());
-    break;
-  case "new":
-  default:
-    comparator = Comparator.comparing(Post::getCreatedAt).reversed();
-    break;
-}
+ Comparator<Post> comparator;
+    switch (sort) {
+        case "likes":
+            comparator = Comparator.comparing(
+                p -> Optional.ofNullable(p.getLikesCount()).orElse(0), Comparator.reverseOrder());
+            break;
+        case "saved":
+            comparator = Comparator.comparing(
+                p -> savedPosts.countByPostId(p.getId()), Comparator.reverseOrder());
+            break;
+        case "new":
+        default:
+            comparator = Comparator.comparing(Post::getCreatedAt, 
+                Comparator.nullsLast(Comparator.reverseOrder()));  // ✅ Safe null handling
+            break;
+    }
 
   base.sort(comparator);
 
-  return base.stream()
-      .map(p -> {
-        boolean isLiked = likes.findByUserIdAndPostId(userId, p.getId()).isPresent();
-        boolean isSaved = savedPosts.findByUserIdAndPostId(userId, p.getId()).isPresent();
-        return PostMapper.toSummary(p, mediaRepo, isLiked, isSaved);
-      })
-      .toList();
+ return base.stream()
+        .map(p -> {
+            boolean isLiked = likes.findByUserIdAndPostId(userId, p.getId()).isPresent();
+            boolean isSaved = savedPosts.findByUserIdAndPostId(userId, p.getId()).isPresent();
+            return PostMapper.toSummary(p, mediaRepo, isLiked, isSaved);
+        })
+        .toList();
 }
 
 
