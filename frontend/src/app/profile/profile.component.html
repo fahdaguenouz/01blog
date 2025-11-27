@@ -19,23 +19,26 @@
         <h2 class="user-name">{{ user.name }}</h2>
         <div class="username">@{{ user.username }}</div>
       </div>
-      <div class="profile-meta">
+       <div class="profile-meta">
         <span *ngIf="user.age !== null" class="meta-item">Age: {{ user.age }}</span>
         <span *ngIf="user.email" class="meta-item email">{{ user.email }}</span>
+        <span class="meta-item">Following: {{ user.subscriptionsCount || 0 }}</span>
+        <span class="meta-item">Followers: {{ user.subscribersCount || 0 }}</span>
       </div>
+      
       <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
-       <span class="meta-item">Following: {{ user.subscriptionsCount || 0 }}</span>
-  <span class="meta-item">Followers: {{ user.subscribersCount || 0 }}</span>
     </div>
   </div>
   
-  <div *ngIf="user && user.id !== currentUserId" class="follow-btn-container">
-  <button mat-flat-button color="primary" (click)="toggleFollow()">
-    {{ user.isSubscribed ? 'Unfollow' : 'Follow' }}
-  </button>
-</div>
+ <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
+    <button mat-flat-button color="primary" (click)="toggleFollow()" class="follow-btn">
+      {{ user.isSubscribed ? 'Unfollow' : 'Follow' }}
+    </button>
+  </div>
 
-  <button mat-stroked-button class="edit-profile-btn" (click)="editProfile()">
+  <button *ngIf="currentUserId && user?.id === currentUserId" 
+          mat-stroked-button class="edit-profile-btn" 
+          (click)="editProfile()">
     Edit Profile
   </button>
 </mat-card>

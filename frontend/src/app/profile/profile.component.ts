@@ -80,20 +80,42 @@ export class ProfileComponent implements OnInit {
       },
     });
   }
-  toggleFollow() {
-    if (!this.user) return;
-    if (this.user.isSubscribed) {
-      this.userService.unsubscribe(this.user.id).subscribe(() => {
+toggleFollow() {
+  if (!this.user || !this.currentUserId) return;
+  
+  const snackBarRef = this.snackBar.open(
+    this.user.isSubscribed ? 'Unfollowing...' : 'Following...', 
+    'Cancel', 
+    { duration: 4000 }
+  );
+  
+  if (this.user.isSubscribed) {
+    this.userService.unsubscribe(this.user.id).subscribe({
+      next: () => {
         this.user!.isSubscribed = false;
-        this.user!.subscribersCount = (this.user!.subscribersCount || 1) - 1;
-      });
-    } else {
-      this.userService.subscribe(this.user.id).subscribe(() => {
+        this.user!.subscribersCount = Math.max(0, (this.user!.subscribersCount || 1) - 1);
+        this.snackBar.open('Unfollowed successfully', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Unfollow failed:', err);
+        this.snackBar.open('Failed to unfollow', 'Close', { duration: 3000 });
+      }
+    });
+  } else {
+    this.userService.subscribe(this.user.id).subscribe({
+      next: () => {
         this.user!.isSubscribed = true;
         this.user!.subscribersCount = (this.user!.subscribersCount || 0) + 1;
-      });
-    }
+        this.snackBar.open('Followed successfully', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Follow failed:', err);
+        this.snackBar.open('Failed to follow', 'Close', { duration: 3000 });
+      }
+    });
   }
+}
+
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);
   }

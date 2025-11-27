@@ -10,18 +10,30 @@ public class UserProfileDto {
   private String bio;
   private Integer age;
   private String avatarUrl;
-
+ private int subscribersCount;  // followers
+    private int subscriptionsCount; // following
+    private boolean isSubscribed;  // current user follows this profile?
   public UserProfileDto() {}
 
-  public UserProfileDto(UUID id, String username, String name, String email, String bio, Integer age, String avatarUrl) {
-    this.id = id;
-    this.username = username;
-    this.name = name;
-    this.email = email;
-    this.bio = bio;
-    this.age = age;
-    this.avatarUrl = avatarUrl;
-  }
+ public UserProfileDto(UUID id, String username, String name, String email, 
+                         String bio, Integer age, String avatarUrl,
+                         int subscribersCount, int subscriptionsCount, boolean isSubscribed) {
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.email = email;
+        this.bio = bio;
+        this.age = age;
+        this.avatarUrl = avatarUrl;
+        this.subscribersCount = subscribersCount;
+        this.subscriptionsCount = subscriptionsCount;
+        this.isSubscribed = isSubscribed;
+    }
+    public UserProfileDto(UUID id, String username, String name, String email, 
+                      String bio, Integer age, String avatarUrl) {
+    this(id, username, name, email, bio, age, avatarUrl, 0, 0, false);
+}
+
 
   // getters and setters for all fields
 
@@ -39,4 +51,12 @@ public class UserProfileDto {
   public void setAge(Integer age) { this.age = age; }
   public String getAvatarUrl() { return avatarUrl; }
   public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+  public int getSubscribersCount() { return subscribersCount; }
+    public void setSubscribersCount(int subscribersCount) { this.subscribersCount = subscribersCount; }
+    
+    public int getSubscriptionsCount() { return subscriptionsCount; }
+    public void setSubscriptionsCount(int subscriptionsCount) { this.subscriptionsCount = subscriptionsCount; }
+    
+    public boolean isSubscribed() { return isSubscribed; }
+    public void setSubscribed(boolean isSubscribed) { this.isSubscribed = isSubscribed; }
 }

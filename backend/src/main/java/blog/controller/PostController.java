@@ -10,9 +10,11 @@ import blog.repository.MediaRepository;
 import blog.repository.UserRepository;
 import blog.service.PostService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,8 +39,9 @@ public List<PostSummaryDto> getFeed(
     @RequestParam(defaultValue = "new") String sort
 ) {
   Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-  if (auth == null || !auth.isAuthenticated())
-    throw new RuntimeException("Unauthorized");
+  if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required for feed");
+  }
   return postService.getFeedForUser(auth.getName(), categoryId, sort);
 }
 
