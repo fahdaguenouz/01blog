@@ -11,13 +11,14 @@ export interface UserProfile {
   avatarUrl?: string;
   createdAt: string;
   postsCount: number;
-  subscribersCount: number;
-  isSubscribed?: boolean;
-  age?: number | null; 
+  subscribersCount: number; // followers count
+  subscriptionsCount?: number; // following count (add from backend)
+  isSubscribed?: boolean; // whether current user follows this profile
+  age?: number | null;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserService {
   private apiUrl = '/api/users';
@@ -28,9 +29,9 @@ export class UserService {
     return this.injector.get(HttpClient);
   }
 
- getProfileByUsername(username: string): Observable<UserProfile> {
-  return this.getHttp().get<UserProfile>(`/api/users/by-username/${username}`);
-}
+  getProfileByUsername(username: string): Observable<UserProfile> {
+    return this.getHttp().get<UserProfile>(`/api/users/by-username/${username}`);
+  }
 
   getCurrentUser(): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`${this.apiUrl}/me`);
@@ -56,7 +57,6 @@ export class UserService {
     return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/search`, { params: { q: query } });
   }
   uploadAvatar(formData: FormData): Observable<void> {
-  return this.getHttp().post<void>(`${this.apiUrl}/me/avatar`, formData);
-}
-
+    return this.getHttp().post<void>(`${this.apiUrl}/me/avatar`, formData);
+  }
 }

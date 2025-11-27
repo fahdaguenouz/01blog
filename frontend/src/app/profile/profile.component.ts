@@ -26,6 +26,7 @@ import { Post, PostService } from '../services/post.service';
 })
 export class ProfileComponent implements OnInit {
   user: UserProfile | null = null;
+  currentUserId: string | null = null;
   loading = true;
   error: string | null = null;
   selectedTab: 'my' | 'saved' | 'liked' = 'my';
@@ -42,6 +43,20 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // ✅ Get current user ID first
+    this.userService.getCurrentUser().subscribe({
+      next: (currentUser) => {
+        this.currentUserId = currentUser.id;
+      },
+      error: (e) => {
+        // Not logged in or error, set to null
+        this.error = 'No username provided.';
+        console.error(e);
+        
+        this.currentUserId = null;
+      },
+    });
+
     const username = this.route.snapshot.paramMap.get('username');
     if (username) {
       this.loadUser(username);
@@ -64,6 +79,20 @@ export class ProfileComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+  toggleFollow() {
+    if (!this.user) return;
+    if (this.user.isSubscribed) {
+      this.userService.unsubscribe(this.user.id).subscribe(() => {
+        this.user!.isSubscribed = false;
+        this.user!.subscribersCount = (this.user!.subscribersCount || 1) - 1;
+      });
+    } else {
+      this.userService.subscribe(this.user.id).subscribe(() => {
+        this.user!.isSubscribed = true;
+        this.user!.subscribersCount = (this.user!.subscribersCount || 0) + 1;
+      });
+    }
   }
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);
