@@ -132,7 +132,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
 toggleFollow() {
   if (!this.user) return;
-  if (this.currentUserId && this.currentUserId === this.user.id) return;
+  if (this.currentUserId === this.user.id) return;
 
   const targetUserId = this.user.id;
   const currentlySubscribed = this.user.isSubscribed;
@@ -148,11 +148,14 @@ toggleFollow() {
     next: () => {
       const msg = currentlySubscribed ? 'Unfollowed successfully' : 'Followed successfully';
       this.snackBar.open(msg, 'Close', { duration: 3000 });
-      // ✅ Don't reload immediately, frontend state is already correct
+
+      // ✅ Instead of reloading full profile, just update isSubscribed locally
+      this.user!.isSubscribed = !currentlySubscribed;
+      // Optional: update followers count
+      this.user!.subscribersCount += currentlySubscribed ? -1 : 1;
     },
     error: err => {
       console.error(currentlySubscribed ? 'Unfollow failed:' : 'Follow failed:', err);
-      // Revert optimistic update on error
       this.user!.isSubscribed = currentlySubscribed;
       this.snackBar.open('Action failed', 'Close', { duration: 3000 });
     }

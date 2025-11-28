@@ -50,36 +50,26 @@ public class UserController {
   }
 
 @GetMapping("/by-username/{username}")
-public UserProfileDto getByUsername(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
+public UserProfileDto getByUsername(@PathVariable String username, Authentication auth) {
     User user = repo.findByUsername(username)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    
-    String avatarUrl = null;
-    if (user.getAvatarMediaId() != null) {
-        Media media = mediaRepo.findById(user.getAvatarMediaId()).orElse(null);
-        if (media != null) {
-            avatarUrl = media.getUrl();
-        }
-    }
-    
-    // Cast long to int explicitly
-    int subscribersCount = (int) subscriptionRepo.countBySubscribedToId(user.getId());
-    int subscriptionsCount = (int) subscriptionRepo.countBySubscriberId(user.getId());
-    
+
     boolean isSubscribed = false;
-    System.err.printf("current user is ",currentUser);
-   if (currentUser != null) {
-        isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(
-            currentUser.getId(), user.getId());
+    if (auth != null && auth.isAuthenticated()) {
+        UUID currentUserId = repo.findByUsername(auth.getName())
+                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
+                                 .getId();
+        isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUserId, user.getId());
     }
-    
+
     return new UserProfileDto(
         user.getId(), user.getUsername(), user.getName(), user.getEmail(),
-        user.getBio(), user.getAge(), avatarUrl,
-        subscribersCount, subscriptionsCount, isSubscribed
+        user.getBio(), user.getAge(), user.getAvatarMediaId() != null ? mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null) : null,
+        (int)subscriptionRepo.countBySubscribedToId(user.getId()),
+        (int)subscriptionRepo.countBySubscriberId(user.getId()),
+        isSubscribed
     );
 }
-
 
   @GetMapping("/me")
   public UserProfileDto getMe(Authentication auth) {
