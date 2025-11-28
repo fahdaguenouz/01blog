@@ -27,8 +27,13 @@ public class SecurityConfig {
             .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/users/**").permitAll()
+            .requestMatchers("/api/posts/user/*/posts").permitAll() // user posts
+            .requestMatchers("/api/posts/user/*/liked").permitAll() // user liked posts
+            .requestMatchers("/api/posts/user/*/saved").permitAll()
             .requestMatchers("/api/categories/**").permitAll()
-  .requestMatchers("/api/users/*/subscribe").authenticated()             .requestMatchers("/api/users/by-username/**").permitAll()
+            .requestMatchers("/api/users/*/subscribe").authenticated()
+            .requestMatchers("/api/users/by-username/**")
+            .permitAll()
             .requestMatchers("/api/users/me/**").authenticated()
             .requestMatchers("/api/posts/**").authenticated()
             .anyRequest().authenticated())

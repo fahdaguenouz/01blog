@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,7 +26,8 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
     MatFormFieldModule,
     FormsModule,
     MatMenuModule,
-    MatDialogModule, // dialog
+    MatDialogModule, 
+    RouterModule,
     MatInputModule,
   ],
   template: `
@@ -49,6 +50,23 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
 
       <h2>{{ post.title }}</h2>
       <small>{{ post.createdAt | date : 'medium' }}</small>
+      <!-- ADD THIS BLOCK after <small>{{ post.createdAt | date : 'medium' }}</small> -->
+      <div class="post-author" style="margin: 12px 0;">
+        <img
+          *ngIf="post.avatarUrl"
+          [src]="post.avatarUrl"
+          alt="{{ post.authorName }}"
+          class="author-avatar"
+          style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; vertical-align: middle;"
+        />
+        <div style="display: inline-block; vertical-align: middle;">
+          <a [routerLink]="['/profile', post.authorUsername]" class="author-link">
+            <strong>{{ post.authorName }}</strong>
+          </a>
+          <br />
+          <small style="color: #666;">@{{ post.authorUsername }}</small>
+        </div>
+      </div>
 
       <div *ngIf="post.categories?.length" style="margin: 8px 0;">
         <span *ngFor="let cat of post.categories" style="margin-right: 6px;" class="category-chip">
@@ -111,19 +129,28 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
       </form>
     </mat-card>
   `,
-  styles: [
-    `
-      .comment {
-        margin-top: 1rem;
-        padding: 0.5rem;
-        background: #f0f0f0;
-        border-radius: 4px;
-      }
-      .full-width {
-        width: 100%;
-      }
-    `,
-  ],
+ styles: [`
+  .comment { /* existing */ }
+  .full-width { /* existing */ }
+  
+  /* ✅ NEW STYLES */
+  .post-author {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+  }
+  .author-link {
+    text-decoration: none;
+    color: #1976d2;
+  }
+  .author-link:hover {
+    text-decoration: underline;
+  }
+  .author-avatar {
+    object-fit: cover;
+  }
+`]
+
 })
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -182,20 +209,19 @@ export class PostDetailComponent implements OnInit {
       });
     }
   }
-toggleSave() {
-  if (!this.post) return;
+  toggleSave() {
+    if (!this.post) return;
 
-  if (this.post.isSaved) {
-    this.posts.unsavePost(this.post.id).subscribe(() => {
-      if (this.post) this.post.isSaved = false;
-    });
-  } else {
-    this.posts.savePost(this.post.id).subscribe(() => {
-      if (this.post) this.post.isSaved = true;
-    });
+    if (this.post.isSaved) {
+      this.posts.unsavePost(this.post.id).subscribe(() => {
+        if (this.post) this.post.isSaved = false;
+      });
+    } else {
+      this.posts.savePost(this.post.id).subscribe(() => {
+        if (this.post) this.post.isSaved = true;
+      });
+    }
   }
-}
-
 
   addComment() {
     if (!this.post || !this.newComment.trim()) return;

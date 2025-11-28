@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
-import { Post } from './post.service';
 
 export interface UserProfile {
   id: string;
@@ -65,16 +64,5 @@ export class UserService {
   }
   uploadAvatar(formData: FormData): Observable<void> {
     return this.getHttp().post<void>(`${this.apiUrl}/me/avatar`, formData);
-  }
-   getUserPosts(userId: string): Observable<Post[]> {
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}`);
-  }
-
-  getLikedPosts(userId: string): Observable<Post[]> {
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`);
-  }
-
-  getSavedPosts(userId: string): Observable<Post[]> {
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`);
   }
 }
