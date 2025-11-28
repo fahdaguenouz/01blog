@@ -31,9 +31,15 @@
   </div>
   
  <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
-    <button mat-flat-button color="primary" (click)="toggleFollow()" class="follow-btn">
-      {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
-    </button>
+  <button mat-button color="primary" class="follow-btn"
+        [disabled]="currentUserId === user?.id"
+        (click)="toggleFollow()">
+  {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
+</button>
+
+
+
+
   </div>
 
   <button *ngIf="currentUserId && user?.id === currentUserId" 

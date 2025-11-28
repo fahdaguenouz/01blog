@@ -34,14 +34,19 @@ export class UserService {
   }
   
 
-  getProfileByUsername(username: string): Observable<UserProfile> {
-  return this.getHttp().get<UserProfile>(`${this.base}/api/users/by-username/${username}`);
+getProfileByUsername(username: string): Observable<UserProfile> {
+  return this.getHttp().get<UserProfile>(
+    `${this.base}/api/users/by-username/${username}`,
+    { withCredentials: true }
+  );
 }
 
-
-  getCurrentUser(): Observable<UserProfile> {
-    return this.getHttp().get<UserProfile>(`${this.apiUrl}/me`);
-  }
+getCurrentUser(): Observable<UserProfile> {
+  return this.getHttp().get<UserProfile>(
+    `${this.apiUrl}/me`,
+    { withCredentials: true }
+  );
+}
 
   updateProfile(data: Partial<UserProfile>): Observable<UserProfile> {
     return this.getHttp().put<UserProfile>(`${this.apiUrl}/me`, data);

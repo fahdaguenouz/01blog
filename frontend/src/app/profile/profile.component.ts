@@ -130,57 +130,51 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleFollow() {
-    if (!this.user) return;
-    if (this.currentUserId && this.currentUserId === this.user.id) return;
+toggleFollow() {
+  if (!this.user) return;
+  if (this.currentUserId && this.currentUserId === this.user.id) return;
 
-    const wasSubscribed = !!this.user.isSubscribed;
+  const targetUserId = this.user.id;
+  const currentlySubscribed = this.user.isSubscribed;
 
-    if (wasSubscribed) {
-      this.userService.unsubscribe(this.user.id).pipe(takeUntil(this.destroy$)).subscribe({
-        next: () => {
-          this.reloadProfile();
-          this.snackBar.open('Unfollowed successfully', 'Close', { duration: 3000 });
-        },
-        error: (err) => {
-          console.error('Unfollow failed:', err);
-          this.reloadProfile();
-          this.snackBar.open('Failed to unfollow', 'Close', { duration: 3000 });
-        }
-      });
-    } else {
-      this.userService.subscribe(this.user.id).pipe(takeUntil(this.destroy$)).subscribe({
-        next: () => {
-          this.reloadProfile();
-          this.snackBar.open('Followed successfully', 'Close', { duration: 3000 });
-        },
-        error: (err) => {
-          console.error('Follow failed:', err);
-          if (err?.status === 400 || err?.status === 409) {
-            this.reloadProfile();
-          }
-          this.snackBar.open('Failed to follow', 'Close', { duration: 3000 });
-        }
-      });
+  // Optimistic update
+  this.user.isSubscribed = !currentlySubscribed;
+
+  const action$ = currentlySubscribed
+    ? this.userService.unsubscribe(targetUserId)
+    : this.userService.subscribe(targetUserId);
+
+  action$.pipe(takeUntil(this.destroy$)).subscribe({
+    next: () => {
+      const msg = currentlySubscribed ? 'Unfollowed successfully' : 'Followed successfully';
+      this.snackBar.open(msg, 'Close', { duration: 3000 });
+      // ✅ Don't reload immediately, frontend state is already correct
+    },
+    error: err => {
+      console.error(currentlySubscribed ? 'Unfollow failed:' : 'Follow failed:', err);
+      // Revert optimistic update on error
+      this.user!.isSubscribed = currentlySubscribed;
+      this.snackBar.open('Action failed', 'Close', { duration: 3000 });
     }
-  }
+  });
+}
 
-  private reloadProfile() {
-    if (!this.user) return;
-    // show a small loading for UX
-    this.loading = true;
-    this.userService.getProfileByUsername(this.user.username).pipe(
-      takeUntil(this.destroy$),
-      catchError(e => {
-        console.error('Failed to reload profile', e);
-        this.loading = false;
-        return of(null);
-      })
-    ).subscribe(u => {
-      if (u) this.user = u;
-      this.loading = false;
-    });
-  }
+ private reloadProfile() {
+  if (!this.user) return;
+  
+  // Don't set full page loading, just refresh data
+  this.userService.getProfileByUsername(this.user.username).pipe(
+    takeUntil(this.destroy$),
+    catchError(e => {
+      console.error('Failed to reload profile', e);
+      return of(null);
+    })
+  ).subscribe(u => {
+    if (u) {
+      this.user = u;  // ✅ This updates isSubscribed from server
+    }
+  });
+}
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);

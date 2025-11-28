@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.web.server.ResponseStatusException;
 
@@ -48,7 +50,7 @@ public class UserController {
   }
 
 @GetMapping("/by-username/{username}")
-public UserProfileDto getByUsername(@PathVariable String username, Authentication auth) {
+public UserProfileDto getByUsername(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
     User user = repo.findByUsername(username)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     
@@ -65,13 +67,10 @@ public UserProfileDto getByUsername(@PathVariable String username, Authenticatio
     int subscriptionsCount = (int) subscriptionRepo.countBySubscriberId(user.getId());
     
     boolean isSubscribed = false;
-    if (auth != null && auth.isAuthenticated()) {
-        String currentUsername = auth.getName();
-        User currentUser = repo.findByUsername(currentUsername).orElse(null);
-        if (currentUser != null) {
-            isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(
-                currentUser.getId(), user.getId());
-        }
+    System.err.printf("current user is ",currentUser);
+   if (currentUser != null) {
+        isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(
+            currentUser.getId(), user.getId());
     }
     
     return new UserProfileDto(
@@ -125,6 +124,7 @@ public UserProfileDto getByUsername(@PathVariable String username, Authenticatio
 
 
   @PostMapping("/{userId}/subscribe")
+  @Transactional
 public ResponseEntity<Void> subscribe(@PathVariable UUID userId, Authentication auth) {
     if (auth == null || !auth.isAuthenticated()) {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
@@ -151,10 +151,12 @@ public ResponseEntity<Void> subscribe(@PathVariable UUID userId, Authentication 
         .build();
     
     subscriptionRepo.save(subscription);
+    subscriptionRepo.flush();
     return ResponseEntity.ok().build();
 }
 
 @DeleteMapping("/{userId}/subscribe")
+@Transactional
 public ResponseEntity<Void> unsubscribe(@PathVariable UUID userId, Authentication auth) {
     if (auth == null || !auth.isAuthenticated()) {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
@@ -165,6 +167,7 @@ public ResponseEntity<Void> unsubscribe(@PathVariable UUID userId, Authenticatio
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
     
     subscriptionRepo.deleteBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
+    subscriptionRepo.flush();
     return ResponseEntity.ok().build();
 }
 }
