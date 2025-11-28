@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environment/environment';
+import { Post } from './post.service';
 
 export interface UserProfile {
   id: string;
@@ -21,9 +23,12 @@ export interface UserProfile {
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = '/api/users';
+ private base = environment.apiUrl; 
+  private apiUrl = `${this.base}/api/users`;
 
-  constructor(private injector: Injector) {}
+  constructor(private injector: Injector) {
+      console.log('ENV apiUrl (service):', this.base);
+  }
 
   private getHttp(): HttpClient {
     return this.injector.get(HttpClient);
@@ -31,8 +36,9 @@ export class UserService {
   
 
   getProfileByUsername(username: string): Observable<UserProfile> {
-    return this.getHttp().get<UserProfile>(`/api/users/by-username/${username}`);
-  }
+  return this.getHttp().get<UserProfile>(`${this.base}/api/users/by-username/${username}`);
+}
+
 
   getCurrentUser(): Observable<UserProfile> {
     return this.getHttp().get<UserProfile>(`${this.apiUrl}/me`);
@@ -59,5 +65,16 @@ export class UserService {
   }
   uploadAvatar(formData: FormData): Observable<void> {
     return this.getHttp().post<void>(`${this.apiUrl}/me/avatar`, formData);
+  }
+   getUserPosts(userId: string): Observable<Post[]> {
+    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}`);
+  }
+
+  getLikedPosts(userId: string): Observable<Post[]> {
+    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`);
+  }
+
+  getSavedPosts(userId: string): Observable<Post[]> {
+    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`);
   }
 }

@@ -2,6 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environment/environment';
 
 
 export interface Category {
@@ -40,19 +41,22 @@ export interface Comment {
 
 @Injectable({ providedIn: 'root' })
 export class PostService {
-  private apiUrl = '/api/posts';
+   private base = environment.apiUrl;
+  private apiUrl = `${this.base}/api/posts`;
 
-  constructor(private injector: Injector) {}
+  constructor(private injector: Injector) {
+    console.log('PostService api base =', this.base);
+  }
 
   private getHttp(): HttpClient { return this.injector.get(HttpClient); }
 
 getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observable<Post[]> {
-  const params: any = { sort };
-  if (categoryId) params.categoryId = categoryId;
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`, { params });
-}
+    const params: any = { sort };
+    if (categoryId) params.categoryId = categoryId;
+    return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`, { params });
+  }
 
-  getById(postId: string): Observable<Post> {
+   getById(postId: string): Observable<Post> {
     return this.getHttp().get<Post>(`${this.apiUrl}/${postId}`);
   }
 
