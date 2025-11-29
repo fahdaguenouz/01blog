@@ -215,4 +215,37 @@ public ResponseEntity<UserProfileDto> unsubscribe(@PathVariable UUID userId, Aut
 
     return ResponseEntity.ok(dto);
 }
+
+@GetMapping("/{userId}/followers")
+public List<UserProfileDto> getFollowers(@PathVariable UUID userId, Authentication auth) {
+    List<UUID> followerIds = subscriptionRepo.findSubscriberIdsBySubscribedToId(userId);
+    return followerIds.stream()
+        .map(id -> repo.findById(id).orElseThrow())
+        .map(this::buildProfileDto)
+        .toList();
+}
+
+@GetMapping("/{userId}/following")
+public List<UserProfileDto> getFollowing(@PathVariable UUID userId, Authentication auth) {
+    List<UUID> followingIds = subscriptionRepo.findSubscribedToIdsBySubscriberId(userId);
+    return followingIds.stream()
+        .map(id -> repo.findById(id).orElseThrow())
+        .map(this::buildProfileDto)
+        .toList();
+}
+
+// Helper method
+private UserProfileDto buildProfileDto(User user) {
+    String avatarUrl = user.getAvatarMediaId() != null ? 
+        mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null) : null;
+    
+    return new UserProfileDto(
+        user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+        user.getBio(), user.getAge(), avatarUrl,
+        (int)subscriptionRepo.countBySubscribedToId(user.getId()),
+        (int)subscriptionRepo.countBySubscriberId(user.getId()),
+        false // isSubscribed not needed for lists
+    );
+}
+
 }

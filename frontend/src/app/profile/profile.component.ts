@@ -35,7 +35,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   selectedTab: 'my' | 'saved' | 'liked' = 'my';
   posts: Post[] = [];
   loadingPosts = false;
-
+  followers: UserProfile[] = [];
+  following: UserProfile[] = [];
+  showFollowers = false;
+  showFollowing = false;
+  loadingFollowers = false;
+  loadingFollowing = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -50,11 +55,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // fetch current user once (if you need currentUserId for follow button)
-    this.userService.getCurrentUser()
+    this.userService
+      .getCurrentUser()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: u => this.currentUserId = u?.id ?? null,
-        error: () => this.currentUserId = null
+        next: (u) => (this.currentUserId = u?.id ?? null),
+        error: () => (this.currentUserId = null),
       });
 
     // react to username param changes reliably and switch to the latest profile request
@@ -63,7 +69,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         // map to username string
         // use distinctUntilChanged to avoid duplicating identical username loads
-        switchMap(paramMap => {
+        switchMap((paramMap) => {
           const username = paramMap.get('username');
           if (!username) {
             this.error = 'No username provided.';
@@ -73,16 +79,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.error = null;
           this.loading = true;
           // call service that returns Observable<UserProfile>
-          return this.userService.getProfileByUsername(username)
-            .pipe(
-              catchError(err => {
-                console.error('getProfileByUsername error', err);
-                // set a user-friendly error and return null so flow continues
-                this.error = (err?.status === 404) ? 'User not found' : 'Failed to load profile';
-                this.loading = false;
-                return of(null);
-              })
-            );
+          return this.userService.getProfileByUsername(username).pipe(
+            catchError((err) => {
+              console.error('getProfileByUsername error', err);
+              // set a user-friendly error and return null so flow continues
+              this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
+              this.loading = false;
+              return of(null);
+            })
+          );
         })
       )
       .subscribe((u: UserProfile | null) => {
@@ -111,125 +116,123 @@ export class ProfileComponent implements OnInit, OnDestroy {
   loadUser(username: string) {
     // kept for backward compatibility, but prefer route param driven flow
     this.loading = true;
-    this.userService.getProfileByUsername(username).pipe(
-      takeUntil(this.destroy$),
-      catchError(err => {
-        console.error('loadUser error', err);
-        this.error = 'User not found';
-        this.loading = false;
-        return of(null);
-      })
-    ).subscribe(u => {
-      if (!u) {
-        this.user = null;
-        this.posts = [];
-        return;
-      }
-      this.user = this.normalizeProfile(u);
+    this.userService
+      .getProfileByUsername(username)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          console.error('loadUser error', err);
+          this.error = 'User not found';
+          this.loading = false;
+          return of(null);
+        })
+      )
+      .subscribe((u) => {
+        if (!u) {
+          this.user = null;
+          this.posts = [];
+          return;
+        }
+        this.user = this.normalizeProfile(u);
 
-      this.loading = false;
-      this.loadPostsForTab();
+        this.loading = false;
+        this.loadPostsForTab();
+      });
+  }
+
+  /** Normalize server DTO into our frontend UserProfile shape */
+  private normalizeProfile(dto: any): UserProfile {
+    if (!dto) return dto;
+
+    const normalized: any = { ...dto };
+
+    // server might return `subscribed` instead of `isSubscribed`
+    if (normalized.isSubscribed === undefined) {
+      normalized.isSubscribed = normalized.subscribed ?? false;
+    }
+
+    // counts normalization (backend might use different names)
+    if (normalized.subscribersCount === undefined) {
+      normalized.subscribersCount = normalized.followersCount ?? normalized.subscribedCount ?? 0;
+    }
+    if (normalized.subscriptionsCount === undefined) {
+      normalized.subscriptionsCount =
+        normalized.followingCount ?? normalized.subscriptionCount ?? 0;
+    }
+
+    // ensure numbers exist
+    normalized.subscribersCount = normalized.subscribersCount ?? 0;
+    normalized.subscriptionsCount = normalized.subscriptionsCount ?? 0;
+
+    return normalized as UserProfile;
+  }
+
+  toggleFollow() {
+    if (!this.user) {
+      return;
+    }
+
+    if (this.currentUserId === this.user.id) {
+      return;
+    }
+
+    const targetUserId = this.user.id;
+    const currentlySubscribed = !!this.user.isSubscribed;
+
+    // optimistic UI: quick feedback
+    this.user.isSubscribed = !currentlySubscribed;
+    this.user.subscribersCount = (this.user.subscribersCount || 0) + (currentlySubscribed ? -1 : 1);
+
+    const req$ = currentlySubscribed
+      ? this.userService.unsubscribe(targetUserId)
+      : this.userService.subscribe(targetUserId);
+
+    req$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (updatedProfile) => {
+        if (updatedProfile) {
+          // use normalized server DTO as authoritative
+          this.user = this.normalizeProfile(updatedProfile);
+        } else {
+          // fallback: reload profile from server (already uses withCredentials)
+          this.reloadProfile();
+        }
+
+        const msg = currentlySubscribed ? 'Unfollowed' : 'Followed';
+        this.snackBar.open(`${msg} successfully`, 'Close', { duration: 2500 });
+      },
+      error: (err) => {
+        // revert optimistic UI
+        this.user!.isSubscribed = currentlySubscribed;
+        this.user!.subscribersCount =
+          (this.user!.subscribersCount || 0) + (currentlySubscribed ? 0 : -1);
+
+        this.snackBar.open('Action failed', 'Close', { duration: 3000 });
+      },
     });
   }
 
-
-/** Normalize server DTO into our frontend UserProfile shape */
-private normalizeProfile(dto: any): UserProfile {
-  if (!dto) return dto;
-
-  const normalized: any = { ...dto };
-
-  // server might return `subscribed` instead of `isSubscribed`
-  if (normalized.isSubscribed === undefined) {
-    normalized.isSubscribed = normalized.subscribed ?? false;
-  }
-
-  // counts normalization (backend might use different names)
-  if (normalized.subscribersCount === undefined) {
-    normalized.subscribersCount = normalized.followersCount ?? normalized.subscribedCount ?? 0;
-  }
-  if (normalized.subscriptionsCount === undefined) {
-    normalized.subscriptionsCount = normalized.followingCount ?? normalized.subscriptionCount ?? 0;
-  }
-
-  // ensure numbers exist
-  normalized.subscribersCount = normalized.subscribersCount ?? 0;
-  normalized.subscriptionsCount = normalized.subscriptionsCount ?? 0;
-
-  return normalized as UserProfile;
-}
-
-toggleFollow() {
-
-  if (!this.user) {
-    return;
-  }
-
-  if (this.currentUserId === this.user.id) {
-    return;
-  }
-
-  const targetUserId = this.user.id;
-  const currentlySubscribed = !!this.user.isSubscribed;
-
-
-  // optimistic UI: quick feedback
-  this.user.isSubscribed = !currentlySubscribed;
-  this.user.subscribersCount = (this.user.subscribersCount || 0) + (currentlySubscribed ? -1 : 1);
-
-  const req$ = currentlySubscribed
-    ? this.userService.unsubscribe(targetUserId)
-    : this.userService.subscribe(targetUserId);
-
-
-  req$.pipe(takeUntil(this.destroy$)).subscribe({
-    next: (updatedProfile) => {
-
-      if (updatedProfile) {
-        // use normalized server DTO as authoritative
-        this.user = this.normalizeProfile(updatedProfile);
-      } else {
-        // fallback: reload profile from server (already uses withCredentials)
-        this.reloadProfile();
-      }
-
-      const msg = currentlySubscribed ? 'Unfollowed' : 'Followed';
-      this.snackBar.open(`${msg} successfully`, 'Close', { duration: 2500 });
-    },
-    error: (err) => {
-
-      // revert optimistic UI
-      this.user!.isSubscribed = currentlySubscribed;
-      this.user!.subscribersCount = (this.user!.subscribersCount || 0) + (currentlySubscribed ? 0 : -1);
-
-      this.snackBar.open('Action failed', 'Close', { duration: 3000 });
+  private reloadProfile() {
+    if (!this.user) {
+      return;
     }
-  });
-}
 
-private reloadProfile() {
-
-  if (!this.user) {
-    return;
+    this.userService
+      .getProfileByUsername(this.user.username)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((e) => {
+          return of(null);
+        })
+      )
+      .subscribe((u) => {
+        if (u) {
+          const normalized = this.normalizeProfile(u);
+          this.user = normalized;
+        } else {
+          console.log('[reloadProfile] No data returned from server');
+        }
+      });
   }
-
-
-  this.userService.getProfileByUsername(this.user.username).pipe(
-    takeUntil(this.destroy$),
-    catchError(e => {
-      return of(null);
-    })
-  ).subscribe(u => {
-
-    if (u) {
-      const normalized = this.normalizeProfile(u);
-      this.user = normalized;
-    } else {
-      console.log('[reloadProfile] No data returned from server');
-    }
-  });
-}
-
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);
@@ -257,18 +260,20 @@ private reloadProfile() {
       obs = this.postService.getSavedPosts(this.user.id);
     }
 
-    obs.pipe(
-      takeUntil(this.destroy$),
-      catchError(err => {
-        console.error('Loading posts failed', err);
-        this.posts = [];
+    obs
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          console.error('Loading posts failed', err);
+          this.posts = [];
+          this.loadingPosts = false;
+          return of([]);
+        })
+      )
+      .subscribe((posts) => {
+        this.posts = posts ?? [];
         this.loadingPosts = false;
-        return of([]);
-      })
-    ).subscribe(posts => {
-      this.posts = posts ?? [];
-      this.loadingPosts = false;
-    });
+      });
   }
 
   editProfile() {
@@ -278,41 +283,112 @@ private reloadProfile() {
       data: { ...this.user },
     });
 
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result) => {
-      if (!result) return;
+    dialogRef
+      .afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        if (!result) return;
 
-      const { changes, avatar } = result;
+        const { changes, avatar } = result;
 
-      if (Object.keys(changes).length === 0 && !avatar) {
-        this.snackBar.open('Nothing to update', 'Close', { duration: 3000 });
-        return;
-      }
+        if (Object.keys(changes).length === 0 && !avatar) {
+          this.snackBar.open('Nothing to update', 'Close', { duration: 3000 });
+          return;
+        }
 
-      if (avatar) {
-        const formData = new FormData();
-        formData.append('avatar', avatar);
+        if (avatar) {
+          const formData = new FormData();
+          formData.append('avatar', avatar);
 
-        this.userService.uploadAvatar(formData).pipe(takeUntil(this.destroy$)).subscribe({
-          next: () => this.updateProfile(changes),
-          error: () => {
-            this.snackBar.open('Failed to upload avatar', 'Close', { duration: 3000 });
-          },
-        });
-      } else {
-        this.updateProfile(changes);
-      }
-    });
+          this.userService
+            .uploadAvatar(formData)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => this.updateProfile(changes),
+              error: () => {
+                this.snackBar.open('Failed to upload avatar', 'Close', { duration: 3000 });
+              },
+            });
+        } else {
+          this.updateProfile(changes);
+        }
+      });
   }
 
   private updateProfile(changes: Partial<UserProfile>) {
-    this.userService.updateProfile(changes).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (updatedUser) => {
-        this.user = updatedUser;
-        this.snackBar.open('Profile updated successfully', 'Close', { duration: 3000 });
-      },
-      error: () => {
-        this.snackBar.open('Failed to update profile', 'Close', { duration: 3000 });
-      },
-    });
+    this.userService
+      .updateProfile(changes)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedUser) => {
+          this.user = updatedUser;
+          this.snackBar.open('Profile updated successfully', 'Close', { duration: 3000 });
+        },
+        error: () => {
+          this.snackBar.open('Failed to update profile', 'Close', { duration: 3000 });
+        },
+      });
+  }
+  showFollowersList() {
+    if (!this.user) return;
+    console.log('[showFollowersList] Loading followers for:', this.user.id);
+    this.loadingFollowers = true;
+    this.showFollowers = true;
+    this.showFollowing = false;
+
+    this.userService
+      .getFollowers(this.user.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          console.error('Failed to load followers', err);
+          this.snackBar.open('Failed to load followers', 'Close');
+          this.loadingFollowers = false;
+          return of([]);
+        })
+      )
+      .subscribe((followers) => {
+        this.followers = followers ?? [];
+        this.loadingFollowers = false;
+        console.log('[showFollowersList] Loaded', this.followers.length, 'followers');
+      });
+  }
+
+  showFollowingList() {
+    if (!this.user) return;
+    console.log('[showFollowingList] Loading following for:', this.user.id);
+    this.loadingFollowing = true;
+    this.showFollowing = true;
+    this.showFollowers = false;
+
+    this.userService
+      .getFollowing(this.user.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          console.error('Failed to load following', err);
+          this.snackBar.open('Failed to load following', 'Close');
+          this.loadingFollowing = false;
+          return of([]);
+        })
+      )
+      .subscribe((following) => {
+        this.following = following ?? [];
+        this.loadingFollowing = false;
+        console.log('[showFollowingList] Loaded', this.following.length, 'following');
+      });
+  }
+
+  goToUserProfile(userId: string) {
+    console.log('[goToUserProfile] Navigating to user:', userId);
+    this.router.navigate(['/profile', userId]);
+    // Close modals
+    this.showFollowers = false;
+    this.showFollowing = false;
+  }
+
+  closeList() {
+    this.showFollowers = false;
+    this.showFollowing = false;
   }
 }

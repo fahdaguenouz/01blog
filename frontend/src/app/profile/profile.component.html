@@ -1,7 +1,3 @@
-<!-- profile.component.html -->
-
-<!-- Profile card only for user info -->
-<!-- Profile card only for user info -->
 <mat-card class="profile-card" *ngIf="user; else errTpl">
   <div class="profile-header">
     <!-- Circular avatar with fixed size -->
@@ -19,35 +15,79 @@
         <h2 class="user-name">{{ user.name }}</h2>
         <div class="username">@{{ user.username }}</div>
       </div>
-       <div class="profile-meta">
+      <div class="profile-meta">
         <span *ngIf="user.age !== null" class="meta-item">Age: {{ user.age }}</span>
         <span *ngIf="user.email" class="meta-item email">{{ user.email }}</span>
-        <span class="meta-item">Following: {{ user.subscriptionsCount || 0 }}</span>
-        <span class="meta-item">Followers: {{ user.subscribersCount || 0 }}</span>
+        <span class="meta-item clickable" (click)="showFollowersList()">
+          <strong>{{ user.subscribersCount || 0 }}</strong>
+          <span>{{ user.subscribersCount === 1 ? 'follower' : 'followers' }}</span>
+        </span>
+
+        <span class="meta-item clickable" (click)="showFollowingList()">
+          <strong>{{ user.subscriptionsCount || 0 }}</strong>
+          <span>{{ user.subscriptionsCount === 1 ? 'following' : 'following' }}</span>
+        </span>
       </div>
-      
+
       <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
     </div>
   </div>
-  
- <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
-  <button mat-button color="primary" class="follow-btn"
-        [disabled]="currentUserId === user?.id"
-        (click)="toggleFollow()">
-  {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
-</button>
+
+  <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
+    <button mat-button color="primary" class="follow-btn" [disabled]="currentUserId === user?.id"
+      (click)="toggleFollow()">
+      {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
+    </button>
 
 
 
 
   </div>
 
-  <button *ngIf="currentUserId && user?.id === currentUserId" 
-          mat-stroked-button class="edit-profile-btn" 
-          (click)="editProfile()">
+  <button *ngIf="currentUserId && user?.id === currentUserId" mat-stroked-button class="edit-profile-btn"
+    (click)="editProfile()">
     Edit Profile
   </button>
 </mat-card>
+
+<!-- Followers/Following Modal Overlay -->
+<div class="modal-overlay" *ngIf="showFollowers || showFollowing" (click)="closeList()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ showFollowers ? 'Followers' : 'Following' }}</h3>
+      <button mat-icon-button class="close-btn" (click)="closeList()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <mat-spinner *ngIf="loadingFollowers || loadingFollowing"></mat-spinner>
+      
+      <div *ngIf="!loadingFollowers && !loadingFollowing" class="users-list">
+        <div *ngIf="showFollowers && followers.length === 0" class="empty-state">
+          No followers yet.
+        </div>
+        <div *ngIf="showFollowing && following.length === 0" class="empty-state">
+          Not following anyone yet.
+        </div>
+        
+        <div *ngFor="let u of (showFollowers ? followers : following)" 
+             class="user-item" 
+             (click)="goToUserProfile(u.username)">
+          <div class="user-avatar">
+            <img *ngIf="u.avatarUrl" [src]="u.avatarUrl" alt="Avatar" />
+            <mat-icon *ngIf="!u.avatarUrl">account_circle</mat-icon>
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ u.name }}</div>
+            <div class="user-username">@{{ u.username }}</div>
+          </div>
+          <mat-icon class="arrow-icon">chevron_right</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <!-- Error template -->

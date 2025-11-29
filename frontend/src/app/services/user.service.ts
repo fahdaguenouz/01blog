@@ -43,10 +43,17 @@ getProfileByUsername(username: string): Observable<UserProfile> {
 
 getCurrentUser(): Observable<UserProfile> {
   return this.getHttp().get<UserProfile>(
-    `${this.apiUrl}/me`,
-    { withCredentials: true }
+    `${this.apiUrl}/me`
   );
 }
+getFollowers(userId: string): Observable<UserProfile[]> {
+  return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/${userId}/followers`, { withCredentials: true });
+}
+
+getFollowing(userId: string): Observable<UserProfile[]> {
+  return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/${userId}/following`, { withCredentials: true });
+}
+
 
   updateProfile(data: Partial<UserProfile>): Observable<UserProfile> {
     return this.getHttp().put<UserProfile>(`${this.apiUrl}/me`, data);
