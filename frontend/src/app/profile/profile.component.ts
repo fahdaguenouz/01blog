@@ -160,59 +160,47 @@ private normalizeProfile(dto: any): UserProfile {
 }
 
 toggleFollow() {
-  console.log('[toggleFollow] START - user:', this.user, 'currentUserId:', this.currentUserId);
 
   if (!this.user) {
-    console.log('[toggleFollow] ABORT - no user');
     return;
   }
 
   if (this.currentUserId === this.user.id) {
-    console.log('[toggleFollow] ABORT - cannot follow self, currentUserId:', this.currentUserId, 'user.id:', this.user.id);
     return;
   }
 
   const targetUserId = this.user.id;
   const currentlySubscribed = !!this.user.isSubscribed;
 
-  console.log('[toggleFollow] targetUserId:', targetUserId, 'currentlySubscribed:', currentlySubscribed);
 
   // optimistic UI: quick feedback
   this.user.isSubscribed = !currentlySubscribed;
   this.user.subscribersCount = (this.user.subscribersCount || 0) + (currentlySubscribed ? -1 : 1);
-  console.log('[toggleFollow] OPTIMISTIC UPDATE - new isSubscribed:', this.user.isSubscribed, 'new subscribersCount:', this.user.subscribersCount);
 
   const req$ = currentlySubscribed
     ? this.userService.unsubscribe(targetUserId)
     : this.userService.subscribe(targetUserId);
 
-  console.log('[toggleFollow] Calling service:', currentlySubscribed ? 'unsubscribe' : 'subscribe', 'for userId:', targetUserId);
 
   req$.pipe(takeUntil(this.destroy$)).subscribe({
     next: (updatedProfile) => {
-      console.log('[toggleFollow] SUCCESS - updatedProfile:', updatedProfile);
 
       if (updatedProfile) {
         // use normalized server DTO as authoritative
         this.user = this.normalizeProfile(updatedProfile);
-        console.log('[toggleFollow] Using server DTO - normalized user:', this.user);
       } else {
         // fallback: reload profile from server (already uses withCredentials)
-        console.log('[toggleFollow] No DTO from server, calling reloadProfile()');
         this.reloadProfile();
       }
 
       const msg = currentlySubscribed ? 'Unfollowed' : 'Followed';
-      console.log('[toggleFollow] Showing success snackbar:', msg);
       this.snackBar.open(`${msg} successfully`, 'Close', { duration: 2500 });
     },
     error: (err) => {
-      console.error('[toggleFollow] ERROR:', currentlySubscribed ? 'Unfollow failed:' : 'Follow failed:', err);
 
       // revert optimistic UI
       this.user!.isSubscribed = currentlySubscribed;
       this.user!.subscribersCount = (this.user!.subscribersCount || 0) + (currentlySubscribed ? 0 : -1);
-      console.log('[toggleFollow] REVERTED optimistic state - isSubscribed:', this.user!.isSubscribed, 'subscribersCount:', this.user!.subscribersCount);
 
       this.snackBar.open('Action failed', 'Close', { duration: 3000 });
     }
@@ -220,27 +208,21 @@ toggleFollow() {
 }
 
 private reloadProfile() {
-  console.log('[reloadProfile] START - current user:', this.user);
 
   if (!this.user) {
-    console.log('[reloadProfile] ABORT - no user');
     return;
   }
 
-  console.log('[reloadProfile] Loading profile for username:', this.user.username);
 
   this.userService.getProfileByUsername(this.user.username).pipe(
     takeUntil(this.destroy$),
     catchError(e => {
-      console.error('[reloadProfile] getProfileByUsername ERROR:', e);
       return of(null);
     })
   ).subscribe(u => {
-    console.log('[reloadProfile] Received profile:', u);
 
     if (u) {
       const normalized = this.normalizeProfile(u);
-      console.log('[reloadProfile] SUCCESS - updating user with server data, isSubscribed:', normalized.isSubscribed);
       this.user = normalized;
     } else {
       console.log('[reloadProfile] No data returned from server');
