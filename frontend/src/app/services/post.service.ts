@@ -60,9 +60,10 @@ getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observabl
     return this.getHttp().get<Post>(`${this.apiUrl}/${postId}`);
   }
 
-  getUserPosts(userId: string): Observable<Post[]> {
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}`);
-  }
+getUserPosts(userId: string): Observable<Post[]> {
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/posts`, { withCredentials: true });  // ← ADD /posts
+}
+
 
   createPost(title: string, description: string, media?: File, categoryIds: string[] = []): Observable<Post> {
     const formData = new FormData();
@@ -90,11 +91,11 @@ getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observabl
     return this.getHttp().post<void>(`${this.apiUrl}/${postId}/like`, {});
   }
   getLikedPosts(userId: string): Observable<Post[]> {
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`);
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`,{ withCredentials: true });
 }
 
 getSavedPosts(userId: string): Observable<Post[]> {
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`);
+  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`,{ withCredentials: true });
 }
 
   unlikePost(postId: string): Observable<void> {

@@ -36,9 +36,7 @@ public class SecurityConfig {
 
             // public posts/categories
             .requestMatchers("/api/categories/**").permitAll()
-            .requestMatchers("/api/posts/user/*/posts").permitAll()
-            .requestMatchers("/api/posts/user/*/liked").permitAll()
-            .requestMatchers("/api/posts/user/*/saved").permitAll()
+           .requestMatchers("/api/posts/user/**").permitAll()
 
             // other authenticated endpoints
             .requestMatchers("/api/posts/**").authenticated()

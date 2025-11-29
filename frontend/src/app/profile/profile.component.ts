@@ -379,9 +379,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       });
   }
 
-  goToUserProfile(userId: string) {
-    console.log('[goToUserProfile] Navigating to user:', userId);
-    this.router.navigate(['/profile', userId]);
+  goToUserProfile(username: string) {
+    console.log('[goToUserProfile] Navigating to user:', username);
+    this.router.navigate(['/profile', username]);
     // Close modals
     this.showFollowers = false;
     this.showFollowing = false;

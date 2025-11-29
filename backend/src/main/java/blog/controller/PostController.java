@@ -114,7 +114,7 @@ public PostDetailDto update(
   }
 
 
-@GetMapping("/user/{userId}")
+@GetMapping("/user/{userId}/posts") 
 public List<PostSummaryDto> getUserPosts(@PathVariable UUID userId) {
   return postService.getPostsByAuthor(userId);
 }
