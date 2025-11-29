@@ -95,7 +95,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
           return;
         }
         // success
-        this.user = u;
+        this.user = this.normalizeProfile(u);
+
         this.loading = false;
         // load posts for the currently selected tab
         this.loadPostsForTab();
@@ -124,60 +125,129 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.posts = [];
         return;
       }
-      this.user = u;
+      this.user = this.normalizeProfile(u);
+
       this.loading = false;
       this.loadPostsForTab();
     });
   }
 
+
+/** Normalize server DTO into our frontend UserProfile shape */
+private normalizeProfile(dto: any): UserProfile {
+  if (!dto) return dto;
+
+  const normalized: any = { ...dto };
+
+  // server might return `subscribed` instead of `isSubscribed`
+  if (normalized.isSubscribed === undefined) {
+    normalized.isSubscribed = normalized.subscribed ?? false;
+  }
+
+  // counts normalization (backend might use different names)
+  if (normalized.subscribersCount === undefined) {
+    normalized.subscribersCount = normalized.followersCount ?? normalized.subscribedCount ?? 0;
+  }
+  if (normalized.subscriptionsCount === undefined) {
+    normalized.subscriptionsCount = normalized.followingCount ?? normalized.subscriptionCount ?? 0;
+  }
+
+  // ensure numbers exist
+  normalized.subscribersCount = normalized.subscribersCount ?? 0;
+  normalized.subscriptionsCount = normalized.subscriptionsCount ?? 0;
+
+  return normalized as UserProfile;
+}
+
 toggleFollow() {
-  if (!this.user) return;
-  if (this.currentUserId === this.user.id) return;
+  console.log('[toggleFollow] START - user:', this.user, 'currentUserId:', this.currentUserId);
+
+  if (!this.user) {
+    console.log('[toggleFollow] ABORT - no user');
+    return;
+  }
+
+  if (this.currentUserId === this.user.id) {
+    console.log('[toggleFollow] ABORT - cannot follow self, currentUserId:', this.currentUserId, 'user.id:', this.user.id);
+    return;
+  }
 
   const targetUserId = this.user.id;
-  const currentlySubscribed = this.user.isSubscribed;
+  const currentlySubscribed = !!this.user.isSubscribed;
 
-  // Optimistic update
+  console.log('[toggleFollow] targetUserId:', targetUserId, 'currentlySubscribed:', currentlySubscribed);
+
+  // optimistic UI: quick feedback
   this.user.isSubscribed = !currentlySubscribed;
+  this.user.subscribersCount = (this.user.subscribersCount || 0) + (currentlySubscribed ? -1 : 1);
+  console.log('[toggleFollow] OPTIMISTIC UPDATE - new isSubscribed:', this.user.isSubscribed, 'new subscribersCount:', this.user.subscribersCount);
 
-  const action$ = currentlySubscribed
+  const req$ = currentlySubscribed
     ? this.userService.unsubscribe(targetUserId)
     : this.userService.subscribe(targetUserId);
 
-  action$.pipe(takeUntil(this.destroy$)).subscribe({
-    next: () => {
-      const msg = currentlySubscribed ? 'Unfollowed successfully' : 'Followed successfully';
-      this.snackBar.open(msg, 'Close', { duration: 3000 });
+  console.log('[toggleFollow] Calling service:', currentlySubscribed ? 'unsubscribe' : 'subscribe', 'for userId:', targetUserId);
 
-      // ✅ Instead of reloading full profile, just update isSubscribed locally
-      this.user!.isSubscribed = !currentlySubscribed;
-      // Optional: update followers count
-      this.user!.subscribersCount += currentlySubscribed ? -1 : 1;
+  req$.pipe(takeUntil(this.destroy$)).subscribe({
+    next: (updatedProfile) => {
+      console.log('[toggleFollow] SUCCESS - updatedProfile:', updatedProfile);
+
+      if (updatedProfile) {
+        // use normalized server DTO as authoritative
+        this.user = this.normalizeProfile(updatedProfile);
+        console.log('[toggleFollow] Using server DTO - normalized user:', this.user);
+      } else {
+        // fallback: reload profile from server (already uses withCredentials)
+        console.log('[toggleFollow] No DTO from server, calling reloadProfile()');
+        this.reloadProfile();
+      }
+
+      const msg = currentlySubscribed ? 'Unfollowed' : 'Followed';
+      console.log('[toggleFollow] Showing success snackbar:', msg);
+      this.snackBar.open(`${msg} successfully`, 'Close', { duration: 2500 });
     },
-    error: err => {
-      console.error(currentlySubscribed ? 'Unfollow failed:' : 'Follow failed:', err);
+    error: (err) => {
+      console.error('[toggleFollow] ERROR:', currentlySubscribed ? 'Unfollow failed:' : 'Follow failed:', err);
+
+      // revert optimistic UI
       this.user!.isSubscribed = currentlySubscribed;
+      this.user!.subscribersCount = (this.user!.subscribersCount || 0) + (currentlySubscribed ? 0 : -1);
+      console.log('[toggleFollow] REVERTED optimistic state - isSubscribed:', this.user!.isSubscribed, 'subscribersCount:', this.user!.subscribersCount);
+
       this.snackBar.open('Action failed', 'Close', { duration: 3000 });
     }
   });
 }
 
- private reloadProfile() {
-  if (!this.user) return;
-  
-  // Don't set full page loading, just refresh data
+private reloadProfile() {
+  console.log('[reloadProfile] START - current user:', this.user);
+
+  if (!this.user) {
+    console.log('[reloadProfile] ABORT - no user');
+    return;
+  }
+
+  console.log('[reloadProfile] Loading profile for username:', this.user.username);
+
   this.userService.getProfileByUsername(this.user.username).pipe(
     takeUntil(this.destroy$),
     catchError(e => {
-      console.error('Failed to reload profile', e);
+      console.error('[reloadProfile] getProfileByUsername ERROR:', e);
       return of(null);
     })
   ).subscribe(u => {
+    console.log('[reloadProfile] Received profile:', u);
+
     if (u) {
-      this.user = u;  // ✅ This updates isSubscribed from server
+      const normalized = this.normalizeProfile(u);
+      console.log('[reloadProfile] SUCCESS - updating user with server data, isSubscribed:', normalized.isSubscribed);
+      this.user = normalized;
+    } else {
+      console.log('[reloadProfile] No data returned from server');
     }
   });
 }
+
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);

@@ -15,6 +15,7 @@ export interface UserProfile {
   subscribersCount: number; // followers count
   subscriptionsCount?: number; // following count (add from backend)
   isSubscribed?: boolean; // whether current user follows this profile
+   subscribed?: boolean;
   age?: number | null;
 }
 
@@ -52,13 +53,20 @@ getCurrentUser(): Observable<UserProfile> {
     return this.getHttp().put<UserProfile>(`${this.apiUrl}/me`, data);
   }
 
-  subscribe(userId: string): Observable<void> {
-    return this.getHttp().post<void>(`${this.apiUrl}/${userId}/subscribe`, {});
-  }
+subscribe(userId: string): Observable<UserProfile> {
+  return this.getHttp().post<UserProfile>(
+    `${this.apiUrl}/${userId}/subscribe`,
+    {},
+    { withCredentials: true }
+  );
+}
 
-  unsubscribe(userId: string): Observable<void> {
-    return this.getHttp().delete<void>(`${this.apiUrl}/${userId}/subscribe`);
-  }
+unsubscribe(userId: string): Observable<UserProfile> {
+  return this.getHttp().delete<UserProfile>(
+    `${this.apiUrl}/${userId}/subscribe`,
+    { withCredentials: true }
+  );
+}
 
   getSubscriptions(): Observable<UserProfile[]> {
     return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/subscriptions`);

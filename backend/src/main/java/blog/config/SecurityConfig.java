@@ -26,14 +26,21 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
             .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
-            .requestMatchers("/api/users/**").permitAll()
-            .requestMatchers("/api/posts/user/*/posts").permitAll() // user posts
-            .requestMatchers("/api/posts/user/*/liked").permitAll() // user liked posts
-            .requestMatchers("/api/posts/user/*/saved").permitAll()
-            .requestMatchers("/api/categories/**").permitAll()
+
+            // Public profile view (so GET /api/users/by-username/{username} won't 401)
+            .requestMatchers("/api/users/by-username/**").permitAll()
+
+            // Protect actions that change subscription
             .requestMatchers("/api/users/*/subscribe").authenticated()
-            .requestMatchers("/api/users/by-username/**").authenticated()
             .requestMatchers("/api/users/me/**").authenticated()
+
+            // public posts/categories
+            .requestMatchers("/api/categories/**").permitAll()
+            .requestMatchers("/api/posts/user/*/posts").permitAll()
+            .requestMatchers("/api/posts/user/*/liked").permitAll()
+            .requestMatchers("/api/posts/user/*/saved").permitAll()
+
+            // other authenticated endpoints
             .requestMatchers("/api/posts/**").authenticated()
             .anyRequest().authenticated())
         .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
