@@ -45,7 +45,7 @@ export class PostService {
   private apiUrl = `${this.base}/api/posts`;
 
   constructor(private injector: Injector) {
-    console.log('PostService api base =', this.base);
+   
   }
 
   private getHttp(): HttpClient { return this.injector.get(HttpClient); }

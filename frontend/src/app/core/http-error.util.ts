@@ -4,7 +4,7 @@ export function toUserMessage(err: any, fallback = 'Something went wrong. Please
 
   if (status === 0) return 'Cannot connect to the server. Check your internet connection.';
   if (status === 400) return msg || 'Please review your input and try again.';
-  if (status === 401) return 'Your session expired. Please log in again.';
+  if (status === 401) return 'Unauthorized. Please check your info .';
   if (status === 403) return 'You do not have permission to perform this action.';
   if (status === 404) return 'Requested resource was not found.';
   if (status === 409) return msg || 'This username or email is already in use. Please choose a different one.';

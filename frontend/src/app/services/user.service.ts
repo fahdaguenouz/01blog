@@ -27,7 +27,6 @@ export class UserService {
   private apiUrl = `${this.base}/api/users`;
 
   constructor(private injector: Injector) {
-      console.log('ENV apiUrl (service):', this.base);
   }
 
   private getHttp(): HttpClient {
@@ -37,8 +36,8 @@ export class UserService {
 
 getProfileByUsername(username: string): Observable<UserProfile> {
   return this.getHttp().get<UserProfile>(
-    `${this.base}/api/users/by-username/${username}`,
-    { withCredentials: true }
+    `${this.base}/api/users/by-username/${username}`
+   
   );
 }
 
