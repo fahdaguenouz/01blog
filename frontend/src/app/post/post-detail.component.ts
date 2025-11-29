@@ -170,7 +170,6 @@ export class PostDetailComponent implements OnInit {
 
     this.userService.getCurrentUser().subscribe({
       next: (user) => {
-        console.log('currentUser', user);
         this.currentUser = user;
       },
       error: (err) => {
@@ -182,7 +181,6 @@ export class PostDetailComponent implements OnInit {
 
   loadPost(id: string) {
     this.posts.getById(id).subscribe((p) => {
-      console.log('loaded post', p);
       this.post = p;
     });
   }

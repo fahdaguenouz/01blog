@@ -59,10 +59,10 @@
         <mat-icon>close</mat-icon>
       </button>
     </div>
-    
+
     <div class="modal-body">
       <mat-spinner *ngIf="loadingFollowers || loadingFollowing"></mat-spinner>
-      
+
       <div *ngIf="!loadingFollowers && !loadingFollowing" class="users-list">
         <div *ngIf="showFollowers && followers.length === 0" class="empty-state">
           No followers yet.
@@ -70,10 +70,9 @@
         <div *ngIf="showFollowing && following.length === 0" class="empty-state">
           Not following anyone yet.
         </div>
-        
-        <div *ngFor="let u of (showFollowers ? followers : following)" 
-             class="user-item" 
-             (click)="goToUserProfile(u.username)">
+
+        <div *ngFor="let u of (showFollowers ? followers : following)" class="user-item"
+          (click)="goToUserProfile(u.username)">
           <div class="user-avatar">
             <img *ngIf="u.avatarUrl" [src]="u.avatarUrl" alt="Avatar" />
             <mat-icon *ngIf="!u.avatarUrl">account_circle</mat-icon>

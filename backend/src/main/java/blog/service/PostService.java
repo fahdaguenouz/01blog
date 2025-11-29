@@ -216,14 +216,7 @@ public List<PostSummaryDto> getFeedForUser(String username, UUID categoryId, Str
       String description,
       MultipartFile media,
       List<UUID> categoryIds) {
-    // System.out.println("=== updatePost ===");
-    // System.out.println("username = " + username);
-    // System.out.println("postId = " + id);
-    // System.out.println("title = " + title);
-    // System.out.println("descr = " + description);
-    // System.out.println("media = " + (media != null ? media.getOriginalFilename()
-    // : "null"));
-    // System.out.println("categoryIds = " + categoryIds);
+  
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
     Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
     if (!post.getAuthor().getId().equals(user.getId()))
@@ -342,12 +335,27 @@ public void unsavePost(String username, UUID postId) {
     return likes.findByUserIdAndPostId(user.getId(), postId).isPresent();
   }
 
-  public List<PostSummaryDto> getPostsByAuthor(UUID userId) {
-    return posts.findByAuthorIdAndStatusOrderByCreatedAtDesc(userId, "active")
-        .stream()
-        .map(p -> PostMapper.toSummary(p, mediaRepo, false, false))
-        .toList();
-  }
+public List<PostSummaryDto> getPostsByAuthor(UUID userId) {
+  System.out.println("🔍 [PostService] getPostsByAuthor START: " + userId);
+  long start = System.currentTimeMillis();
+  
+  List<Post> result = posts.findByAuthorIdAndStatusOrderByCreatedAtDesc(userId, "active");
+  
+  long queryTime = System.currentTimeMillis() - start;
+  System.out.println("✅ [PostService] Query END: " + queryTime + "ms");
+  
+  long mapStart = System.currentTimeMillis();
+  List<PostSummaryDto> dtos = result.stream()
+      .map(p -> PostMapper.toSummary(p, mediaRepo, false, false))
+      .toList();
+  
+  long mapTime = System.currentTimeMillis() - mapStart;
+  System.out.println("✅ [PostService] Mapping END: " + mapTime + "ms, Total: " + (System.currentTimeMillis() - start) + "ms");
+  
+  return dtos;
+}
+
+
 
   public List<PostSummaryDto> getLikedPostsForUser(UUID userId) {
     var liked = likes.findByUserId(userId);

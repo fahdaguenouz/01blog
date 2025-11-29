@@ -11,6 +11,7 @@ import { EditProfileDialogComponent } from './edit-profile.component';
 import { Post, PostService } from '../services/post.service';
 import { AuthService } from '../services/auth.service';
 import { Subject, of } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { switchMap, distinctUntilChanged, takeUntil, catchError, tap } from 'rxjs/operators';
 
 @Component({
@@ -34,15 +35,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
   error: string | null = null;
   selectedTab: 'my' | 'saved' | 'liked' = 'my';
   posts: Post[] = [];
-  loadingPosts = false;
   followers: UserProfile[] = [];
   following: UserProfile[] = [];
   showFollowers = false;
   showFollowing = false;
   loadingFollowers = false;
   loadingFollowing = false;
+private selectedTab$ = new BehaviorSubject<'my' | 'saved' | 'liked'>('my');
+private profileUser$ = new BehaviorSubject<UserProfile | null>(null);
+  loadingMyPosts = false;
+  loadingLikedPosts = false;
+  loadingSavedPosts = false;
   private destroy$ = new Subject<void>();
-
+loadingPosts = false;
   constructor(
     private route: ActivatedRoute,
     private userService: UserService,
@@ -53,65 +58,62 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private auth: AuthService
   ) {}
 
-  ngOnInit(): void {
-    // fetch current user once (if you need currentUserId for follow button)
-    this.userService
-      .getCurrentUser()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (u) => (this.currentUserId = u?.id ?? null),
-        error: () => (this.currentUserId = null),
-      });
-
-    // react to username param changes reliably and switch to the latest profile request
-    this.route.paramMap
-      .pipe(
-        takeUntil(this.destroy$),
-        // map to username string
-        // use distinctUntilChanged to avoid duplicating identical username loads
-        switchMap((paramMap) => {
-          const username = paramMap.get('username');
-          if (!username) {
-            this.error = 'No username provided.';
-            this.loading = false;
-            return of(null);
-          }
-          this.error = null;
-          this.loading = true;
-          // call service that returns Observable<UserProfile>
-          return this.userService.getProfileByUsername(username).pipe(
-            catchError((err) => {
-              console.error('getProfileByUsername error', err);
-              // set a user-friendly error and return null so flow continues
-              this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
-              this.loading = false;
-              return of(null);
-            })
-          );
-        })
-      )
-      .subscribe((u: UserProfile | null) => {
-        // if null we already set loading/error in catchError branch
-        if (!u) {
-          // clear user and posts
-          this.user = null;
-          this.posts = [];
+ngOnInit() {
+  // Load profile via route
+  this.route.paramMap.pipe(
+    takeUntil(this.destroy$),
+    switchMap(params => {
+      const username = params.get('username');
+      if (!username) return of(null);
+      this.loading = true;
+      return this.userService.getProfileByUsername(username).pipe(
+        catchError(err => {
+          this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
           this.loading = false;
-          return;
-        }
-        // success
-        this.user = this.normalizeProfile(u);
+          return of(null);
+        })
+      );
+    })
+  ).subscribe(profile => {
+    this.loading = false;
+    this.user = profile ? this.normalizeProfile(profile) : null;
+    this.profileUser$.next(this.user);
+  });
 
-        this.loading = false;
-        // load posts for the currently selected tab
-        this.loadPostsForTab();
-      });
-  }
+  // React to profile + tab changes for posts
+  combineLatest([this.profileUser$, this.selectedTab$])
+    .pipe(
+      takeUntil(this.destroy$),
+      switchMap(([user, tab]) => {
+        if (!user) return of([]);
+        this.loadingPosts = true;
+        let obs;
+        if (tab === 'my') obs = this.postService.getUserPosts(user.id);
+        else if (tab === 'liked') obs = this.postService.getLikedPosts(user.id);
+        else obs = this.postService.getSavedPosts(user.id);
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+        return obs.pipe(
+          catchError(err => {
+            console.error(`❌ ${tab} posts ERROR:`, err);
+            return of([]);
+          }),
+          tap(() => this.loadingPosts = false)
+        );
+      })
+    )
+    .subscribe(posts => {
+      this.posts = posts ?? [];
+      this.loadingPosts = false;
+    });
+}
+
+
+ngOnDestroy(): void {
+
+  this.destroy$.next();
+  this.destroy$.complete();
+}
+
 
   loadUser(username: string) {
     // kept for backward compatibility, but prefer route param driven flow
@@ -238,43 +240,46 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.router.navigate(['/post', post.id]);
   }
 
-  onTabChange(tab: 'my' | 'saved' | 'liked') {
-    if (this.selectedTab === tab) return;
-    this.selectedTab = tab;
-    this.loadPostsForTab();
+ onTabChange(tab: 'my' | 'saved' | 'liked') {
+  this.selectedTab$.next(tab);
+}
+
+
+private loadPostsForTab() {
+  if (!this.user) {
+    this.posts = [];
+    this.loadingPosts = false;
+    return;
   }
 
-  private loadPostsForTab() {
-    if (!this.user) {
+  console.log(`🚀 Loading ${this.selectedTab} posts for: ${this.user.id}`);
+  this.loadingPosts = true;
+
+  let obs;
+  if (this.selectedTab === 'my') {
+    obs = this.postService.getUserPosts(this.user.id);
+  } else if (this.selectedTab === 'liked') {
+    obs = this.postService.getLikedPosts(this.user.id);
+  } else {
+    obs = this.postService.getSavedPosts(this.user.id);
+  }
+
+  obs.pipe(
+    takeUntil(this.destroy$),
+    tap(posts => console.log(`✅ Backend responded ${this.selectedTab}:`, posts.length, 'posts')),
+    catchError(err => {
+      console.error(`❌ ${this.selectedTab} posts ERROR:`, err);
       this.posts = [];
-      return;
-    }
-    this.loadingPosts = true;
+      this.loadingPosts = false;
+      return of([]);
+    })
+  ).subscribe(posts => {
+    console.log(`🎉 ${this.selectedTab} posts RENDERED:`, posts.length);
+    this.posts = posts ?? [];
+    this.loadingPosts = false;  // ← This MUST fire now
+  });
+}
 
-    let obs;
-    if (this.selectedTab === 'my') {
-      obs = this.postService.getUserPosts(this.user.id);
-    } else if (this.selectedTab === 'liked') {
-      obs = this.postService.getLikedPosts(this.user.id);
-    } else {
-      obs = this.postService.getSavedPosts(this.user.id);
-    }
-
-    obs
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((err) => {
-          console.error('Loading posts failed', err);
-          this.posts = [];
-          this.loadingPosts = false;
-          return of([]);
-        })
-      )
-      .subscribe((posts) => {
-        this.posts = posts ?? [];
-        this.loadingPosts = false;
-      });
-  }
 
   editProfile() {
     if (!this.user) return;
