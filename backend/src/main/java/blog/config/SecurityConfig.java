@@ -26,20 +26,22 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
             .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
-
-            // Public profile view (so GET /api/users/by-username/{username} won't 401)
+            
+            // Public profile view
             .requestMatchers("/api/users/by-username/**").permitAll()
-
-            // Protect actions that change subscription
+            
+            // ADMIN ONLY endpoints
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            
+            // Authenticated user actions
             .requestMatchers("/api/users/*/subscribe").authenticated()
             .requestMatchers("/api/users/me/**").authenticated()
-
-            // public posts/categories
-            .requestMatchers("/api/categories/**").permitAll()
-           .requestMatchers("/api/posts/user/**").permitAll()
-
-            // other authenticated endpoints
             .requestMatchers("/api/posts/**").authenticated()
+            
+            // Public posts/categories
+            .requestMatchers("/api/categories/**").permitAll()
+            .requestMatchers("/api/posts/user/**").permitAll()
+            
             .anyRequest().authenticated())
         .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 

@@ -1,24 +1,18 @@
-// auth-guard.service.ts snippet
-
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
-export class AuthGuard implements CanActivate {
+export class AdminGuard implements CanActivate {
   constructor(private router: Router, private auth: AuthService) {}
 
   canActivate(): Observable<boolean | UrlTree> {
-    return this.auth.authResolved$.pipe(
-      switchMap(() => this.auth.isLoggedIn$),
+    return this.auth.isLoggedIn$.pipe(
       map(loggedIn => {
-        if (!loggedIn) {
-          // Not logged in -> send to login
-          return this.router.parseUrl('/auth/login');
-        }
-        // Logged in -> allow access to the requested route
+        if (!loggedIn) return this.router.parseUrl('/auth/login');
+        if (!this.auth.isAdmin()) return this.router.parseUrl('/feed');
         return true;
       })
     );

@@ -12,6 +12,7 @@ import { SnackService } from '../../core/snack.service';
 import { toUserMessage } from '../../core/http-error.util';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 interface LoginForm {
   username: FormControl<string | null>,
@@ -45,7 +46,8 @@ export class LoginComponent {
   constructor(
     private router: Router,
     private loginService: LoginService,
-    private snack: SnackService
+    private snack: SnackService,
+    private auth: AuthService,
   ) {}
 
   submit() {
@@ -55,10 +57,14 @@ export class LoginComponent {
     }
     const v = this.loginForm.value;
     this.loginService.login(v.username!, v.password!).subscribe({
-      next: () => {
-        this.snack.success('Logged in successfully.');
-        this.router.navigate(['/feed']);
-      },
+     next: () => {
+      const role = this.auth.getRole();
+      if (role === 'ADMIN') {
+        this.router.navigate(['/admin/dashboard']);   // ADMIN → dashboard
+      } else {
+        this.router.navigate(['/feed']);              // USER → feed
+      }
+    },
       error: (err) => {
         const msg = toUserMessage(err, 'Could not log you in.');
         this.snack.error(msg);

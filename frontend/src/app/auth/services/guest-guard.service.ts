@@ -9,7 +9,11 @@ export class GuestGuard implements CanActivate {
 
   canActivate(): boolean {
     if (this.auth.isLoggedIn()) {
-      this.router.navigate(['/feed']);
+      if (this.auth.isAdmin()) {
+        this.router.navigate(['/admin/dashboard']);   // ADMIN → dashboard
+      } else {
+        this.router.navigate(['/feed']);              // USER → feed
+      }
       return false;
     }
     return true;

@@ -17,7 +17,7 @@ CREATE TABLE users (
     bio TEXT,                                    -- Optional bio
     age INT  NOT NULL CHECK (age >= 0),                   
     status VARCHAR(20) NOT NULL DEFAULT 'active',
-    role VARCHAR(50) NOT NULL DEFAULT 'ROLE_USER',
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
     avatar_media_id UUID,                        -- FK to media (added later)
     impressions_count INT DEFAULT 0,
     posts_count INT DEFAULT 0,

@@ -11,13 +11,17 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID) // or remove and rely on DB default
   private UUID id;
 
-   @Column(nullable = false, length = 100)
+  @Column(nullable = false, length = 100)
   private String name;
 
   @Column(nullable = false, unique = true, length = 50)
@@ -30,24 +34,28 @@ public class User {
   @JsonIgnore
   private String password;
 
-
-
- @Column(nullable = false, length = 20)
+  @Column(nullable = false, length = 20)
   private String status;
 
   @Column(nullable = false, length = 50)
-  private String role;
+  @Enumerated(EnumType.STRING)
+  @Builder.Default  // ← ADD THIS to fix warning
+  private Role role = Role.USER;
+
+  public enum Role {
+    USER, ADMIN
+  }
+
   @Column(name = "avatar_media_id")
   private UUID avatarMediaId;
 
   @Column(name = "impressions_count")
   private Integer impressionsCount;
- @Column(columnDefinition = "text")
-  private String bio;                       // optional
+  @Column(columnDefinition = "text")
+  private String bio; // optional
 
   @Column(nullable = false)
-  private Integer age;                    
-
+  private Integer age;
 
   @Column(name = "posts_count")
   private Integer postsCount;
@@ -58,28 +66,99 @@ public class User {
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
-   public UUID getId() { return id; }
-  public void setId(UUID id) { this.id = id; }
-  public String getName() { return name; }
-  public void setName(String name) { this.name = name; }
-  public String getUsername() { return username; }
-  public void setUsername(String username) { this.username = username; }
-  public String getEmail() { return email; }
-  public void setEmail(String email) { this.email = email; }
-  public String getPassword() { return password; }
-  public void setPassword(String password) { this.password = password; }
-  public String getStatus() { return status; }
-  public void setStatus(String status) { this.status = status; }
-  public String getRole() { return role; }
-  public void setRole(String role) { this.role = role; }
-  public UUID getAvatarMediaId() { return avatarMediaId; }
-  public void setAvatarMediaId(UUID avatarMediaId) { this.avatarMediaId = avatarMediaId; }
-  public Integer getImpressionsCount() { return impressionsCount; }
-  public void setImpressionsCount(Integer impressionsCount) { this.impressionsCount = impressionsCount; }
-  public Integer getPostsCount() { return postsCount; }
-  public void setPostsCount(Integer postsCount) { this.postsCount = postsCount; }
-  public String getReadme() { return readme; }
-  public void setReadme(String readme) { this.readme = readme; }
-  public OffsetDateTime getCreatedAt() { return createdAt; }
-  public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+  public UUID getId() {
+    return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public Role getRole() {
+    return role;
+  }
+
+  public void setRole(Role role) {
+    this.role = role;
+  }
+
+  public UUID getAvatarMediaId() {
+    return avatarMediaId;
+  }
+
+  public void setAvatarMediaId(UUID avatarMediaId) {
+    this.avatarMediaId = avatarMediaId;
+  }
+
+  public Integer getImpressionsCount() {
+    return impressionsCount;
+  }
+
+  public void setImpressionsCount(Integer impressionsCount) {
+    this.impressionsCount = impressionsCount;
+  }
+
+  public Integer getPostsCount() {
+    return postsCount;
+  }
+
+  public void setPostsCount(Integer postsCount) {
+    this.postsCount = postsCount;
+  }
+
+  public String getReadme() {
+    return readme;
+  }
+
+  public void setReadme(String readme) {
+    this.readme = readme;
+  }
+
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(OffsetDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 }

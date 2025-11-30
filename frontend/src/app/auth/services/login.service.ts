@@ -12,11 +12,13 @@ export class LoginService {
 
   login(username: string, password: string) {
     return this.getHttp().post<any>(`${this.apiUrl}/login`, { username, password }).pipe(
-      tap((value) => {
-        this.auth.setAuth(value.token, value.user?.username || username);
-        this.router.navigate(['/feed']);
-      })
-    );
+       tap((response) => {
+      this.auth.setAuth({
+        token: response.token, 
+        username: response.user.username,  
+        role: response.role as 'USER' | 'ADMIN' // ADD
+      });
+  }));
   }
 
   signupMultipart(payload: {

@@ -32,7 +32,10 @@ public class AuthController {
 
   @PostMapping("/login")
   public AuthResponse login(@RequestBody LoginRequest request) {
-    return userService.authenticate(request);
+    
+  AuthResponse response = userService.authenticate(request);
+  
+    return response;
   }
 
   @PostMapping("/logout")

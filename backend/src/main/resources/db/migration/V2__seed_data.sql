@@ -21,12 +21,12 @@ INSERT INTO categories (id, name, slug, description) VALUES
 
 -- 1. Insert test users
 INSERT INTO users (id, name, username, email, password, bio, age, status, role, impressions_count, posts_count, readme, created_at) VALUES
-  ('550e8400-e29b-41d4-a716-446655440001', 'Alice Johnson',   'alice',   'alice@example.com',   'password123', 'Learning Full Stack Development', 22, 'active', 'ROLE_USER', 1500, 5,  'Learning Full Stack Development', CURRENT_TIMESTAMP - INTERVAL '30 days'),
-  ('550e8400-e29b-41d4-a716-446655440002', 'Bob Smith',       'bob',     'bob@example.com',     'password123', 'Java Spring Boot enthusiast',     28, 'active', 'ROLE_USER', 2300, 8,  'Java Spring Boot enthusiast',     CURRENT_TIMESTAMP - INTERVAL '25 days'),
-  ('550e8400-e29b-41d4-a716-446655440003', 'Charlie Brown',   'charlie', 'charlie@example.com', 'password123', 'Angular & TypeScript learner',    19, 'active', 'ROLE_USER', 890,  3,  'Angular & TypeScript learner',    CURRENT_TIMESTAMP - INTERVAL '20 days'),
-  ('550e8400-e29b-41d4-a716-446655440004', 'Diana Prince',    'diana',   'diana@example.com',   'password123', 'Data structures and algorithms',  24, 'active', 'ROLE_USER', 3100, 12, 'Data structures and algorithms',  CURRENT_TIMESTAMP - INTERVAL '15 days'),
-  ('550e8400-e29b-41d4-a716-446655440005', 'Eve Wilson',      'eve',     'eve@example.com',     'password123', 'Web development journey',         21, 'active', 'ROLE_USER', 1200, 6,  'Web development journey',         CURRENT_TIMESTAMP - INTERVAL '10 days'),
-  ('550e8400-e29b-41d4-a716-446655440006', 'Frank Davis',     'frank',   'frank@example.com',   'password123', 'Platform moderator',              34, 'active', 'ROLE_ADMIN', 5000, 20, 'Platform moderator',              CURRENT_TIMESTAMP - INTERVAL '40 days');
+  ('550e8400-e29b-41d4-a716-446655440001', 'Alice Johnson',   'alice',   'alice@example.com',   'password123', 'Learning Full Stack Development', 22, 'active', 'USER', 1500, 5,  'Learning Full Stack Development', CURRENT_TIMESTAMP - INTERVAL '30 days'),
+  ('550e8400-e29b-41d4-a716-446655440002', 'Bob Smith',       'bob',     'bob@example.com',     'password123', 'Java Spring Boot enthusiast',     28, 'active', 'USER', 2300, 8,  'Java Spring Boot enthusiast',     CURRENT_TIMESTAMP - INTERVAL '25 days'),
+  ('550e8400-e29b-41d4-a716-446655440003', 'Charlie Brown',   'charlie', 'charlie@example.com', 'password123', 'Angular & TypeScript learner',    19, 'active', 'USER', 890,  3,  'Angular & TypeScript learner',    CURRENT_TIMESTAMP - INTERVAL '20 days'),
+  ('550e8400-e29b-41d4-a716-446655440004', 'Diana Prince',    'diana',   'diana@example.com',   'password123', 'Data structures and algorithms',  24, 'active', 'USER', 3100, 12, 'Data structures and algorithms',  CURRENT_TIMESTAMP - INTERVAL '15 days'),
+  ('550e8400-e29b-41d4-a716-446655440005', 'Eve Wilson',      'eve',     'eve@example.com',     'password123', 'Web development journey',         21, 'active', 'USER', 1200, 6,  'Web development journey',         CURRENT_TIMESTAMP - INTERVAL '10 days'),
+  ('550e8400-e29b-41d4-a716-446655440006', 'Frank Davis',     'frank',   'frank@example.com',   'password123', 'Platform moderator',              34, 'active', 'ADMIN', 5000, 20, 'Platform moderator',              CURRENT_TIMESTAMP - INTERVAL '40 days');
 
 -- 2. Insert media (placeholder images/videos)
 INSERT INTO media (id, user_id, media_type, size, url, uploaded_at) VALUES

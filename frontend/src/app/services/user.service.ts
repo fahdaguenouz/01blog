@@ -17,6 +17,7 @@ export interface UserProfile {
   isSubscribed?: boolean; // whether current user follows this profile
    subscribed?: boolean;
   age?: number | null;
+  role?: 'USER' | 'ADMIN'; 
 }
 
 @Injectable({
@@ -41,11 +42,10 @@ getProfileByUsername(username: string): Observable<UserProfile> {
   );
 }
 
-getCurrentUser(): Observable<UserProfile> {
-  return this.getHttp().get<UserProfile>(
-    `${this.apiUrl}/me`
-  );
+getCurrentUser(): Observable<any> {  // ← Change to any
+  return this.getHttp().get<any>(`${this.apiUrl}/me`);
 }
+
 getFollowers(userId: string): Observable<UserProfile[]> {
   return this.getHttp().get<UserProfile[]>(`${this.apiUrl}/${userId}/followers`, { withCredentials: true });
 }
