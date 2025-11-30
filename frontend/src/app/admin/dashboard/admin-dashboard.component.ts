@@ -28,9 +28,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     <mat-toolbar color="primary">
       <span>Admin Dashboard</span>
       <span class="spacer"></span>
-      <button mat-icon-button (click)="logout()" matTooltip="Logout">
-        <mat-icon>logout</mat-icon>
-      </button>
+     
     </mat-toolbar>
     
     <div class="p-6">
@@ -116,9 +114,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  logout() { 
-    this.loginService.logout().subscribe(); 
-  }
+
 
   ngOnDestroy() {
     this.destroy$.next();

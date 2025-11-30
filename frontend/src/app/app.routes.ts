@@ -13,7 +13,7 @@ import { AdminGuard } from './auth/services/admin.guard';
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 
 export const routes: Routes = [
-  { path: '', component: Home, canActivate: [GuestGuard] },
+  { path: '', redirectTo: 'feed', pathMatch: 'full' },  // root -> feed
   { path: 'feed', component: FeedComponent, canActivate: [AuthGuard] },
   { path: 'post/create', component: CreatePostComponent, canActivate: [AuthGuard] },
   { path: 'post/:id', component: PostDetailComponent, canActivate: [AuthGuard] },

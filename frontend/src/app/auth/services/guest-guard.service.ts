@@ -7,13 +7,10 @@ import { AuthService } from '../../services/auth.service';
 export class GuestGuard implements CanActivate {
   constructor(private router: Router, private auth: AuthService) {}
 
-  canActivate(): boolean {
+ canActivate(): boolean {
     if (this.auth.isLoggedIn()) {
-      if (this.auth.isAdmin()) {
-        this.router.navigate(['/admin/dashboard']);   // ADMIN → dashboard
-      } else {
-        this.router.navigate(['/feed']);              // USER → feed
-      }
+      // Logged-in user (admin or normal) trying to access guest-only route -> send to feed
+      this.router.navigate(['/feed']);
       return false;
     }
     return true;
