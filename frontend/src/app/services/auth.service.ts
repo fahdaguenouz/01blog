@@ -17,7 +17,8 @@ export class AuthService {
 
   // Expose auth status as observable
   public readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
-  constructor(private injector: Injector) {  // ADD Injector
+  constructor(private injector: Injector) {
+    // ADD Injector
     this._isLoggedIn$.next(this.hasToken());
     this._authResolved$.next(true);
   }
@@ -25,38 +26,43 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem('auth-token', data.token);
       if (data.username) window.sessionStorage.setItem('username', data.username);
-      if (data.role) window.sessionStorage.setItem('role', data.role);
+      if (data.role) window.sessionStorage.setItem('role', data.role); // store role in session
     }
+
     this.setCookie('auth-token', data.token, 1);
     if (data.username) this.setCookie('username', data.username, 1);
-    this._isLoggedIn$.next(true);
+    if (data.role) this.setCookie('role', data.role, 1); // NEW: store role in cookie
 
+    this._isLoggedIn$.next(true);
     this._authResolved$.next(true);
   }
-
   clearAuth(): void {
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem('auth-token');
       window.sessionStorage.removeItem('username');
-      window.sessionStorage.removeItem('role');
+      window.sessionStorage.removeItem('role'); // NEW
     }
     this.deleteCookie('auth-token');
     this.deleteCookie('username');
+    this.deleteCookie('role'); // NEW
+
     this._isLoggedIn$.next(false);
     this._authResolved$.next(true);
   }
-   validateAdminRole(): Observable<boolean> {
-  const token = this.getToken();
-  if (!token) return of(false);
-  
-  return this.injector.get(HttpClient).get<any>('/api/users/me', {
-    headers: { Authorization: `Bearer ${token}` }
-  }).pipe(
-    map((response: any) => response.role === 'ADMIN'),
-    catchError(() => of(false))
-  );
-}
+  validateAdminRole(): Observable<boolean> {
+    const token = this.getToken();
+    if (!token) return of(false);
 
+    return this.injector
+      .get(HttpClient)
+      .get<any>('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .pipe(
+        map((response: any) => response.role === 'ADMIN'),
+        catchError(() => of(false))
+      );
+  }
 
   getToken(): string | null {
     const ss = typeof window !== 'undefined' ? window.sessionStorage.getItem('auth-token') : null;
@@ -94,9 +100,15 @@ export class AuthService {
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
   }
   getRole(): 'USER' | 'ADMIN' | null {
-    return typeof window !== 'undefined'
-      ? (window.sessionStorage.getItem('role') as 'USER' | 'ADMIN' | null)
-      : null;
+    if (typeof window === 'undefined') return null;
+
+    // 1. Try sessionStorage (same tab)
+    const ssRole = window.sessionStorage.getItem('role') as 'USER' | 'ADMIN' | null;
+    if (ssRole) return ssRole;
+
+    // 2. Fallback to cookie (after full reload / new tab)
+    const cookieRole = this.getCookie('role') as 'USER' | 'ADMIN' | null;
+    return cookieRole ?? null;
   }
 
   isAdmin(): boolean {
