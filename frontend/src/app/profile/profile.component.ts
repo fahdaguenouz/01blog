@@ -10,8 +10,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EditProfileDialogComponent } from './edit-profile.component';
 import { Post, PostService } from '../services/post.service';
-import { AuthService } from '../services/auth.service';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject, BehaviorSubject, combineLatest } from 'rxjs';
 import {
   switchMap,
   distinctUntilChanged,
@@ -19,7 +18,6 @@ import {
   catchError,
   finalize,
 } from 'rxjs/operators';
-import { BehaviorSubject, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -48,13 +46,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   showFollowing = false;
   loadingFollowers = false;
   loadingFollowing = false;
+
   private selectedTab$ = new BehaviorSubject<'my' | 'saved' | 'liked'>('my');
   private profileUser$ = new BehaviorSubject<UserProfile | null>(null);
-  loadingMyPosts = false;
-  loadingLikedPosts = false;
-  loadingSavedPosts = false;
+
   private destroy$ = new Subject<void>();
   loadingPosts = false;
+
   constructor(
     private route: ActivatedRoute,
     private userService: UserService,
@@ -62,13 +60,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private postService: PostService,
     private router: Router,
-    private auth: AuthService,
     private cd: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit() {
-    // Ensure default tab is 'my' and BehaviorSubject reflects that immediately
+    // default tab
     this.selectedTab = 'my';
     this.selectedTab$.next('my');
 
@@ -79,20 +76,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
         switchMap((params) => {
           const username = params.get('username');
           if (!username) {
-            // no username in route -> clear state and stop loading
             this.loading = false;
             this.user = null;
             this.profileUser$.next(null);
             return of(null);
           }
-          // start profile loader
           this.loading = true;
           return this.userService.getProfileByUsername(username).pipe(
             catchError((err) => {
               this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
               return of(null);
             }),
-            // ensure the route-level loader is always cleared (success or error)
             finalize(() => {
               this.loading = false;
             })
@@ -100,31 +94,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe((profile) => {
-        // normalize profile or clear
         this.user = profile ? this.normalizeProfile(profile) : null;
-        // push into the reactive stream that loads posts
         this.profileUser$.next(this.user);
       });
 
-    // Reactive posts loader (single source of truth)
+    // Reactive posts loader
     combineLatest([this.profileUser$, this.selectedTab$.pipe(distinctUntilChanged())])
       .pipe(
         takeUntil(this.destroy$),
         switchMap(([user, tab]) => {
-          // if no user -> clear and short-circuit
           if (!user) {
             this.posts = [];
             this.loadingPosts = false;
             return of([]);
           }
 
-          // keep UI binding in sync
           this.selectedTab = tab;
-
-          // start loader
           this.loadingPosts = true;
 
-          // fallback timer: only create it in browser (SSR-safe)
+          // SSR-safe fallback timer
           const fallbackMs = 3000;
           let fallbackTimer: any = undefined;
           if (isPlatformBrowser(this.platformId)) {
@@ -132,7 +120,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
               if (this.loadingPosts) {
                 console.warn('[posts.loader] fallback cleared loader after', fallbackMs, 'ms');
                 this.loadingPosts = false;
-                // force view update (safe in browser)
                 try {
                   this.cd.detectChanges();
                 } catch (e) {
@@ -157,7 +144,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
                 clearTimeout(fallbackTimer);
               }
               this.loadingPosts = false;
-              // force view update
               try {
                 this.cd.detectChanges();
               } catch (e) {
@@ -176,6 +162,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
       });
   }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -204,23 +191,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
           return;
         }
         this.user = this.normalizeProfile(u);
-        // push into reactive stream — the combineLatest pipeline will fetch posts automatically
         this.profileUser$.next(this.user);
       });
   }
 
-  /** Normalize server DTO into our frontend UserProfile shape */
   private normalizeProfile(dto: any): UserProfile {
     if (!dto) return dto;
 
     const normalized: any = { ...dto };
 
-    // server might return `subscribed` instead of `isSubscribed`
     if (normalized.isSubscribed === undefined) {
       normalized.isSubscribed = normalized.subscribed ?? false;
     }
 
-    // counts normalization (backend might use different names)
     if (normalized.subscribersCount === undefined) {
       normalized.subscribersCount = normalized.followersCount ?? normalized.subscribedCount ?? 0;
     }
@@ -229,7 +212,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         normalized.followingCount ?? normalized.subscriptionCount ?? 0;
     }
 
-    // ensure numbers exist
     normalized.subscribersCount = normalized.subscribersCount ?? 0;
     normalized.subscriptionsCount = normalized.subscriptionsCount ?? 0;
 
@@ -237,18 +219,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   toggleFollow() {
-    if (!this.user) {
-      return;
-    }
-
-    if (this.currentUserId === this.user.id) {
-      return;
-    }
+    if (!this.user) return;
+    if (this.currentUserId === this.user.id) return;
 
     const targetUserId = this.user.id;
     const currentlySubscribed = !!this.user.isSubscribed;
 
-    // optimistic UI: quick feedback
     this.user.isSubscribed = !currentlySubscribed;
     this.user.subscribersCount = (this.user.subscribersCount || 0) + (currentlySubscribed ? -1 : 1);
 
@@ -259,18 +235,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
     req$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (updatedProfile) => {
         if (updatedProfile) {
-          // use normalized server DTO as authoritative
           this.user = this.normalizeProfile(updatedProfile);
         } else {
-          // fallback: reload profile from server (already uses withCredentials)
           this.reloadProfile();
         }
-
         const msg = currentlySubscribed ? 'Unfollowed' : 'Followed';
         this.snackBar.open(`${msg} successfully`, 'Close', { duration: 2500 });
       },
       error: (err) => {
-        // revert optimistic UI
         this.user!.isSubscribed = currentlySubscribed;
         this.user!.subscribersCount =
           (this.user!.subscribersCount || 0) + (currentlySubscribed ? 0 : -1);
@@ -281,25 +253,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   private reloadProfile() {
-    if (!this.user) {
-      return;
-    }
+    if (!this.user) return;
 
     this.userService
       .getProfileByUsername(this.user.username)
       .pipe(
         takeUntil(this.destroy$),
-        catchError((e) => {
-          return of(null);
-        })
+        catchError(() => of(null))
       )
       .subscribe((u) => {
-        if (u) {
-          const normalized = this.normalizeProfile(u);
-          this.user = normalized;
-        } else {
-          console.log('[reloadProfile] No data returned from server');
-        }
+        if (u) this.user = this.normalizeProfile(u);
+        else console.log('[reloadProfile] No data returned from server');
       });
   }
 
@@ -326,7 +290,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (!result) return;
 
         const { changes, avatar } = result;
-
         if (Object.keys(changes).length === 0 && !avatar) {
           this.snackBar.open('Nothing to update', 'Close', { duration: 3000 });
           return;
@@ -335,7 +298,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         if (avatar) {
           const formData = new FormData();
           formData.append('avatar', avatar);
-
           this.userService
             .uploadAvatar(formData)
             .pipe(takeUntil(this.destroy$))
@@ -365,9 +327,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         },
       });
   }
+
   showFollowersList() {
     if (!this.user) return;
-    console.log('[showFollowersList] Loading followers for:', this.user.id);
     this.loadingFollowers = true;
     this.showFollowers = true;
     this.showFollowing = false;
@@ -386,13 +348,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe((followers) => {
         this.followers = followers ?? [];
         this.loadingFollowers = false;
-        console.log('[showFollowersList] Loaded', this.followers.length, 'followers');
       });
   }
 
   showFollowingList() {
     if (!this.user) return;
-    console.log('[showFollowingList] Loading following for:', this.user.id);
     this.loadingFollowing = true;
     this.showFollowing = true;
     this.showFollowers = false;
@@ -411,14 +371,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe((following) => {
         this.following = following ?? [];
         this.loadingFollowing = false;
-        console.log('[showFollowingList] Loaded', this.following.length, 'following');
       });
   }
 
   goToUserProfile(username: string) {
-    console.log('[goToUserProfile] Navigating to user:', username);
     this.router.navigate(['/profile', username]);
-    // Close modals
     this.showFollowers = false;
     this.showFollowing = false;
   }
