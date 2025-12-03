@@ -1,7 +1,7 @@
 <!-- src/app/shared/navabr/navbar.component.html -->
-<mat-sidenav-container class="sidenav-container">
+<mat-sidenav-container class="sidenav-container" >
   <!-- Sidebar -->
-  <mat-sidenav #sidenav mode="side" class="sidenav" fixedInViewport>
+  <mat-sidenav #sidenav mode="side" class="sidenav" fixedInViewport *ngIf="loggedIn">
     <mat-toolbar color="primary" class="sidenav-header">
       01Blog
     </mat-toolbar>

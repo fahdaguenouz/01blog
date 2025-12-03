@@ -17,7 +17,7 @@ export const routes: Routes = [
   { path: 'feed', component: FeedComponent, canActivate: [AuthGuard] },
   { path: 'post/create', component: CreatePostComponent, canActivate: [AuthGuard] },
   { path: 'post/:id', component: PostDetailComponent, canActivate: [AuthGuard] },
-  { path: 'profile/:username', component: ProfileComponent },
+  { path: 'profile/:username', component: ProfileComponent , canActivate: [AuthGuard]},
   { 
     path: 'admin', 
     canActivate: [AuthGuard, AdminGuard],

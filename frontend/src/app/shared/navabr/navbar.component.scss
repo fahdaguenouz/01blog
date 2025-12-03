@@ -34,11 +34,11 @@
 
 
 .menu-icon {
-  display: none;
-  @media (max-width: 768px) {
-    display: inline-flex;
-  }
+  display: inline-flex;
+  cursor: pointer;
+  margin-right: 16px; /* optional spacing */
 }
+
 
 .spacer {
   flex: 1;
