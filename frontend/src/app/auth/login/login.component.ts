@@ -58,12 +58,14 @@ export class LoginComponent {
     const v = this.loginForm.value;
     this.loginService.login(v.username!, v.password!).subscribe({
      next: () => {
-      const role = this.auth.getRole();
-      if (role === 'ADMIN') {
-        this.router.navigate(['/admin/dashboard']);   // ADMIN → dashboard
+     
+     setTimeout(() => {
+      if (this.auth.isAdmin()) {
+        this.router.navigate(['/admin/dashboard']);
       } else {
-        this.router.navigate(['/feed']);              // USER → feed
+        this.router.navigate(['/feed']);
       }
+    });
     },
       error: (err) => {
         const msg = toUserMessage(err, 'Could not log you in.');

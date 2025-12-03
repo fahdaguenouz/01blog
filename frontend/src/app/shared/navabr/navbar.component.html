@@ -10,6 +10,7 @@
         <mat-icon matListIcon>{{ item.icon }}</mat-icon>
         <span matLine>{{ item.label }}</span>
       </a>
+     
     </mat-nav-list>
   </mat-sidenav>
 
@@ -45,6 +46,10 @@
             {{ userName || 'Account' }}
           </button>
           <mat-menu #menu="matMenu">
+            <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/dashboard">
+              <mat-icon>dashboard</mat-icon>
+              Dashboard
+            </button>
             <button mat-menu-item (click)="goToMyProfile()">
               <mat-icon>account_circle</mat-icon>
               See Profile

@@ -102,13 +102,18 @@ export class AuthService {
   getRole(): 'USER' | 'ADMIN' | null {
     if (typeof window === 'undefined') return null;
 
-    // 1. Try sessionStorage (same tab)
     const ssRole = window.sessionStorage.getItem('role') as 'USER' | 'ADMIN' | null;
     if (ssRole) return ssRole;
 
-    // 2. Fallback to cookie (after full reload / new tab)
+    // Fallback to cookie
     const cookieRole = this.getCookie('role') as 'USER' | 'ADMIN' | null;
-    return cookieRole ?? null;
+    if (cookieRole) {
+      // restore sessionStorage for smoother next access
+      window.sessionStorage.setItem('role', cookieRole);
+      return cookieRole;
+    }
+
+    return null;
   }
 
   isAdmin(): boolean {

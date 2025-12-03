@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd, RouterOutlet } from '@angular/router';
 import { NgIf, NgClass, NgFor } from '@angular/common';
 import { MatSidenav } from '@angular/material/sidenav';
@@ -35,10 +35,10 @@ interface NavItem {
     MatIconModule,
     MatMenuModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
   ],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav!: MatSidenav;
@@ -46,25 +46,27 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isAuthPage = false;
   loggedIn = false;
   userName: string | null = null;
+  isAdmin = false;
   private sub?: Subscription;
 
   navItems: NavItem[] = [
     { label: 'Home', icon: 'home', route: '/' },
     { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
-    { label: 'Profile', icon: 'account_circle', route: '/profile' }
+    { label: 'Profile', icon: 'account_circle', route: '/profile' },
   ];
-avatarUrl: string | null = null;
+  avatarUrl: string | null = null;
   constructor(
     private router: Router,
     private auth: AuthService,
     private loginService: LoginService,
     private toastr: ToastrService,
-    private userService: UserService
+    private userService: UserService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.refreshAuthState();
-    this.sub = this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe(() => {
+    this.sub = this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.isAuthPage = this.router.url.startsWith('/auth');
       this.refreshAuthState();
     });
@@ -74,31 +76,43 @@ avatarUrl: string | null = null;
     this.sub?.unsubscribe();
   }
 
- private refreshAuthState(): void {
+  private refreshAuthState(): void {
     this.loggedIn = this.auth.isLoggedIn();
     this.userName = this.auth.getUsername();
+    if (this.loggedIn) {
+      this.auth.validateAdminRole().subscribe((isAdmin) => {
+        this.isAdmin = isAdmin;
 
-    if (this.loggedIn && this.userName) {
-      // Load user profile to get avatar URL
-      this.userService.getProfileByUsername(this.userName).subscribe({
-        next: user => {
-          this.avatarUrl = user.avatarUrl || null;
-        },
-        error: () => {
-          this.avatarUrl = null;
+        // Update navItems dynamically
+        this.navItems = [
+          { label: 'Home', icon: 'home', route: '/' },
+          { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
+          { label: 'Profile', icon: 'account_circle', route: '/profile' },
+        ];
+
+        if (this.isAdmin) {
+          this.navItems.push({ label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' });
         }
+
+        this.cd.detectChanges();
       });
+
+      if (this.userName) {
+        this.userService.getProfileByUsername(this.userName).subscribe({
+          next: (user) => (this.avatarUrl = user.avatarUrl || null),
+          error: () => (this.avatarUrl = null),
+        });
+      }
     } else {
+      this.isAdmin = false;
       this.avatarUrl = null;
     }
   }
   goToMyProfile(): void {
-  if (this.userName) {
-  
-    this.router.navigate(['/profile', this.userName]);
+    if (this.userName) {
+      this.router.navigate(['/profile', this.userName]);
+    }
   }
-}
-
 
   logout(): void {
     this.loginService.logout().subscribe({
@@ -113,7 +127,7 @@ avatarUrl: string | null = null;
         this.auth.clearAuth();
         this.refreshAuthState();
         this.router.navigate(['/auth/login']);
-      }
+      },
     });
   }
 }
