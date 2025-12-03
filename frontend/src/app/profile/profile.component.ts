@@ -68,7 +68,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // default tab
     this.selectedTab = 'my';
     this.selectedTab$.next('my');
-
+    
+    this.userService.getCurrentUser()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (me) => {
+        this.currentUserId = me?.id || null;
+      },
+      error: () => {
+        this.currentUserId = null;
+      }
+    });
     // Load profile via route
     this.route.paramMap
       .pipe(
