@@ -54,7 +54,6 @@ public class AdminController {
    @GetMapping("/stats")
   public ResponseEntity<StatsDto> getStats() {
     StatsDto dto = service.getStats();
-    System.out.printf("teh state data",dto);
     return ResponseEntity.ok(dto);
   }
 }

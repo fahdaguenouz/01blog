@@ -50,10 +50,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
               : List.of(new SimpleGrantedAuthority("USER"));
           Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
           SecurityContextHolder.getContext().setAuthentication(auth);
-          System.out.println("JwtAuthFilter: header=" + header);
-          System.out.println("JwtAuthFilter: token=" + token);
-          System.out.println("JwtAuthFilter: auth=" + SecurityContextHolder.getContext().getAuthentication());
-
+      
         }
       } catch (Exception e) {
         // invalid token -> leave anonymous
