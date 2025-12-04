@@ -1,5 +1,6 @@
 package blog.controller;
 
+import blog.dto.DailyStatsDto;
 import blog.dto.StatsDto;
 import blog.models.User;
 import blog.repository.UserRepository;
@@ -15,13 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.UUID;
 
-@RestController  // Spring Web
+@RestController // Spring Web
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
   private final UserRepository userRepo;
   private final UserService userService;
-    private final AdminStatsService service;
+  private final AdminStatsService service;
 
   @GetMapping("/users")
   public List<User> getAllUsers(Authentication auth) {
@@ -38,8 +39,7 @@ public class AdminController {
     if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
     }
-    return userRepo.findById(id).orElseThrow(() -> 
-        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    return userRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 
   @DeleteMapping("/users/{id}")
@@ -51,9 +51,15 @@ public class AdminController {
     return ResponseEntity.noContent().build();
   }
 
-   @GetMapping("/stats")
+  @GetMapping("/stats")
   public ResponseEntity<StatsDto> getStats() {
     StatsDto dto = service.getStats();
     return ResponseEntity.ok(dto);
   }
+
+ @GetMapping("/stats/trends")
+public ResponseEntity<List<DailyStatsDto>> getTrends(@RequestParam(defaultValue = "30d") String period) {
+    List<DailyStatsDto> list = service.getDailyStats(period);
+    return ResponseEntity.ok(list);
+}
 }

@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { KpiCardComponent } from '../components/kpi-card.component';
 import { AdminService, StatsPayload } from '../../services/admin.service';
+import { SvgLineChartComponent } from '../components/line-chart.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -19,16 +20,18 @@ import { AdminService, StatsPayload } from '../../services/admin.service';
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    KpiCardComponent
+    KpiCardComponent,
+    SvgLineChartComponent,
   ],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.scss']
+  styleUrls: ['./admin-dashboard.component.scss'],
 })
 export class AdminDashboardComponent implements OnInit {
   private admin = inject(AdminService);
   private bp = inject(BreakpointObserver);
-
-  // Use the strongly typed StatsPayload from AdminService
+  trendDataUsers: number[] = [];
+  trendLabels: string[] = [];
+  period: '30d' | '7d' | '6m' = '30d';
   stats: StatsPayload | null = null;
 
   cols = 2;
@@ -37,21 +40,41 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit() {
     // responsive layout
-    this.bp.observe([Breakpoints.Handset]).subscribe(result => {
+    this.bp.observe([Breakpoints.Handset]).subscribe((result) => {
       this.cols = result.matches ? 1 : 2;
     });
 
     this.loadStats();
+    this.loadTrends();
   }
 
+
+setPeriod(p: '7d' | '30d' | '6m' | string) {
+  if (p === '7d' || p === '30d' || p === '6m') {
+    this.period = p;
+    this.loadTrends();
+  } else {
+    console.warn('Invalid period:', p);
+  }
+}
+
+
+
+loadTrends() {
+  this.admin.getDailyStats(this.period).subscribe({
+    next: (data) => {
+      this.trendLabels = data.map(d => d.date);
+      this.trendDataUsers = data.map(d => d.users);
+    },
+    error: (err) => console.error('Failed to load trends', err)
+  });
+}
   loadStats() {
     this.loading = true;
     this.error = null;
 
     this.admin.getStats().subscribe({
       next: (s: StatsPayload) => {
-        console.log("s",s);
-        
         this.stats = s;
         this.loading = false;
       },
@@ -59,7 +82,7 @@ export class AdminDashboardComponent implements OnInit {
         console.error('Failed to load admin stats', err);
         this.error = 'Failed to load stats';
         this.loading = false;
-      }
+      },
     });
   }
 }

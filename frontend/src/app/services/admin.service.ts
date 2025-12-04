@@ -12,6 +12,13 @@ export interface StatsPayload {
   openReports: number;
 }
 
+ export interface DailyStats {
+  date: string;
+  users: number;
+  posts: number;
+  reports: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private base = environment.apiUrl || '';
@@ -20,5 +27,15 @@ export class AdminService {
   getStats(): Observable<StatsPayload> {
     return this.http.get<StatsPayload>(`${this.base}/api/admin/stats`, { withCredentials: true });
   }
+ 
+
+getDailyStats(period: '7d' | '30d' | '6m' = '30d'): Observable<DailyStats[]> {
+  return this.http.get<DailyStats[]>(`${this.base}/api/admin/stats/trends`, {
+    params: { period },
+    withCredentials: true
+  });
+}
+
+
 }
 

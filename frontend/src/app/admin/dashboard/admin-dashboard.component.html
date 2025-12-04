@@ -14,6 +14,17 @@
         <app-kpi-card label="Categories" [value]="stats?.totalCategories ?? null"
             sub="Defined categories"></app-kpi-card>
         <app-kpi-card label="Open Reports" [value]="stats?.openReports ?? null" sub="Waiting moderation"></app-kpi-card>
+    </div>
+
+    <div class="chart-section" *ngIf="trendDataUsers?.length">
+        <div class="trend-filters">
+            <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
+            <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
+            <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
+        </div>
+
+        <app-svg-line-chart [title]="'Daily Users'" [labels]="trendLabels" [data]="trendDataUsers">
+        </app-svg-line-chart>
 
     </div>
 </div>
