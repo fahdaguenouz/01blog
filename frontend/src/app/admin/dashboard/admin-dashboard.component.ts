@@ -1,80 +1,65 @@
-import { Component, inject, OnDestroy, OnInit } from "@angular/core";
-import { LoginService } from "../../auth/services/login.service";
-import { interval, Subject, take, takeUntil } from "rxjs";
-import { HttpClient } from "@angular/common/http";
-import { AuthService } from "../../services/auth.service";
-import { CommonModule } from "@angular/common";
+// src/app/admin/dashboard/admin-dashboard.component.ts
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+
+import { KpiCardComponent } from '../components/kpi-card.component';
+import { AdminService, StatsPayload } from '../../services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
-   imports: [  // ADD ALL MATERIAL MODULES
+  standalone: true,
+  imports: [
     CommonModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    MatTabsModule,
-    MatTableModule,
-    MatChipsModule,
-    MatTooltipModule
+    MatCardModule,
+    KpiCardComponent
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss']
 })
-export class AdminDashboardComponent implements OnInit, OnDestroy {
-  users: any[] = [];
-  displayedColumns = ['username', 'email', 'role', 'actions'];
-  private destroy$ = new Subject<void>();
-  
-  private http = inject(HttpClient);
-  private loginService = inject(LoginService);
-  private auth = inject(AuthService);
+export class AdminDashboardComponent implements OnInit {
+  private admin = inject(AdminService);
+  private bp = inject(BreakpointObserver);
+
+  // Use the strongly typed StatsPayload from AdminService
+  stats: StatsPayload | null = null;
+
+  cols = 2;
+  loading = false;
+  error: string | null = null;
 
   ngOnInit() {
-    this.loadUsers();
-    // Re-validate admin role every 5min
-    interval(300000).pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.auth.validateAdminRole().pipe(take(1)).subscribe(isAdmin => {
-        if (!isAdmin) this.loginService.logout();
-      });
+    // responsive layout
+    this.bp.observe([Breakpoints.Handset]).subscribe(result => {
+      this.cols = result.matches ? 1 : 2;
     });
+
+    this.loadStats();
   }
 
-  loadUsers() {
-    const token = this.auth.getToken();
-    this.http.get<any[]>('/api/admin/users', {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: (users) => this.users = users,
-      error: () => {
-        console.error('Failed to load users');
-        this.auth.clearAuth();
+  loadStats() {
+    this.loading = true;
+    this.error = null;
+
+    this.admin.getStats().subscribe({
+      next: (s: StatsPayload) => {
+        console.log("s",s);
+        
+        this.stats = s;
+        this.loading = false;
+      },
+      error: (err: unknown) => {
+        console.error('Failed to load admin stats', err);
+        this.error = 'Failed to load stats';
+        this.loading = false;
       }
     });
-  }
-
-  deleteUser(id: string) {
-    if (!confirm('Delete this user?')) return;
-    
-    const token = this.auth.getToken();
-    this.http.delete(`/api/admin/users/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).subscribe({
-      next: () => this.loadUsers(),
-      error: (err) => console.error('Delete failed:', err)
-    });
-  }
-
-
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

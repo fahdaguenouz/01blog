@@ -1,0 +1,9 @@
+/* src/app/admin/dashboard/admin-dashboard.component.scss */
+.dashboard-root { display:grid; gap:16px; padding:16px; }
+.kpi-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+.spacer{flex:1 1 auto;}
+.error { color: #c62828; }
+@media (max-width:700px){
+  .kpi-row { justify-content:center; }
+  .kpi-row app-kpi-card { width: 100% !important; max-width: 360px; }
+}

@@ -1,7 +1,9 @@
 package blog.controller;
 
+import blog.dto.StatsDto;
 import blog.models.User;
 import blog.repository.UserRepository;
+import blog.service.AdminStatsService;
 import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class AdminController {
   private final UserRepository userRepo;
   private final UserService userService;
+    private final AdminStatsService service;
 
   @GetMapping("/users")
   public List<User> getAllUsers(Authentication auth) {
@@ -46,5 +49,12 @@ public class AdminController {
     }
     userRepo.deleteById(id);
     return ResponseEntity.noContent().build();
+  }
+
+   @GetMapping("/stats")
+  public ResponseEntity<StatsDto> getStats() {
+    StatsDto dto = service.getStats();
+    System.out.printf("teh state data",dto);
+    return ResponseEntity.ok(dto);
   }
 }

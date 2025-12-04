@@ -32,23 +32,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     String header = request.getHeader("Authorization");
     if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
       String token = header.substring(7);
+
       try {
         // parse using your JwtService secretKey
         Jws<Claims> jws = io.jsonwebtoken.Jwts.parserBuilder()
-          .setSigningKey(jwtService.getSecretKey())
-          .build()
-          .parseClaimsJws(token);
+            .setSigningKey(jwtService.getSecretKey())
+            .build()
+            .parseClaimsJws(token);
 
         Claims claims = jws.getBody();
         String username = claims.getSubject();
-       String role = claims.get("role", String.class);
+        String role = claims.get("role", String.class);
 
         if (username != null) {
-          List<GrantedAuthority> authorities =
-              role != null ? List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                           : List.of(new SimpleGrantedAuthority("USER"));
+          List<GrantedAuthority> authorities = role != null
+              ? List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+              : List.of(new SimpleGrantedAuthority("USER"));
           Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
           SecurityContextHolder.getContext().setAuthentication(auth);
+          System.out.println("JwtAuthFilter: header=" + header);
+          System.out.println("JwtAuthFilter: token=" + token);
+          System.out.println("JwtAuthFilter: auth=" + SecurityContextHolder.getContext().getAuthentication());
+
         }
       } catch (Exception e) {
         // invalid token -> leave anonymous
