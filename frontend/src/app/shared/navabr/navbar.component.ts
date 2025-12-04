@@ -85,7 +85,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
         // Update navItems dynamically
         this.navItems = [
-          { label: 'Home', icon: 'home', route: '/' },
           { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
           { label: 'Profile', icon: 'account_circle', route: '/profile' },
         ];

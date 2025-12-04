@@ -24,51 +24,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatChipsModule,
     MatTooltipModule
   ],
-  template: `
-    <mat-toolbar color="primary">
-      <span>Admin Dashboard</span>
-      <span class="spacer"></span>
-     
-    </mat-toolbar>
-    
-    <div class="p-6">
-      <mat-tab-group>
-        <mat-tab label="Users">
-          <div class="mt-4">
-            <table mat-table [dataSource]="users" class="w-full">
-              <ng-container matColumnDef="username">
-                <th mat-header-cell *matHeaderCellDef>Username</th>
-                <td mat-cell *matCellDef="let user">{{user.username}}</td>
-              </ng-container>
-              <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef>Email</th>
-                <td mat-cell *matCellDef="let user">{{user.email}}</td>
-              </ng-container>
-              <ng-container matColumnDef="role">
-                <th mat-header-cell *matHeaderCellDef>Role</th>
-                <td mat-cell *matCellDef="let user">
-                  <mat-chip [color]="user.role === 'ADMIN' ? 'warn' : 'primary'">
-                    {{user.role}}
-                  </mat-chip>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let user">
-                  <button mat-icon-button color="warn" (click)="deleteUser(user.id)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-              
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
-    </div>
-  `
+  templateUrl: './admin-dashboard.component.html',
+  styleUrls: ['./admin-dashboard.component.scss']
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   users: any[] = [];
