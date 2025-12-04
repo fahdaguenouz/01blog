@@ -1,5 +1,5 @@
 <!-- src/app/shared/navabr/navbar.component.html -->
-<mat-sidenav-container class="sidenav-container" >
+<mat-sidenav-container class="sidenav-container">
   <!-- Sidebar -->
   <mat-sidenav #sidenav mode="side" class="sidenav" fixedInViewport *ngIf="loggedIn">
     <mat-toolbar color="primary" class="sidenav-header">
@@ -10,14 +10,14 @@
         <mat-icon matListIcon>{{ item.icon }}</mat-icon>
         <span matLine>{{ item.label }}</span>
       </a>
-     
+
     </mat-nav-list>
   </mat-sidenav>
 
   <!-- Main content -->
   <mat-sidenav-content>
     <mat-toolbar color="primary" class="top-toolbar">
-      <button mat-icon-button (click)="sidenav.toggle()" class="menu-icon">
+      <button *ngIf="loggedIn" mat-icon-button (click)="sidenav.toggle()" class="menu-icon">
         <mat-icon>menu</mat-icon>
       </button>
 
