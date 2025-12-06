@@ -1,6 +1,33 @@
-.donut-content{display:flex;gap:12px;align-items:center}
-    .donut-svg{width:180px;height:180px}
-    .legend{display:flex;flex-direction:column;gap:6px}
-    .item{display:flex;align-items:center;gap:8px}
-    .swatch{width:14px;height:14px;border-radius:3px;display:inline-block}
-    .lbl{font-size:0.9rem}
+.donut-content {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.donut-svg {
+  width: 180px;
+  height: 180px;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.lbl {
+  font-size: 0.9rem;
+}

@@ -8,8 +8,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { KpiCardComponent } from '../components/kpi-cards/kpi-card.component';
-import { AdminService, StatsPayload, DailyStats } from '../../services/admin.service';
+import {
+  AdminService,
+  StatsPayload,
+  DailyStats,
+  ReportCategoryStat,
+} from '../../services/admin.service';
 import { SvgLineChartComponent } from '../components/line-chart/line-chart.component';
+import { SvgDonutChartComponent } from '../components/donuts-chart/donut-chart.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -22,6 +28,7 @@ import { SvgLineChartComponent } from '../components/line-chart/line-chart.compo
     MatCardModule,
     KpiCardComponent,
     SvgLineChartComponent,
+    SvgDonutChartComponent,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
@@ -33,6 +40,10 @@ export class AdminDashboardComponent implements OnInit {
   // time‑series data
   trendDataPosts: number[] = [];
   trendLabels: string[] = [];
+
+  // donut: reports by category only
+  reportDonutLabels: string[] = [];
+  reportDonutData: number[] = [];
 
   period: '30d' | '7d' | '6m' = '30d';
   stats: StatsPayload | null = null;
@@ -48,12 +59,13 @@ export class AdminDashboardComponent implements OnInit {
 
     this.loadStats();
     this.loadTrends();
+    this.loadReportCategoryStats();
 
-    // optional real‑time refresh when posts change
     if ((this.admin as any).postsUpdated$) {
       (this.admin as any).postsUpdated$.subscribe(() => {
         this.loadTrends();
         this.loadStats();
+        this.loadReportCategoryStats();
       });
     }
   }
@@ -91,6 +103,16 @@ export class AdminDashboardComponent implements OnInit {
         this.error = 'Failed to load stats';
         this.loading = false;
       },
+    });
+  }
+
+  loadReportCategoryStats() {
+    this.admin.getReportCategoryStats().subscribe({
+      next: (rows: ReportCategoryStat[]) => {
+        this.reportDonutLabels = rows.map((r) => r.category);
+        this.reportDonutData = rows.map((r) => r.count);
+      },
+      error: (err) => console.error('Failed to load report category stats', err),
     });
   }
 }

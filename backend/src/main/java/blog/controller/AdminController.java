@@ -1,6 +1,7 @@
 package blog.controller;
 
 import blog.dto.DailyStatsDto;
+import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
 import blog.models.User;
 import blog.repository.UserRepository;
@@ -62,4 +63,11 @@ public ResponseEntity<List<DailyStatsDto>> getTrends(@RequestParam(defaultValue 
     List<DailyStatsDto> list = service.getDailyStats(period);
     return ResponseEntity.ok(list);
 }
+
+@GetMapping("/stats/report-categories")
+public ResponseEntity<List<ReportCategoryCountDto>> getReportCategoryStats() {
+  List<ReportCategoryCountDto> list = service.getReportCategoryStats();
+  return ResponseEntity.ok(list);
+}
+
 }

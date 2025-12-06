@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import blog.dto.DailyStatsDto;
+import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
 
 
@@ -91,4 +92,23 @@ public class AdminStatsService {
                 rs.getLong("posts"),
                 rs.getLong("reports")));
   }
+
+
+
+  public List<ReportCategoryCountDto> getReportCategoryStats() {
+  String sql = """
+      SELECT COALESCE(category, 'Uncategorized') AS category,
+             COUNT(*) AS count
+      FROM reports
+      GROUP BY COALESCE(category, 'Uncategorized')
+      ORDER BY count DESC
+      """;
+  return jdbc.query(sql, (rs, rowNum) ->
+      new ReportCategoryCountDto(
+          rs.getString("category"),
+          rs.getLong("count")
+      )
+  );
+}
+
 }

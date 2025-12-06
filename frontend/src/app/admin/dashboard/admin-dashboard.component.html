@@ -8,6 +8,7 @@
   <div *ngIf="error" class="error">{{ error }}</div>
 
   <div class="kpi-row" *ngIf="stats">
+    <!-- your KPI cards as before -->
     <app-kpi-card
       label="Total Users"
       [value]="stats?.totalUsers ?? null"
@@ -39,17 +40,30 @@
     </app-kpi-card>
   </div>
 
-  <div class="chart-section" *ngIf="trendDataPosts?.length">
-    <div class="trend-filters">
-      <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
-      <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
-      <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
+  <div class="chart-section">
+   
+
+    <!-- posts over time line chart -->
+    <div class="chart-section" *ngIf="trendDataPosts?.length">
+      <div class="trend-filters">
+        <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
+        <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
+        <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
+      </div>
+
+      <app-svg-line-chart
+        [title]="'Posts over time'"
+        [labels]="trendLabels"
+        [data]="trendDataPosts">
+      </app-svg-line-chart>
     </div>
 
-    <app-svg-line-chart
-      [title]="'Posts over time'"
-      [labels]="trendLabels"
-      [data]="trendDataPosts">
-    </app-svg-line-chart>
+     <!-- donut: only report categories -->
+    <app-svg-donut-chart
+      *ngIf="reportDonutData?.length"
+      [title]="'Reports by category'"
+      [labels]="reportDonutLabels"
+      [data]="reportDonutData">
+    </app-svg-donut-chart>
   </div>
 </div>
