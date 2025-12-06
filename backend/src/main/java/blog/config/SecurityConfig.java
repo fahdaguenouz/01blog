@@ -37,6 +37,8 @@ public class SecurityConfig {
             .requestMatchers("/api/users/*/subscribe").authenticated()
             .requestMatchers("/api/users/me/**").authenticated()
             .requestMatchers("/api/posts/**").authenticated()
+            .requestMatchers("/api/reports/**").authenticated()
+
             
             // Public posts/categories
             .requestMatchers("/api/categories/**").permitAll()
