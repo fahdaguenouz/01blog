@@ -1,30 +1,55 @@
 <mat-toolbar color="primary">
-    <span>Admin Dashboard</span>
-    <span class="spacer"></span>
+  <span>Admin Dashboard</span>
+  <span class="spacer"></span>
 </mat-toolbar>
 
 <div class="dashboard-root p-16">
-    <div *ngIf="loading">Loading stats...</div>
-    <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="loading">Loading stats...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
 
-    <div class="kpi-row" *ngIf="stats">
-        <app-kpi-card label="Total Users" [value]="stats?.totalUsers ?? null" sub="All time"></app-kpi-card>
-        <app-kpi-card label="Total Posts" [value]="stats?.totalPosts ?? null" sub="All time"></app-kpi-card>
-        <app-kpi-card label="Total Reports" [value]="stats?.totalReports ?? null" sub="All time"></app-kpi-card>
-        <app-kpi-card label="Categories" [value]="stats?.totalCategories ?? null"
-            sub="Defined categories"></app-kpi-card>
-        <app-kpi-card label="Open Reports" [value]="stats?.openReports ?? null" sub="Waiting moderation"></app-kpi-card>
+  <div class="kpi-row" *ngIf="stats">
+    <app-kpi-card
+      label="Total Users"
+      [value]="stats?.totalUsers ?? null"
+      sub="All time">
+    </app-kpi-card>
+
+    <app-kpi-card
+      label="Total Posts"
+      [value]="stats?.totalPosts ?? null"
+      sub="All time">
+    </app-kpi-card>
+
+    <app-kpi-card
+      label="Total Reports"
+      [value]="stats?.totalReports ?? null"
+      sub="All time">
+    </app-kpi-card>
+
+    <app-kpi-card
+      label="Categories"
+      [value]="stats?.totalCategories ?? null"
+      sub="Defined categories">
+    </app-kpi-card>
+
+    <app-kpi-card
+      label="Open Reports"
+      [value]="stats?.openReports ?? null"
+      sub="Waiting moderation">
+    </app-kpi-card>
+  </div>
+
+  <div class="chart-section" *ngIf="trendDataPosts?.length">
+    <div class="trend-filters">
+      <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
+      <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
+      <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
     </div>
 
-    <div class="chart-section" *ngIf="trendDataUsers?.length">
-        <div class="trend-filters">
-            <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
-            <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
-            <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
-        </div>
-
-        <app-svg-line-chart [title]="'Daily Users'" [labels]="trendLabels" [data]="trendDataUsers">
-        </app-svg-line-chart>
-
-    </div>
+    <app-svg-line-chart
+      [title]="'Posts over time'"
+      [labels]="trendLabels"
+      [data]="trendDataPosts">
+    </app-svg-line-chart>
+  </div>
 </div>

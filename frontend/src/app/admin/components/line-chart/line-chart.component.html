@@ -1,0 +1,192 @@
+<mat-card class="chart-card">
+  <mat-card-header class="card-header">
+    <mat-card-title>{{ title }}</mat-card-title>
+    <div class="controls" *ngIf="labels?.length">
+      <button class="mini" (click)="zoomOut()">−</button>
+      <button class="mini" (click)="resetZoom()">◻</button>
+      <button class="mini" (click)="zoomIn()">+</button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="chart-content">
+    <div class="svg-wrap">
+      <svg
+        [attr.viewBox]="viewBox"
+        preserveAspectRatio="none"
+        class="svg"
+        (mousemove)="onMouseMove($event)"
+        (mouseleave)="onLeave()"
+      >
+        <defs>
+          <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1">
+            <stop
+              offset="0%"
+              stop-opacity="0.18"
+              stop-color="var(--accent)">
+            </stop>
+            <stop
+              offset="100%"
+              stop-opacity="0.02"
+              stop-color="var(--accent)">
+            </stop>
+          </linearGradient>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx="0"
+              dy="6"
+              stdDeviation="8"
+              flood-opacity="0.08" />
+          </filter>
+        </defs>
+
+        <!-- grid lines (horizontal) -->
+        <g class="grid">
+          <line
+            *ngFor="let y of gridYs"
+            [attr.x1]="padding.left"
+            [attr.x2]="width - padding.right"
+            [attr.y1]="y"
+            [attr.y2]="y"
+            class="grid-line">
+          </line>
+        </g>
+
+        <!-- y axis title -->
+        <text
+          class="axis-title"
+          [attr.x]="padding.left - 32"
+          [attr.y]="(height - padding.bottom + padding.top) / 2"
+          text-anchor="middle"
+          [attr.transform]="
+            'rotate(-90 ' +
+            (padding.left - 32) +
+            ' ' +
+            (height - padding.bottom + padding.top) / 2 +
+            ')'
+          ">
+          Posts
+        </text>
+
+        <!-- y axis ticks & labels -->
+        <g class="y-axis">
+          <line
+            [attr.x1]="padding.left"
+            [attr.x2]="padding.left"
+            [attr.y1]="padding.top"
+            [attr.y2]="height - padding.bottom"
+            class="axis-line">
+          </line>
+
+          <g *ngFor="let t of yTicks">
+            <line
+              [attr.x1]="padding.left - 6"
+              [attr.x2]="padding.left"
+              [attr.y1]="t.y"
+              [attr.y2]="t.y"
+              class="tick">
+            </line>
+            <text
+              class="tick-label"
+              [attr.x]="padding.left - 10"
+              [attr.y]="t.y + 4"
+              text-anchor="end">
+              {{ t.v }}
+            </text>
+          </g>
+        </g>
+
+        <!-- x axis title -->
+        <text
+          class="axis-title"
+          [attr.x]="(width - padding.right + padding.left) / 2"
+          [attr.y]="height - 8"
+          text-anchor="middle">
+          Time
+        </text>
+
+        <!-- x axis -->
+        <g class="x-axis">
+          <line
+            [attr.x1]="padding.left"
+            [attr.x2]="width - padding.right"
+            [attr.y1]="height - padding.bottom"
+            [attr.y2]="height - padding.bottom"
+            class="axis-line">
+          </line>
+
+          <g *ngFor="let xt of xTicks">
+            <line
+              [attr.x1]="xt.x"
+              [attr.x2]="xt.x"
+              [attr.y1]="height - padding.bottom"
+              [attr.y2]="height - padding.bottom + 6"
+              class="tick">
+            </line>
+            <text
+              class="tick-label"
+              [attr.x]="xt.x"
+              [attr.y]="height - padding.bottom + 18"
+              text-anchor="middle">
+              {{ xt.label }}
+            </text>
+          </g>
+        </g>
+
+        <!-- area under curve -->
+        <path
+          *ngIf="path"
+          [attr.d]="areaPath"
+          fill="url(#areaGrad)"
+          [attr.filter]="'url(#shadow)'">
+        </path>
+
+        <!-- main line -->
+        <path
+          *ngIf="path"
+          [attr.d]="path"
+          fill="none"
+          stroke="var(--accent)"
+          stroke-width="2.5"
+          stroke-linejoin="round"
+          stroke-linecap="round">
+        </path>
+
+        <!-- points -->
+        <g
+          *ngFor="let p of points"
+          class="point-group"
+          (mouseenter)="onPointEnter(p)">
+         <circle class="point-fill" [attr.cx]="p.x" [attr.cy]="p.y" r="4.5"></circle>
+
+          <circle class="point-hit"[attr.cx]="p.x"[attr.cy]="p.y"r="8"></circle>
+        </g>
+
+        <!-- hover guide line -->
+        <line
+          *ngIf="hover.x"
+          class="guide"
+          [attr.x1]="hover.x"
+          [attr.x2]="hover.x"
+          [attr.y1]="padding.top"
+          [attr.y2]="height - padding.bottom">
+        </line>
+      </svg>
+    </div>
+
+    <!-- tooltip -->
+    <div
+      class="tooltip"
+      [style.transform]="tooltipTransform"
+      [class.show]="tooltipVisible">
+      <div class="tt-value">{{ tooltip?.v }}</div>
+      <div class="tt-label">{{ tooltip?.label }}</div>
+    </div>
+
+    <!-- summary labels -->
+    <div class="labels">
+      <div class="label-left">Min: {{ minLabel }}</div>
+      <div class="label-center">Avg: {{ avgLabel }}</div>
+      <div class="label-right">Max: {{ maxLabel }}</div>
+    </div>
+  </mat-card-content>
+</mat-card>

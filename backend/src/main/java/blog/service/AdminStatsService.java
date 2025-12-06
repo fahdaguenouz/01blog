@@ -38,15 +38,21 @@ public class AdminStatsService {
     );
   }
 
-public List<DailyStatsDto> getDailyStats(String period) {
+ public List<DailyStatsDto> getDailyStats(String period) {
     String interval;
     switch (period) {
-        case "7d": interval = "7"; break;
-        case "6m": interval = "180"; break; // roughly 6 months
-        default: interval = "30"; // 30 days by default
+      case "7d":
+        interval = "7";
+        break;
+      case "6m":
+        interval = "180"; // roughly 6 months
+        break;
+      default:
+        interval = "30"; // 30 days by default
     }
 
-    String sql = """
+    String sql =
+        """
         SELECT d.date,
                COALESCE(u.count, 0) AS users,
                COALESCE(p.count, 0) AS posts,
@@ -73,16 +79,16 @@ public List<DailyStatsDto> getDailyStats(String period) {
             GROUP BY DATE(created_at)
         ) r ON r.date = d.date
         ORDER BY d.date
-    """.formatted(interval, interval, interval, interval);
+        """
+            .formatted(interval, interval, interval, interval);
 
-    return jdbc.query(sql, (rs, rowNum) ->
-        new DailyStatsDto(
-            rs.getDate("date").toLocalDate(),
-            rs.getLong("users"),
-            rs.getLong("posts"),
-            rs.getLong("reports")
-        )
-    );
-}
-
+    return jdbc.query(
+        sql,
+        (rs, rowNum) ->
+            new DailyStatsDto(
+                rs.getDate("date").toLocalDate(),
+                rs.getLong("users"),
+                rs.getLong("posts"),
+                rs.getLong("reports")));
+  }
 }

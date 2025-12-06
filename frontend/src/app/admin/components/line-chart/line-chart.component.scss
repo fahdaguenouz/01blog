@@ -1,0 +1,132 @@
+:root {
+        --accent: #1976d2;
+        --muted: rgba(0, 0, 0, 0.6);
+      }
+
+      .chart-card {
+        padding: 8px 8px 4px;
+        height: 100%;
+        border-radius: 12px;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 4px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 6px;
+      }
+
+      .mini {
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: transparent;
+        border-radius: 6px;
+        padding: 4px 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
+      .chart-content {
+        position: relative;
+        height: 260px;
+        display: flex;
+        flex-direction: column;
+        padding: 4px 0 0;
+      }
+
+      .svg-wrap {
+        width: 100%;
+        height: 100%;
+      }
+      .svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .grid-line {
+        stroke: rgba(0, 0, 0, 0.04);
+        stroke-dasharray: 3 3;
+      }
+      .axis-line {
+        stroke: rgba(0, 0, 0, 0.08);
+        stroke-width: 1;
+      }
+      .tick {
+        stroke: rgba(0, 0, 0, 0.16);
+      }
+
+      .tick-label {
+        font-size: 10px;
+        fill: var(--muted);
+        font-family: Roboto, Arial, sans-serif;
+      }
+
+      .axis-title {
+        font-size: 11px;
+        fill: var(--muted);
+        font-family: Roboto, Arial, sans-serif;
+      }
+
+      .point-fill {
+        fill: #fff;
+        stroke: var(--accent);
+        stroke-width: 2;
+      }
+      .point-hit {
+        fill: transparent;
+        cursor: pointer;
+      }
+
+      .guide {
+        stroke: rgba(25, 118, 210, 0.15);
+        stroke-width: 1;
+        stroke-dasharray: 3 3;
+      }
+
+      .labels {
+        display: flex;
+        justify-content: flex-start;
+        gap: 16px;
+        font-size: 0.78rem;
+        margin-top: 6px;
+        color: var(--muted);
+      }
+      .label-center {
+        text-align: left;
+      }
+      .label-right {
+        margin-left: auto;
+      }
+
+      .tooltip {
+        position: absolute;
+        pointer-events: none;
+        transform: translate(-50%, -120%);
+        transition: transform 120ms ease, opacity 120ms ease;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        padding: 6px 8px;
+        font-size: 12px;
+        opacity: 0;
+        z-index: 10;
+        min-width: 72px;
+        text-align: center;
+        left: 0;
+        top: 0;
+      }
+      .tooltip.show {
+        opacity: 1;
+      }
+      .tt-value {
+        font-weight: 600;
+      }
+      .tt-label {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.6);
+        margin-top: 2px;
+      }
