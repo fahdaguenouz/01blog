@@ -13,7 +13,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { EditPostData, EditPostDialogComponent } from './edit-post-component';
-
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ReportService } from '../services/report.service';
+import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dialog.component';
 @Component({
   standalone: true,
   selector: 'app-post-detail',
@@ -26,9 +28,10 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
     MatFormFieldModule,
     FormsModule,
     MatMenuModule,
-    MatDialogModule, 
+    MatDialogModule,
     RouterModule,
     MatInputModule,
+    MatTooltipModule,
   ],
   template: `
     <mat-card *ngIf="post">
@@ -47,6 +50,15 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
           </button>
         </mat-menu>
       </div>
+       <button
+        mat-icon-button
+        color="warn"
+        aria-label="Report this post"
+        matTooltip="Report this post"
+        (click)="openReportDialog()"
+      >
+        <mat-icon>warning</mat-icon>
+      </button>
 
       <h2>{{ post.title }}</h2>
       <small>{{ post.createdAt | date : 'medium' }}</small>
@@ -113,6 +125,8 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
         <p>{{ comment.text }}</p>
       </div>
 
+     
+
       <form (ngSubmit)="addComment()" #commentForm="ngForm">
         <mat-form-field appearance="fill" class="full-width">
           <textarea
@@ -129,33 +143,39 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
       </form>
     </mat-card>
   `,
- styles: [`
-  .comment { /* existing */ }
-  .full-width { /* existing */ }
-  
-  /* ✅ NEW STYLES */
-  .post-author {
-    display: flex;
-    align-items: center;
-    margin: 12px 0;
-  }
-  .author-link {
-    text-decoration: none;
-    color: #1976d2;
-  }
-  .author-link:hover {
-    text-decoration: underline;
-  }
-  .author-avatar {
-    object-fit: cover;
-  }
-`]
+  styles: [
+    `
+      .comment {
+        /* existing */
+      }
+      .full-width {
+        /* existing */
+      }
 
+      /* ✅ NEW STYLES */
+      .post-author {
+        display: flex;
+        align-items: center;
+        margin: 12px 0;
+      }
+      .author-link {
+        text-decoration: none;
+        color: #1976d2;
+      }
+      .author-link:hover {
+        text-decoration: underline;
+      }
+      .author-avatar {
+        object-fit: cover;
+      }
+    `,
+  ],
 })
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private posts = inject(PostService);
   private userService = inject(UserService);
+  private reports = inject(ReportService);
   post: Post | null = null;
   comments: Comment[] = [];
   newComment = '';
@@ -289,4 +309,39 @@ export class PostDetailComponent implements OnInit {
       },
     });
   }
+
+
+  openReportDialog() {
+  if (!this.post || !this.currentUser) {
+    alert('You must be logged in to report a post.');
+    return;
+  }
+
+  const dialogRef = this.dialog.open<
+    ReportPostDialogComponent,
+    { authorName: string; postTitle: string },
+    ReportPostDialogResult
+  >(ReportPostDialogComponent, {
+    width: '420px',
+    data: {
+      authorName: this.post.authorName,
+      postTitle: this.post.title,
+    },
+  });
+
+  dialogRef.afterClosed().subscribe((result) => {
+    if (!result) return;
+
+    this.reports.reportPost({
+      reportedUserId: this.post!.authorId,
+      reportedPostId: this.post!.id,
+      category: result.category,
+      reason: result.reason,
+    }).subscribe({
+      next: () => alert('Thank you. Your report has been submitted.'),
+      error: () => alert('Failed to submit report. Please try again later.'),
+    });
+  });
+}
+
 }

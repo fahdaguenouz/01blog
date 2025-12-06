@@ -1,37 +1,48 @@
+// src/app/services/report.service.ts
 import { HttpClient } from '@angular/common/http';
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environment/environment';
 
 export interface Report {
   id: string;
+  reporterId: string;
   reportedUserId: string;
-  reportedUsername: string;
+  reportedPostId?: string;
+  reportedCommentId?: string;
+  category: string;
   reason: string;
-  status: 'pending' | 'reviewed' | 'resolved';
+  status: 'waiting' | 'reviewed' | 'resolved';
   createdAt: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface CreatePostReport {
+  reportedUserId: string;
+  reportedPostId: string;
+  category: string;
+  reason: string;
+}
+
+@Injectable({ providedIn: 'root' })
 export class ReportService {
-  private apiUrl = '/api/reports';
+  private base = environment.apiUrl || '';
+  private http = inject(HttpClient);
+  private apiUrl = `${this.base}/api/reports`;
 
-  constructor(private injector: Injector) {}
-
-  private getHttp(): HttpClient {
-    return this.injector.get(HttpClient);
+  reportPost(payload: CreatePostReport): Observable<Report> {
+    return this.http.post<Report>(this.apiUrl, payload, { withCredentials: true });
   }
 
-  reportUser(userId: string, reason: string): Observable<Report> {
-    return this.getHttp().post<Report>(this.apiUrl, { userId, reason });
-  }
-
+  // admin-only later:
   getReports(): Observable<Report[]> {
-    return this.getHttp().get<Report[]>(this.apiUrl);
+    return this.http.get<Report[]>(this.apiUrl, { withCredentials: true });
   }
 
   updateReportStatus(reportId: string, status: string): Observable<Report> {
-    return this.getHttp().patch<Report>(`${this.apiUrl}/${reportId}`, { status });
+    return this.http.patch<Report>(
+      `${this.apiUrl}/${reportId}`,
+      { status },
+      { withCredentials: true }
+    );
   }
 }
