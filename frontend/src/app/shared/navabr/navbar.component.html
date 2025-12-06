@@ -46,14 +46,20 @@
             {{ userName || 'Account' }}
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/dashboard">
-              <mat-icon>dashboard</mat-icon>
-              Dashboard
-            </button>
+
             <button mat-menu-item (click)="goToMyProfile()">
               <mat-icon>account_circle</mat-icon>
               See Profile
             </button>
+            <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/dashboard">
+              <mat-icon>dashboard</mat-icon>
+              Dashboard
+            </button>
+            <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/users">
+              <mat-icon>group</mat-icon>
+              Users
+            </button>
+
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon>
               Logout

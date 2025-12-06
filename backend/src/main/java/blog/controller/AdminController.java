@@ -81,4 +81,55 @@ public ResponseEntity<List<TopContributorDto>> getTopContributors(
 }
 
 
+
+@PatchMapping("/users/{id}/status")
+public ResponseEntity<User> updateUserStatus(
+    @PathVariable UUID id,
+    @RequestBody StatusBody body,
+    Authentication auth
+) {
+  if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+  }
+
+  User user = userRepo.findById(id)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+  user.setStatus(body.status()); // e.g. "active" / "banned"
+  return ResponseEntity.ok(userRepo.save(user));
+}
+
+public record StatusBody(String status) {}
+
+
+
+
+
+@PatchMapping("/users/{id}/role")
+public ResponseEntity<User> updateUserRole(
+    @PathVariable UUID id,
+    @RequestBody RoleBody body,
+    Authentication auth
+) {
+  if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+  }
+
+  User user = userRepo.findById(id)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+  // expect "USER" or "ADMIN"
+  try {
+    user.setRole(User.Role.valueOf(body.role()));
+  } catch (IllegalArgumentException ex) {
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
+  }
+
+  return ResponseEntity.ok(userRepo.save(user));
+}
+
+public record RoleBody(String role) {}
+
+
+
 }

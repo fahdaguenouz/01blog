@@ -38,6 +38,14 @@ export interface TopContributor {
   lastActivity: string;
 }
 
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  status: string;       // "active" / "banned"
+  role: 'USER' | 'ADMIN';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private base = environment.apiUrl || '';
@@ -69,5 +77,33 @@ export class AdminService {
         withCredentials: true,
       }
     );
+  }
+
+  getAllUsers(): Observable<AdminUser[]> {
+    return this.http.get<AdminUser[]>(`${this.base}/api/admin/users`, {
+      withCredentials: true,
+    });
+  }
+
+  updateUserStatus(id: string, status: 'active' | 'banned'): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(
+      `${this.base}/api/admin/users/${id}/status`,
+      { status },
+      { withCredentials: true }
+    );
+  }
+
+  updateUserRole(id: string, role: 'USER' | 'ADMIN'): Observable<AdminUser> {
+    return this.http.patch<AdminUser>(
+      `${this.base}/api/admin/users/${id}/role`,
+      { role },
+      { withCredentials: true }
+    );
+  }
+
+  deleteUser(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/admin/users/${id}`, {
+      withCredentials: true,
+    });
   }
 }
