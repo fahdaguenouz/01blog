@@ -1,0 +1,6 @@
+ .kpi-card{width:220px;padding:12px;display:flex;flex-direction:column;gap:6px}
+    .value{font-size:1.6rem;font-weight:700}
+    .label{color:rgba(0,0,0,0.6);font-size:.9rem}
+    .sub{font-size:.85rem;color:rgba(0,0,0,0.55)}
+    .delta{margin-top:auto;font-size:.85rem}
+    .up{color:#2e7d32}.down{color:#c62828}

@@ -1,0 +1,12 @@
+ <mat-card class="kpi-card mat-elevation-z2">
+      <div class="top">
+        <div class="value">{{ value | number }}</div>
+        <div class="label">{{ label }}</div>
+      </div>
+      <div class="sub" *ngIf="sub">{{ sub }}</div>
+      <div class="delta" *ngIf="delta !== undefined">
+        <span [class.up]="delta >= 0" [class.down]="delta < 0">
+          {{ delta >= 0 ? '+' : ''}}{{ delta }}%
+        </span>
+      </div>
+    </mat-card>
