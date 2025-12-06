@@ -7,7 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-import { KpiCardComponent } from '../components/kpi-card.component';
+import { KpiCardComponent } from '../components/kpi-cards/kpi-card.component';
 import { AdminService, StatsPayload, DailyStats } from '../../services/admin.service';
 import { SvgLineChartComponent } from '../components/line-chart/line-chart.component';
 

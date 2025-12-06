@@ -6,39 +6,8 @@ import { MatCardModule } from '@angular/material/card';
   selector: 'app-svg-donut-chart',
   standalone: true,
   imports: [CommonModule, MatCardModule],
-  template: `
-    <mat-card class="chart-card">
-      <mat-card-header><mat-card-title>{{ title }}</mat-card-title></mat-card-header>
-      <mat-card-content class="donut-content">
-        <svg viewBox="0 0 200 200" class="donut-svg">
-          <g transform="translate(100,100)">
-            <circle r="60" fill="transparent"></circle>
-            <ng-container *ngFor="let seg of segments">
-              <path [attr.d]="seg.path" [attr.fill]="seg.color"></path>
-            </ng-container>
-            <!-- hole -->
-            <circle r="36" fill="white"></circle>
-            <text *ngIf="total" x="0" y="4" text-anchor="middle" font-size="14" fill="#333">{{ total }}</text>
-          </g>
-        </svg>
-
-        <div class="legend">
-          <div class="item" *ngFor="let seg of segments">
-            <span class="swatch" [style.background]="seg.color"></span>
-            <span class="lbl">{{seg.label}} ({{seg.value}})</span>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  `,
-  styles: [`
-    .donut-content{display:flex;gap:12px;align-items:center}
-    .donut-svg{width:180px;height:180px}
-    .legend{display:flex;flex-direction:column;gap:6px}
-    .item{display:flex;align-items:center;gap:8px}
-    .swatch{width:14px;height:14px;border-radius:3px;display:inline-block}
-    .lbl{font-size:0.9rem}
-  `]
+  templateUrl: './donut-chart.component.html',
+  styleUrls: ['./donut-chart.component.scss'],
 })
 export class SvgDonutChartComponent implements OnChanges {
   @Input() title = 'Donut';
