@@ -65,5 +65,11 @@
       [labels]="reportDonutLabels"
       [data]="reportDonutData">
     </app-svg-donut-chart>
+
+
+    <app-top-contributors
+    *ngIf="topContributors?.length"
+    [items]="topContributors">
+  </app-top-contributors>
   </div>
 </div>

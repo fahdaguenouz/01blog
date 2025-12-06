@@ -3,6 +3,7 @@ package blog.controller;
 import blog.dto.DailyStatsDto;
 import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
+import blog.dto.TopContributorDto;
 import blog.models.User;
 import blog.repository.UserRepository;
 import blog.service.AdminStatsService;
@@ -69,5 +70,15 @@ public ResponseEntity<List<ReportCategoryCountDto>> getReportCategoryStats() {
   List<ReportCategoryCountDto> list = service.getReportCategoryStats();
   return ResponseEntity.ok(list);
 }
+
+
+@GetMapping("/stats/top-contributors")
+public ResponseEntity<List<TopContributorDto>> getTopContributors(
+    @RequestParam(defaultValue = "10") int limit
+) {
+  List<TopContributorDto> list = service.getTopContributors(limit);
+  return ResponseEntity.ok(list);
+}
+
 
 }

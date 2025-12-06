@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import blog.dto.DailyStatsDto;
 import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
-
+import blog.dto.TopContributorDto;
 
 @Service
 public class AdminStatsService {
@@ -20,26 +20,23 @@ public class AdminStatsService {
 
   public StatsDto getStats() {
     String sql = """
-      SELECT
-        (SELECT COUNT(*) FROM users) AS total_users,
-        (SELECT COUNT(*) FROM posts) AS total_posts,
-        (SELECT COUNT(*) FROM reports) AS total_reports,
-        (SELECT COUNT(*) FROM categories) AS total_categories,
-        (SELECT COUNT(*) FROM reports WHERE status = 'waiting') AS open_reports
-    """;
+          SELECT
+            (SELECT COUNT(*) FROM users) AS total_users,
+            (SELECT COUNT(*) FROM posts) AS total_posts,
+            (SELECT COUNT(*) FROM reports) AS total_reports,
+            (SELECT COUNT(*) FROM categories) AS total_categories,
+            (SELECT COUNT(*) FROM reports WHERE status = 'waiting') AS open_reports
+        """;
 
-    return jdbc.queryForObject(sql, (rs, rowNum) ->
-      new StatsDto(
+    return jdbc.queryForObject(sql, (rs, rowNum) -> new StatsDto(
         rs.getLong("total_users"),
         rs.getLong("total_posts"),
         rs.getLong("total_reports"),
         rs.getLong("total_categories"),
-        rs.getLong("open_reports")
-      )
-    );
+        rs.getLong("open_reports")));
   }
 
- public List<DailyStatsDto> getDailyStats(String period) {
+  public List<DailyStatsDto> getDailyStats(String period) {
     String interval;
     switch (period) {
       case "7d":
@@ -52,8 +49,7 @@ public class AdminStatsService {
         interval = "30"; // 30 days by default
     }
 
-    String sql =
-        """
+    String sql = """
         SELECT d.date,
                COALESCE(u.count, 0) AS users,
                COALESCE(p.count, 0) AS posts,
@@ -81,32 +77,53 @@ public class AdminStatsService {
         ) r ON r.date = d.date
         ORDER BY d.date
         """
-            .formatted(interval, interval, interval, interval);
+        .formatted(interval, interval, interval, interval);
 
     return jdbc.query(
         sql,
-        (rs, rowNum) ->
-            new DailyStatsDto(
-                rs.getDate("date").toLocalDate(),
-                rs.getLong("users"),
-                rs.getLong("posts"),
-                rs.getLong("reports")));
+        (rs, rowNum) -> new DailyStatsDto(
+            rs.getDate("date").toLocalDate(),
+            rs.getLong("users"),
+            rs.getLong("posts"),
+            rs.getLong("reports")));
   }
 
-
-
   public List<ReportCategoryCountDto> getReportCategoryStats() {
+    String sql = """
+        SELECT COALESCE(category, 'Uncategorized') AS category,
+               COUNT(*) AS count
+        FROM reports
+        GROUP BY COALESCE(category, 'Uncategorized')
+        ORDER BY count DESC
+        """;
+    return jdbc.query(sql, (rs, rowNum) -> new ReportCategoryCountDto(
+        rs.getString("category"),
+        rs.getLong("count")));
+  }
+
+public List<TopContributorDto> getTopContributors(int limit) {
   String sql = """
-      SELECT COALESCE(category, 'Uncategorized') AS category,
-             COUNT(*) AS count
-      FROM reports
-      GROUP BY COALESCE(category, 'Uncategorized')
-      ORDER BY count DESC
+      SELECT u.id,
+             u.username,
+             COUNT(p.id) AS posts_count,
+             COALESCE(SUM(CASE WHEN p.status = 'flagged' THEN 1 ELSE 0 END), 0) AS flagged_count,
+             COALESCE(MAX(p.created_at), u.created_at) AS last_activity
+      FROM users u
+      LEFT JOIN posts p ON p.user_id = u.id   -- <-- use user_id, not author_id
+      GROUP BY u.id, u.username
+      ORDER BY posts_count DESC
+      LIMIT ?
       """;
-  return jdbc.query(sql, (rs, rowNum) ->
-      new ReportCategoryCountDto(
-          rs.getString("category"),
-          rs.getLong("count")
+
+  return jdbc.query(
+      sql,
+      ps -> ps.setInt(1, limit),
+      (rs, rowNum) -> new TopContributorDto(
+          rs.getObject("id", java.util.UUID.class),
+          rs.getString("username"),
+          rs.getLong("posts_count"),
+          rs.getLong("flagged_count"),
+          rs.getTimestamp("last_activity").toInstant()
       )
   );
 }

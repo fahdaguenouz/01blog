@@ -30,6 +30,14 @@ export interface ReportCategoryStat {
   count: number;
 }
 
+export interface TopContributor {
+  id: string;
+  username: string;
+  postsCount: number;
+  flaggedCount: number;
+  lastActivity: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private base = environment.apiUrl || '';
@@ -50,5 +58,16 @@ export class AdminService {
     return this.http.get<ReportCategoryStat[]>(`${this.base}/api/admin/stats/report-categories`, {
       withCredentials: true,
     });
+  }
+
+
+  getTopContributors(limit = 10): Observable<TopContributor[]> {
+    return this.http.get<TopContributor[]>(
+      `${this.base}/api/admin/stats/top-contributors`,
+      {
+        params: { limit },
+        withCredentials: true,
+      }
+    );
   }
 }

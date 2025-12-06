@@ -13,9 +13,11 @@ import {
   StatsPayload,
   DailyStats,
   ReportCategoryStat,
+  TopContributor,
 } from '../../services/admin.service';
 import { SvgLineChartComponent } from '../components/line-chart/line-chart.component';
 import { SvgDonutChartComponent } from '../components/donuts-chart/donut-chart.component';
+import { TopContributorsComponent } from '../components/top-contributors/top-contributors.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -29,6 +31,7 @@ import { SvgDonutChartComponent } from '../components/donuts-chart/donut-chart.c
     KpiCardComponent,
     SvgLineChartComponent,
     SvgDonutChartComponent,
+    TopContributorsComponent,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
@@ -40,6 +43,7 @@ export class AdminDashboardComponent implements OnInit {
   // time‑series data
   trendDataPosts: number[] = [];
   trendLabels: string[] = [];
+  topContributors: TopContributor[] = [];
 
   // donut: reports by category only
   reportDonutLabels: string[] = [];
@@ -60,12 +64,13 @@ export class AdminDashboardComponent implements OnInit {
     this.loadStats();
     this.loadTrends();
     this.loadReportCategoryStats();
-
+    this.loadTopContributors();
     if ((this.admin as any).postsUpdated$) {
       (this.admin as any).postsUpdated$.subscribe(() => {
         this.loadTrends();
         this.loadStats();
         this.loadReportCategoryStats();
+        this.loadTopContributors();
       });
     }
   }
@@ -115,4 +120,15 @@ export class AdminDashboardComponent implements OnInit {
       error: (err) => console.error('Failed to load report category stats', err),
     });
   }
+
+ loadTopContributors() {
+  this.admin.getTopContributors(10).subscribe({
+    next: (rows) => {
+      console.log('top contributors rows:', rows);
+      this.topContributors = rows;
+    },
+    error: (err) => console.error('Failed to load top contributors', err),
+  });
+}
+
 }

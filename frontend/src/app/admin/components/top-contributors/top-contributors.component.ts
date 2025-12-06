@@ -23,8 +23,8 @@ import { MatChipsModule } from '@angular/material/chips';
 })
 export class TopContributorsComponent {
   @Input() items: any[] = [];
-  cols = ['username','posts','flagged','last','actions'];
+  cols = ['username','posts','flagged','last'];
 
-  view(u: any){ console.log('view', u) }
-  suspend(u: any){ console.log('suspend', u) }
+  // view(u: any){ console.log('view', u) }
+  // suspend(u: any){ console.log('suspend', u) }
 }
