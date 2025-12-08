@@ -26,7 +26,7 @@ INSERT INTO users (id, name, username, email, password, bio, age, status, role, 
   ('550e8400-e29b-41d4-a716-446655440003', 'Charlie Brown',   'charlie', 'charlie@example.com', 'password123', 'Angular & TypeScript learner',    19, 'active', 'USER', 890,  3,  'Angular & TypeScript learner',    CURRENT_TIMESTAMP - INTERVAL '20 days'),
   ('550e8400-e29b-41d4-a716-446655440004', 'Diana Prince',    'diana',   'diana@example.com',   'password123', 'Data structures and algorithms',  24, 'active', 'USER', 3100, 12, 'Data structures and algorithms',  CURRENT_TIMESTAMP - INTERVAL '15 days'),
   ('550e8400-e29b-41d4-a716-446655440005', 'Eve Wilson',      'eve',     'eve@example.com',     'password123', 'Web development journey',         21, 'active', 'USER', 1200, 6,  'Web development journey',         CURRENT_TIMESTAMP - INTERVAL '10 days'),
-  ('550e8400-e29b-41d4-a716-446655440006', 'Frank Davis',     'frank',   'frank@example.com',   'password123', 'Platform moderator',              34, 'active', 'ADMIN', 5000, 20, 'Platform moderator',              CURRENT_TIMESTAMP - INTERVAL '40 days');
+  ('550e8400-e29b-41d4-a716-446655440006', 'Admin Admin',     'admin',   'admin@example.com',   'password123', 'Platform moderator',              34, 'active', 'ADMIN', 5000, 20, 'Platform moderator',              CURRENT_TIMESTAMP - INTERVAL '40 days');
 
 -- 2. Insert media (placeholder images/videos)
 INSERT INTO media (id, user_id, media_type, size, url, uploaded_at) VALUES

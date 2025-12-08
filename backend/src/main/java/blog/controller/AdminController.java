@@ -26,32 +26,50 @@ public class AdminController {
   private final UserService userService;
   private final AdminStatsService service;
 
-  @GetMapping("/users")
-  public List<User> getAllUsers(Authentication auth) {
-    // Double-check admin role server-side (never trust client)
-    // Fix: Check for "ROLE_ADMIN" (Spring Security prefix)
-    if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+  private void assertAdmin(Authentication auth) {
+    if (auth == null || !auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
     }
-    return userRepo.findAll();
+  }
+
+  @GetMapping("/users")
+  public List<User> getAllUsers(Authentication auth) {
+    assertAdmin(auth);
+
+    // exclude current admin from list
+    String currentUsername = auth.getName();
+    return userRepo.findAll().stream()
+        .filter(u -> !u.getUsername().equals(currentUsername))
+        .toList();
   }
 
   @GetMapping("/users/{id}")
   public User getUser(@PathVariable UUID id, Authentication auth) {
-    if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
-    }
-    return userRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    assertAdmin(auth);
+    return userRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 
   @DeleteMapping("/users/{id}")
   public ResponseEntity<Void> deleteUser(@PathVariable UUID id, Authentication auth) {
-    if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+    assertAdmin(auth);
+
+    String currentUsername = auth.getName();
+    User current = userRepo.findByUsername(currentUsername)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Current user not found"));
+
+    if (current.getId().equals(id)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete your own account");
     }
+
+    if (!userRepo.existsById(id)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
     userRepo.deleteById(id);
     return ResponseEntity.noContent().build();
   }
+
 
   @GetMapping("/stats")
   public ResponseEntity<StatsDto> getStats() {
@@ -80,55 +98,58 @@ public ResponseEntity<List<TopContributorDto>> getTopContributors(
   return ResponseEntity.ok(list);
 }
 
-
-
 @PatchMapping("/users/{id}/status")
-public ResponseEntity<User> updateUserStatus(
-    @PathVariable UUID id,
-    @RequestBody StatusBody body,
-    Authentication auth
-) {
-  if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+  public ResponseEntity<User> updateUserStatus(
+      @PathVariable UUID id,
+      @RequestBody StatusBody body,
+      Authentication auth
+  ) {
+    assertAdmin(auth);
+
+    String currentUsername = auth.getName();
+    userRepo.findByUsername(currentUsername).ifPresent(current -> {
+      if (current.getId().equals(id)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change your own status");
+      }
+    });
+
+    User user = userRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    user.setStatus(body.status()); // e.g. "active" / "banned"
+    return ResponseEntity.ok(userRepo.save(user));
   }
 
-  User user = userRepo.findById(id)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+  public record StatusBody(String status) {}
 
-  user.setStatus(body.status()); // e.g. "active" / "banned"
-  return ResponseEntity.ok(userRepo.save(user));
-}
+  @PatchMapping("/users/{id}/role")
+  public ResponseEntity<User> updateUserRole(
+      @PathVariable UUID id,
+      @RequestBody RoleBody body,
+      Authentication auth
+  ) {
+    assertAdmin(auth);
 
-public record StatusBody(String status) {}
+    String currentUsername = auth.getName();
+    userRepo.findByUsername(currentUsername).ifPresent(current -> {
+      if (current.getId().equals(id)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot change your own role");
+      }
+    });
 
+    User user = userRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+    try {
+      user.setRole(User.Role.valueOf(body.role()));
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
+    }
 
-
-
-@PatchMapping("/users/{id}/role")
-public ResponseEntity<User> updateUserRole(
-    @PathVariable UUID id,
-    @RequestBody RoleBody body,
-    Authentication auth
-) {
-  if (!auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+    return ResponseEntity.ok(userRepo.save(user));
   }
 
-  User user = userRepo.findById(id)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-  // expect "USER" or "ADMIN"
-  try {
-    user.setRole(User.Role.valueOf(body.role()));
-  } catch (IllegalArgumentException ex) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role");
-  }
-
-  return ResponseEntity.ok(userRepo.save(user));
-}
-
-public record RoleBody(String role) {}
+  public record RoleBody(String role) {}
 
 
 

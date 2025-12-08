@@ -106,4 +106,10 @@ export class AdminService {
       withCredentials: true,
     });
   }
+ 
+getCurrentUser(): Observable<{ id: string; username: string; role: string }> {
+  return this.http.get<{ id: string; username: string; role: string }>(`${this.base}/api/users/me`, { withCredentials: true });
+}
+
+
 }
