@@ -19,8 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+
+import java.nio.file.AccessDeniedException;
 import java.time.OffsetDateTime;
-import java.util.Map;
+import java.util.Map; 
 import java.util.Optional;
 import java.util.UUID;
 
@@ -201,5 +205,14 @@ public class UserService {
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.UNAUTHORIZED, "User not found for authentication"));
   }
+
+  public void assertAdmin(Authentication auth) {
+  User user = getCurrentUser(auth);
+
+  if (user.getRole() != User.Role.ADMIN) {
+    throw new AccessDeniedException("Admin access required");
+  }
+}
+
 
 }

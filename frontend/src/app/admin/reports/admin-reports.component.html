@@ -1,0 +1,46 @@
+<h2>Reported Content</h2>
+
+<div *ngIf="loading">Loading reports...</div>
+
+<table *ngIf="!loading && reports.length">
+  <thead>
+    <tr>
+      <th>Reporter</th>
+      <th>Reported User</th>
+      <th>Post</th>
+      <th>Category</th>
+      <th>Reason</th>
+      <th>Status</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let r of reports">
+      <td>{{ r.reporterId }}</td>
+      <td>{{ r.reportedUserId }}</td>
+      <td>{{ r.reportedPostId || '—' }}</td>
+      <td>{{ r.category }}</td>
+      <td>{{ r.reason }}</td>
+      <td>
+        <span [class.waiting]="r.status === 'waiting'">
+          {{ r.status }}
+        </span>
+      </td>
+      <td>{{ r.createdAt | date:'short' }}</td>
+      <td>
+        <button (click)="updateStatus(r, 'reviewed')" *ngIf="r.status === 'waiting'">
+          Review
+        </button>
+        <button (click)="updateStatus(r, 'resolved')" *ngIf="r.status !== 'resolved'">
+          Resolve
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p *ngIf="!loading && !reports.length">
+  No reports found 🎉
+</p>

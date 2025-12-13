@@ -7,7 +7,8 @@ import blog.models.Report;
 import blog.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService {
   private final ReportRepository repo;
+   private final JdbcTemplate jdbc;
 
   public ReportDto createReport(UUID reporterId, CreateReportRequest req) {
     Report r = new Report();
@@ -35,6 +37,26 @@ public class ReportService {
     return repo.findAll().stream().map(this::toDto).toList();
   }
 
+  @Transactional
+  public void handleReport(UUID reportId, String action) {
+    Report report = repo.findById(reportId)
+        .orElseThrow(() -> new IllegalArgumentException("Report not found"));
+
+    switch (action) {
+      case "delete_post" -> {
+        if (report.getReportedPostId() != null) {
+          jdbc.update("DELETE FROM posts WHERE id = ?", report.getReportedPostId());
+        }
+      }
+      case "ban_user" -> {
+        jdbc.update("UPDATE users SET status='banned' WHERE id = ?", report.getReportedUserId());
+      }
+    }
+
+    report.setStatus("resolved");
+    repo.save(report);
+  }
+
   public ReportDto updateStatus(UUID id, String status) {
     Report r = repo.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("Report not found"));
@@ -52,7 +74,6 @@ public class ReportService {
         r.getCategory(),
         r.getReason(),
         r.getStatus(),
-        r.getCreatedAt()
-    );
+        r.getCreatedAt());
   }
 }

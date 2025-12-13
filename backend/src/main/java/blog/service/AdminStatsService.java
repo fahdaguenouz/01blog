@@ -19,7 +19,7 @@ import blog.repository.UserRepository;
 @RequiredArgsConstructor
 public class AdminStatsService {
   private final UserRepository userRepo;
-  private final JdbcTemplate jdbc;; // optional, only needed for explicit deletes
+  private final JdbcTemplate jdbc; // optional, only needed for explicit deletes
   private final MediaRepository mediaStorageService; // implement this (S3/local file removal)
 
  

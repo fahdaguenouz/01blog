@@ -12,6 +12,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { AdminGuard } from './auth/services/admin.guard';
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 import { AdminUsersComponent } from './admin/users/admin-users.component';
+import { AdminReportsComponent } from './admin/reports/admin-reports.component';
 
 export const routes: Routes = [
   { path: '', component: Home, canActivate: [GuestGuard] }, // root -> feed
@@ -25,6 +26,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'users', component: AdminUsersComponent },
+      { path: 'reports', component: AdminReportsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

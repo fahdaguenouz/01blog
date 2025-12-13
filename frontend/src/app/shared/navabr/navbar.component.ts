@@ -91,7 +91,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
         if (this.isAdmin) {
           this.navItems.push({ label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' });
-this.navItems.push({ label: 'Users', icon: 'group', route: '/admin/users' });        }
+          this.navItems.push({ label: 'Users', icon: 'group', route: '/admin/users' });
+          this.navItems.push({ label: 'Reports', icon: 'group', route: '/admin/reports' });
+        }
 
         this.cd.detectChanges();
       });

@@ -32,13 +32,13 @@ public class SecurityConfig {
             
             // ADMIN ONLY endpoints
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/reports/**").hasRole("ADMIN")
             
             // Authenticated user actions
             .requestMatchers("/api/users/*/subscribe").authenticated()
             .requestMatchers("/api/users/me/**").authenticated()
             .requestMatchers("/api/posts/**").authenticated()
-            .requestMatchers("/api/reports/**").authenticated()
-
+            .requestMatchers("/api/reports").authenticated()
             
             // Public posts/categories
             .requestMatchers("/api/categories/**").permitAll()

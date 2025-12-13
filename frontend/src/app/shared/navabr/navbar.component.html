@@ -59,6 +59,10 @@
               <mat-icon>group</mat-icon>
               Users
             </button>
+             <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/reports">
+              <mat-icon>group</mat-icon>
+              Reports
+            </button>
 
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon>

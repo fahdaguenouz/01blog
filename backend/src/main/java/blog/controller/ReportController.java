@@ -34,16 +34,21 @@ public ResponseEntity<ReportDto> create(
   return ResponseEntity.ok(dto);
 }
 
+  // 🔐 ADMIN ONLY
   @GetMapping
-  public ResponseEntity<List<ReportDto>> getAll() {
+  public ResponseEntity<List<ReportDto>> getAll(Authentication auth) {
+    userService.assertAdmin(auth);
     return ResponseEntity.ok(service.getAll());
   }
 
+ // 🔐 ADMIN ONLY
   @PatchMapping("/{id}")
   public ResponseEntity<ReportDto> updateStatus(
       @PathVariable UUID id,
-      @RequestBody StatusBody body
+      @RequestBody StatusBody body,
+      Authentication auth
   ) {
+    userService.assertAdmin(auth);
     return ResponseEntity.ok(service.updateStatus(id, body.status()));
   }
 
