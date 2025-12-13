@@ -66,10 +66,12 @@ public class AdminController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
-    userRepo.deleteById(id);
+   
+    service.deleteUserAndAllContent(id);
+
+
     return ResponseEntity.noContent().build();
   }
-
 
   @GetMapping("/stats")
   public ResponseEntity<StatsDto> getStats() {
@@ -77,33 +79,30 @@ public class AdminController {
     return ResponseEntity.ok(dto);
   }
 
- @GetMapping("/stats/trends")
-public ResponseEntity<List<DailyStatsDto>> getTrends(@RequestParam(defaultValue = "30d") String period) {
+  @GetMapping("/stats/trends")
+  public ResponseEntity<List<DailyStatsDto>> getTrends(@RequestParam(defaultValue = "30d") String period) {
     List<DailyStatsDto> list = service.getDailyStats(period);
     return ResponseEntity.ok(list);
-}
+  }
 
-@GetMapping("/stats/report-categories")
-public ResponseEntity<List<ReportCategoryCountDto>> getReportCategoryStats() {
-  List<ReportCategoryCountDto> list = service.getReportCategoryStats();
-  return ResponseEntity.ok(list);
-}
+  @GetMapping("/stats/report-categories")
+  public ResponseEntity<List<ReportCategoryCountDto>> getReportCategoryStats() {
+    List<ReportCategoryCountDto> list = service.getReportCategoryStats();
+    return ResponseEntity.ok(list);
+  }
 
+  @GetMapping("/stats/top-contributors")
+  public ResponseEntity<List<TopContributorDto>> getTopContributors(
+      @RequestParam(defaultValue = "10") int limit) {
+    List<TopContributorDto> list = service.getTopContributors(limit);
+    return ResponseEntity.ok(list);
+  }
 
-@GetMapping("/stats/top-contributors")
-public ResponseEntity<List<TopContributorDto>> getTopContributors(
-    @RequestParam(defaultValue = "10") int limit
-) {
-  List<TopContributorDto> list = service.getTopContributors(limit);
-  return ResponseEntity.ok(list);
-}
-
-@PatchMapping("/users/{id}/status")
+  @PatchMapping("/users/{id}/status")
   public ResponseEntity<User> updateUserStatus(
       @PathVariable UUID id,
       @RequestBody StatusBody body,
-      Authentication auth
-  ) {
+      Authentication auth) {
     assertAdmin(auth);
 
     String currentUsername = auth.getName();
@@ -120,14 +119,14 @@ public ResponseEntity<List<TopContributorDto>> getTopContributors(
     return ResponseEntity.ok(userRepo.save(user));
   }
 
-  public record StatusBody(String status) {}
+  public record StatusBody(String status) {
+  }
 
   @PatchMapping("/users/{id}/role")
   public ResponseEntity<User> updateUserRole(
       @PathVariable UUID id,
       @RequestBody RoleBody body,
-      Authentication auth
-  ) {
+      Authentication auth) {
     assertAdmin(auth);
 
     String currentUsername = auth.getName();
@@ -149,8 +148,7 @@ public ResponseEntity<List<TopContributorDto>> getTopContributors(
     return ResponseEntity.ok(userRepo.save(user));
   }
 
-  public record RoleBody(String role) {}
-
-
+  public record RoleBody(String role) {
+  }
 
 }

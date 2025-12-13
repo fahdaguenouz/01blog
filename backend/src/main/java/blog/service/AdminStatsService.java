@@ -1,22 +1,28 @@
 package blog.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
 import blog.dto.DailyStatsDto;
 import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
 import blog.dto.TopContributorDto;
+import blog.repository.MediaRepository;
+import blog.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class AdminStatsService {
-  private final JdbcTemplate jdbc;
+  private final UserRepository userRepo;
+  private final JdbcTemplate jdbc;; // optional, only needed for explicit deletes
+  private final MediaRepository mediaStorageService; // implement this (S3/local file removal)
 
-  public AdminStatsService(JdbcTemplate jdbc) {
-    this.jdbc = jdbc;
-  }
+ 
 
   public StatsDto getStats() {
     String sql = """
@@ -101,31 +107,41 @@ public class AdminStatsService {
         rs.getLong("count")));
   }
 
-public List<TopContributorDto> getTopContributors(int limit) {
-  String sql = """
-      SELECT u.id,
-             u.username,
-             COUNT(p.id) AS posts_count,
-             COALESCE(SUM(CASE WHEN p.status = 'flagged' THEN 1 ELSE 0 END), 0) AS flagged_count,
-             COALESCE(MAX(p.created_at), u.created_at) AS last_activity
-      FROM users u
-      LEFT JOIN posts p ON p.user_id = u.id   -- <-- use user_id, not author_id
-      GROUP BY u.id, u.username
-      ORDER BY posts_count DESC
-      LIMIT ?
-      """;
+  public List<TopContributorDto> getTopContributors(int limit) {
+    String sql = """
+        SELECT u.id,
+               u.username,
+               COUNT(p.id) AS posts_count,
+               COALESCE(SUM(CASE WHEN p.status = 'flagged' THEN 1 ELSE 0 END), 0) AS flagged_count,
+               COALESCE(MAX(p.created_at), u.created_at) AS last_activity
+        FROM users u
+        LEFT JOIN posts p ON p.user_id = u.id   -- <-- use user_id, not author_id
+        GROUP BY u.id, u.username
+        ORDER BY posts_count DESC
+        LIMIT ?
+        """;
 
-  return jdbc.query(
-      sql,
-      ps -> ps.setInt(1, limit),
-      (rs, rowNum) -> new TopContributorDto(
-          rs.getObject("id", java.util.UUID.class),
-          rs.getString("username"),
-          rs.getLong("posts_count"),
-          rs.getLong("flagged_count"),
-          rs.getTimestamp("last_activity").toInstant()
-      )
-  );
-}
+    return jdbc.query(
+        sql,
+        ps -> ps.setInt(1, limit),
+        (rs, rowNum) -> new TopContributorDto(
+            rs.getObject("id", java.util.UUID.class),
+            rs.getString("username"),
+            rs.getLong("posts_count"),
+            rs.getLong("flagged_count"),
+            rs.getTimestamp("last_activity").toInstant()));
+  }
+
+  @Transactional
+  public void deleteUserAndAllContent(UUID userId) {
+    // 1) Ensure user exists
+    userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+    // 2) Delete external media files
+    mediaStorageService.deleteByUserId(userId);
+
+    // 3) Delete user from DB (children rows deleted by cascade)
+    userRepo.deleteById(userId);
+  }
 
 }
