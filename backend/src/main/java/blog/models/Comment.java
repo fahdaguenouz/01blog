@@ -4,8 +4,9 @@ package blog.models;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-
+import lombok.*;
 @Entity
+@Data
 @Table(name = "comments", indexes = {
   @Index(name = "idx_comments_post_created", columnList = "post_id, created_at DESC")
 })

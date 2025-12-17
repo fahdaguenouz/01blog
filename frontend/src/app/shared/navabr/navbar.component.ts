@@ -52,7 +52,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   navItems: NavItem[] = [
     { label: 'Home', icon: 'home', route: '/' },
     { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
-    { label: 'Profile', icon: 'account_circle', route: '/profile' },
   ];
   avatarUrl: string | null = null;
   constructor(

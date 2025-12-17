@@ -1,5 +1,6 @@
 package blog.controller;
 
+import blog.dto.ReportDto;
 import blog.dto.UserProfileDto;
 import blog.models.Media;
 import blog.models.Subscription;
@@ -254,5 +255,7 @@ private UserProfileDto buildProfileDto(User user) {
         false // isSubscribed not needed for lists
     );
 }
+
+
 
 }

@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
+@Data
 @Table(name = "sessions")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Session {

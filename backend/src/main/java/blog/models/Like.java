@@ -2,8 +2,9 @@ package blog.models;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-
+import lombok.*;
 @Entity
+@Data
 @Table(name = "likes", uniqueConstraints = {@UniqueConstraint(columnNames = {"post_id", "user_id"})})
 public class Like {
   @Id

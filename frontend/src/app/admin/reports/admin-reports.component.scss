@@ -1,8 +1,9 @@
-.table-wrapper {
-  overflow-x: auto;
+.post-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
 }
 
-table {
-  width: 100%;
-  min-width: 900px;
+.post-link:hover {
+  text-decoration: underline;
 }

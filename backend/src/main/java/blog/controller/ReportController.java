@@ -4,53 +4,57 @@ package blog.controller;
 import blog.dto.CreateReportRequest;
 import blog.dto.ReportDto;
 import blog.models.User;
+import blog.repository.UserRepository;
 import blog.service.ReportService;
-import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
 public class ReportController {
 
-  private final ReportService service;
-  private final UserService userService;
+    private final ReportService reportService;
+    private final UserRepository userRepo;
 
- @PostMapping
-public ResponseEntity<ReportDto> create(
-    @RequestBody CreateReportRequest req,
-    Authentication auth
-) {
-  User current = userService.getCurrentUser(auth);
-  UUID reporterId = current.getId();
+    // USER: create report
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ReportDto create(@RequestBody CreateReportRequest body, Authentication auth) {
+        String username = auth.getName();
+        User reporter = userRepo.findByUsername(username)
+            .orElseThrow(() -> new IllegalStateException("Current user not found"));
 
-  ReportDto dto = service.createReport(reporterId, req);
-  return ResponseEntity.ok(dto);
-}
+        UUID reporterId = reporter.getId();
+        return reportService.createReport(reporterId, body);
+    }
 
-  // 🔐 ADMIN ONLY
-  @GetMapping
-  public ResponseEntity<List<ReportDto>> getAll(Authentication auth) {
-    userService.assertAdmin(auth);
-    return ResponseEntity.ok(service.getAll());
-  }
+    // ADMIN: list all reports
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<ReportDto> getAll(Authentication auth) {
+        System.out.println("Authorities: " + auth.getAuthorities());
+        return reportService.getAll();
+    }
 
- // 🔐 ADMIN ONLY
-  @PatchMapping("/{id}")
-  public ResponseEntity<ReportDto> updateStatus(
-      @PathVariable UUID id,
-      @RequestBody StatusBody body,
-      Authentication auth
-  ) {
-    userService.assertAdmin(auth);
-    return ResponseEntity.ok(service.updateStatus(id, body.status()));
-  }
+    // ADMIN: update report status
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ReportDto updateStatus(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body
+    ) {
+        return reportService.updateStatus(id, body.get("status"));
+    }
 
-  public record StatusBody(String status) {}
+    // ADMIN: ban user
+    @DeleteMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void banUser(@PathVariable UUID userId) {
+        reportService.banUser(userId);
+    }
 }

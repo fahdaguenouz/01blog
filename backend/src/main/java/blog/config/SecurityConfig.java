@@ -10,8 +10,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.util.List;
+import org.springframework.http.HttpMethod;
+import java.util.*;
 
 @Configuration
 public class SecurityConfig {
@@ -30,15 +30,21 @@ public class SecurityConfig {
             // Public profile view
             .requestMatchers("/api/users/by-username/**").permitAll()
             
+           
             // ADMIN ONLY endpoints
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers("/api/reports/**").hasRole("ADMIN")
-            
+            .requestMatchers(HttpMethod.GET,    "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PATCH,  "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
+
+            // USER: create report
+            .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
+
             // Authenticated user actions
             .requestMatchers("/api/users/*/subscribe").authenticated()
             .requestMatchers("/api/users/me/**").authenticated()
             .requestMatchers("/api/posts/**").authenticated()
-            .requestMatchers("/api/reports").authenticated()
+          
             
             // Public posts/categories
             .requestMatchers("/api/categories/**").permitAll()

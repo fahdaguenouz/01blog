@@ -10,9 +10,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
+@Data // generates getters, setters, equals, hashCode, toString
 @Table(name = "users")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -39,7 +38,7 @@ public class User {
 
   @Column(nullable = false, length = 50)
   @Enumerated(EnumType.STRING)
-  @Builder.Default  // ← ADD THIS to fix warning
+  @Builder.Default // ← ADD THIS to fix warning
   private Role role = Role.USER;
 
   public enum Role {
@@ -161,4 +160,7 @@ public class User {
   public void setCreatedAt(OffsetDateTime createdAt) {
     this.createdAt = createdAt;
   }
+
+ 
+
 }

@@ -2,8 +2,9 @@ package blog.models;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-
+import lombok.*;
 @Entity
+@Data
 @Table(name = "post_categories",
        uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "category_id"}))
 public class PostCategory {

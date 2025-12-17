@@ -21,12 +21,13 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-
+import lombok.*;
 import java.time.OffsetDateTime;
 import java.util.Map; 
 import java.util.Optional;
 import java.util.UUID;
 
+@Builder
 @Service
 @RequiredArgsConstructor
 public class UserService {

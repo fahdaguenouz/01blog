@@ -4,7 +4,12 @@ import blog.dto.DailyStatsDto;
 import blog.dto.ReportCategoryCountDto;
 import blog.dto.StatsDto;
 import blog.dto.TopContributorDto;
+import blog.models.Post;
 import blog.models.User;
+import blog.repository.CommentRepository;
+import blog.repository.MediaRepository;
+import blog.repository.PostRepository;
+import blog.repository.ReportRepository;
 import blog.repository.UserRepository;
 import blog.service.AdminStatsService;
 import blog.service.UserService;
@@ -14,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +32,10 @@ public class AdminController {
   private final UserRepository userRepo;
   private final UserService userService;
   private final AdminStatsService service;
+  private final PostRepository postRepo;
+  private final CommentRepository commentRepo;
+  private final MediaRepository mediaRepo;
+  private final ReportRepository reportRepo;
 
   private void assertAdmin(Authentication auth) {
     if (auth == null || !auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
@@ -66,9 +77,7 @@ public class AdminController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
-   
     service.deleteUserAndAllContent(id);
-
 
     return ResponseEntity.noContent().build();
   }
@@ -149,6 +158,26 @@ public class AdminController {
   }
 
   public record RoleBody(String role) {
+  }
+
+
+  @DeleteMapping("/posts/{postId}")
+  public ResponseEntity<Void> deletePost(@PathVariable UUID postId, Authentication auth) {
+    assertAdmin(auth);
+    deletePostInternal(postId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Transactional
+  private void deletePostInternal(UUID postId) {
+    Post post = postRepo.findById(postId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    // Delete related content
+    commentRepo.deleteByPostId(postId);
+    reportRepo.deleteByReportedPostId(postId);
+
+    postRepo.delete(post);
   }
 
 }

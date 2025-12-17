@@ -45,4 +45,12 @@ export class ReportService {
       { withCredentials: true }
     );
   }
+  deletePost(postId: string) {
+  return this.http.delete(`${this.apiUrl}/post/${postId}`, { withCredentials: true });
+}
+
+banUser(userId: string) {
+  return this.http.delete(`${this.apiUrl}/user/${userId}`, { withCredentials: true });
+}
+
 }

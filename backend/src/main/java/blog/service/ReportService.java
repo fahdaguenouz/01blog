@@ -5,6 +5,7 @@ import blog.dto.CreateReportRequest;
 import blog.dto.ReportDto;
 import blog.models.Report;
 import blog.models.User;
+import blog.repository.PostRepository;
 import blog.repository.ReportRepository;
 import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +20,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService {
   private final ReportRepository repo;
-    private final UserRepository userRepo;
-   private final JdbcTemplate jdbc;
+  private final UserRepository userRepo;
+  private final PostRepository postRepo;
+
+  private final JdbcTemplate jdbc;
 
   public ReportDto createReport(UUID reporterId, CreateReportRequest req) {
     Report r = new Report();
@@ -67,7 +70,7 @@ public class ReportService {
     return toDto(repo.save(r));
   }
 
- private ReportDto toDto(Report r) {
+  private ReportDto toDto(Report r) {
 
     String reporterUsername = userRepo.findById(r.getReporterId())
         .map(User::getUsername)
@@ -92,7 +95,15 @@ public class ReportService {
         r.getCategory(),
         r.getReason(),
         r.getStatus(),
-        r.getCreatedAt()
-    );
+        r.getCreatedAt());
+  }
+
+  public void deleteReportedPost(UUID postId) {
+    postRepo.deleteById(postId);
+  }
+
+  public void banUser(UUID userId) {
+    User user = userRepo.findById(userId).orElseThrow();
+    userRepo.save(user);
   }
 }

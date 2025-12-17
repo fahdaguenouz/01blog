@@ -6,8 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;import java.util.List;
 import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
@@ -32,6 +31,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 List<Post> findByCategoryAndStatus(@Param("categoryId") UUID categoryId, @Param("status") String status);
 
   @Modifying
+  @Transactional
   @Query("delete from PostCategory pc where pc.postId = :postId")
   void deleteByPostId(UUID postId);
 }

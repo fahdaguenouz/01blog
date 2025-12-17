@@ -2,8 +2,9 @@ package blog.models;
 
 import jakarta.persistence.*;
 import java.util.UUID;
-
+import lombok.*;  
 @Entity
+@Data
 @Table(name = "categories")
 public class Category {
 

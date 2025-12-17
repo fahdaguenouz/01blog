@@ -42,7 +42,7 @@ export interface AdminUser {
   id: string;
   username: string;
   email: string;
-  status: string;       // "active" / "banned"
+  status: string; // "active" / "banned"
   role: 'USER' | 'ADMIN';
 }
 
@@ -68,15 +68,11 @@ export class AdminService {
     });
   }
 
-
   getTopContributors(limit = 10): Observable<TopContributor[]> {
-    return this.http.get<TopContributor[]>(
-      `${this.base}/api/admin/stats/top-contributors`,
-      {
-        params: { limit },
-        withCredentials: true,
-      }
-    );
+    return this.http.get<TopContributor[]>(`${this.base}/api/admin/stats/top-contributors`, {
+      params: { limit },
+      withCredentials: true,
+    });
   }
 
   getAllUsers(): Observable<AdminUser[]> {
@@ -106,10 +102,17 @@ export class AdminService {
       withCredentials: true,
     });
   }
- 
-getCurrentUser(): Observable<{ id: string; username: string; role: string }> {
-  return this.http.get<{ id: string; username: string; role: string }>(`${this.base}/api/users/me`, { withCredentials: true });
-}
 
+  getCurrentUser(): Observable<{ id: string; username: string; role: string }> {
+    return this.http.get<{ id: string; username: string; role: string }>(
+      `${this.base}/api/users/me`,
+      { withCredentials: true }
+    );
+  }
 
+  deletePost(postId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/api/admin/posts/${postId}`, {
+      withCredentials: true,
+    });
+  }
 }
