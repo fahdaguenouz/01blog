@@ -4,7 +4,9 @@ package blog.service;
 import blog.dto.CreateReportRequest;
 import blog.dto.ReportDto;
 import blog.models.Report;
+import blog.models.User;
 import blog.repository.ReportRepository;
+import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService {
   private final ReportRepository repo;
+    private final UserRepository userRepo;
    private final JdbcTemplate jdbc;
 
   public ReportDto createReport(UUID reporterId, CreateReportRequest req) {
@@ -64,16 +67,32 @@ public class ReportService {
     return toDto(repo.save(r));
   }
 
-  private ReportDto toDto(Report r) {
+ private ReportDto toDto(Report r) {
+
+    String reporterUsername = userRepo.findById(r.getReporterId())
+        .map(User::getUsername)
+        .orElse("unknown");
+
+    String reportedUsername = userRepo.findById(r.getReportedUserId())
+        .map(User::getUsername)
+        .orElse("unknown");
+
     return new ReportDto(
         r.getId(),
+
         r.getReporterId(),
+        reporterUsername,
+
         r.getReportedUserId(),
+        reportedUsername,
+
         r.getReportedPostId(),
         r.getReportedCommentId(),
+
         r.getCategory(),
         r.getReason(),
         r.getStatus(),
-        r.getCreatedAt());
+        r.getCreatedAt()
+    );
   }
 }

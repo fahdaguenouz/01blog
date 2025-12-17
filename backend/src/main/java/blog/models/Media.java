@@ -8,7 +8,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "media")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Media {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
