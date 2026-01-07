@@ -7,6 +7,8 @@ import blog.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -29,22 +31,14 @@ public class SecurityConfig {
             
             // Public profile view
             .requestMatchers("/api/users/by-username/**").permitAll()
-            
-           
             // ADMIN ONLY endpoints
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
             .requestMatchers(HttpMethod.GET,    "/api/reports/**").hasRole("ADMIN")
             .requestMatchers(HttpMethod.PATCH,  "/api/reports/**").hasRole("ADMIN")
             .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
 
-            // USER: create report
-            .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
-
-            // Authenticated user actions
-            .requestMatchers("/api/users/*/subscribe").authenticated()
-            .requestMatchers("/api/users/me/**").authenticated()
-            .requestMatchers("/api/posts/**").authenticated()
-          
+            
+      
             
             // Public posts/categories
             .requestMatchers("/api/categories/**").permitAll()
@@ -55,7 +49,10 @@ public class SecurityConfig {
 
     return http.build();
   }
-
+  @Bean
+  public PasswordEncoder passwordEncoder(){
+    return new BCryptPasswordEncoder();
+  }
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration cfg = new CorsConfiguration();
