@@ -97,10 +97,22 @@ export class AdminReportsComponent implements OnInit {
   }
 
   resolve(report: Report) {
-    this.reportsApi.updateReportStatus(report.id, 'resolved').subscribe(() => {
-      this.load();
+    this.reportsApi.updateReportStatus(report.id, 'resolved').subscribe({
+      next: () => {
+        this.load(); // reloads fresh data
+      },
+      error: (err) => {
+        // Ignore "not found" errors - report was likely auto-deleted by FK cascade
+        if (err.status === 404 || err.error?.message?.includes('not found')) {
+          console.log('Report auto-resolved by post deletion');
+          this.load();
+          return;
+        }
+        this.snack.open('Failed to resolve report', 'Close', { duration: 3000 });
+      },
     });
   }
+
   deletePost(report: Report) {
     const postId = report.reportedPostId;
     if (!postId) return;

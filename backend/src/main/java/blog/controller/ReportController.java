@@ -7,6 +7,8 @@ import blog.models.User;
 import blog.repository.UserRepository;
 import blog.service.ReportService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +29,7 @@ public class ReportController {
     public ReportDto create(@RequestBody CreateReportRequest body, Authentication auth) {
         String username = auth.getName();
         User reporter = userRepo.findByUsername(username)
-            .orElseThrow(() -> new IllegalStateException("Current user not found"));
+                .orElseThrow(() -> new IllegalStateException("Current user not found"));
 
         UUID reporterId = reporter.getId();
         return reportService.createReport(reporterId, body);
@@ -42,13 +44,21 @@ public class ReportController {
     }
 
     // ADMIN: update report status
+
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ReportDto updateStatus(
+    public ResponseEntity<?> updateStatus(
             @PathVariable UUID id,
-            @RequestBody Map<String, String> body
-    ) {
-        return reportService.updateStatus(id, body.get("status"));
+            @RequestBody Map<String, String> body) {
+        try {
+            ReportDto updated = reportService.updateStatus(id, body.get("status"));
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("Report not found")) {
+                return ResponseEntity.ok().build(); // 200 OK - idempotent
+            }
+            throw e;
+        }
     }
 
     // ADMIN: ban user
