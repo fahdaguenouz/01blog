@@ -82,10 +82,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.auth.validateAdminRole().subscribe((isAdmin) => {
         this.isAdmin = isAdmin;
 
-        // Update navItems dynamically
         this.navItems = [
           { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
-          { label: 'Profile', icon: 'account_circle', route: '/profile' },
         ];
 
         if (this.isAdmin) {
