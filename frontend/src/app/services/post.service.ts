@@ -63,16 +63,20 @@ getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observabl
 getUserPosts(userId: string): Observable<Post[]> {
   return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/posts`, { withCredentials: true });  // ← ADD /posts
 }
+// In your PostService (src/app/services/post.service.ts)
+createPostFormData(formData: FormData): Observable<any> {
+  return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
+}
 
 
-  createPost(title: string, description: string, media?: File, categoryIds: string[] = []): Observable<Post> {
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    if (media) formData.append('media', media);
-    categoryIds.forEach(id => formData.append('categoryIds', id));
-    return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
-  }
+  // createPost(title: string, description: string, media?: File, categoryIds: string[] = []): Observable<Post> {
+  //   const formData = new FormData();
+  //   formData.append('title', title);
+  //   formData.append('description', description);
+  //   if (media) formData.append('media', media);
+  //   categoryIds.forEach(id => formData.append('categoryIds', id));
+  //   return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
+  // }
 
   updatePost(postId: string, title: string, description: string, media?:File, categoryIds: string[] = []): Observable<Post> {
     const formData = new FormData();
