@@ -34,14 +34,6 @@ public class Post {
   @Column(name = "comments_count")
   private Integer commentsCount;
 
-  @Column(name = "impressions_count")
-  private Integer impressionsCount;
-
-  @Column(name = "media_url")
-  private String mediaUrl;
-
-  @Column(name = "media_type")
-  private String mediaType; // "image" or "video"
 
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
@@ -56,8 +48,6 @@ public class Post {
       likesCount = 0;
     if (commentsCount == null)
       commentsCount = 0;
-    if (impressionsCount == null)
-      impressionsCount = 0;
     if (id == null)
       id = UUID.randomUUID();
   }
@@ -119,29 +109,6 @@ public class Post {
     this.commentsCount = commentsCount;
   }
 
-  public Integer getImpressionsCount() {
-    return impressionsCount;
-  }
-
-  public void setImpressionsCount(Integer impressionsCount) {
-    this.impressionsCount = impressionsCount;
-  }
-
-  public String getMediaUrl() {
-    return mediaUrl;
-  }
-
-  public void setMediaUrl(String mediaUrl) {
-    this.mediaUrl = mediaUrl;
-  }
-
-  public String getMediaType() {
-    return mediaType;
-  }
-
-  public void setMediaType(String mediaType) {
-    this.mediaType = mediaType;
-  }
 
   public Instant getCreatedAt() {
     return createdAt;

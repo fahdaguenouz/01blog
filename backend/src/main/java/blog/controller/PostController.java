@@ -1,4 +1,3 @@
-// src/main/java/blog/controller/PostController.java
 package blog.controller;
 
 import blog.dto.PostDetailDto;
@@ -54,17 +53,28 @@ public List<PostSummaryDto> getFeed(
 
 
   // Create
-  @PostMapping
-  public PostDetailDto create(
-      @RequestParam String title,
-      @RequestParam String description,
-      @RequestParam(required = false) MultipartFile media,
-    @RequestParam(required = false) List<UUID> categoryIds ) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !auth.isAuthenticated())
-      throw new RuntimeException("Unauthorized");
-   return postService.createPost(auth.getName(), title, description, media, categoryIds);
-  }
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public PostDetailDto create(
+  @RequestParam String title,
+  @RequestParam String body,
+  @RequestParam(required = false) List<MultipartFile> mediaFiles,
+  @RequestParam(required = false) List<UUID> categoryIds,
+  @RequestParam(required = false) List<String> mediaDescriptions
+) {
+  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+  if (auth == null || !auth.isAuthenticated())
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
+  return postService.createPost(
+    auth.getName(),
+    title,
+    body,
+    mediaFiles,
+    categoryIds,
+    mediaDescriptions
+  );
+}
+
 
   // Update (multipart to allow media change)
 

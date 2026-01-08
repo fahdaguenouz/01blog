@@ -10,6 +10,7 @@ import blog.models.Post;
 import blog.models.User;
 import blog.dto.CategoryDto;
 import blog.models.PostCategory;
+import blog.models.PostMedia;
 import blog.models.SavedPost;
 import blog.repository.CategoryRepository;
 import blog.repository.PostCategoryRepository;
@@ -25,6 +26,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 
@@ -59,46 +62,68 @@ public class PostService {
     this.savedPosts = savedPosts;
   }
 
-  public PostDetailDto createPost(String username, String title, String description, MultipartFile media,
-      List<UUID> categoryIds) {
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
+ public PostDetailDto createPost(String username, String title, String excerpt, String body, List<MultipartFile> mediaFiles, List<UUID> categoryIds) {
+  User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-    Post post = new Post();
-    post.setAuthor(user);
-    post.setTitle(title);
-    post.setBody(description);
-    post.setStatus("active");
+  Post post = new Post();
+  post.setAuthor(user);
+  post.setTitle(title);
+  post.setExcerpt(excerpt);  // Match frontend
+  post.setBody(body);
+  post.setStatus("active");
+  post = posts.save(post);  // Save first to get ID
 
-    if (media != null && !media.isEmpty()) {
-      var saved = mediaStorage.save(media);
-      if (saved != null) {
-        post.setMediaUrl(saved.url());
-        String mt = saved.contentType();
-        post.setMediaType(mt != null && mt.startsWith("video") ? "video" : "image");
+  // Handle multiple media
+  if (mediaFiles != null) {
+    PostMediaRepository.deleteByPostId(post.getId());  // Clear old if any
+    for (int i = 0; i < mediaFiles.size(); i++) {
+      MultipartFile file = mediaFiles.get(i);
+      if (!file.isEmpty()) {
+        var saved = mediaStorage.save(file);
+        if (saved != null) {
+          // Save media first (assume Media entity exists with repo)
+          Media media = new Media();
+          media.setUserId(user.getId());
+          media.setMediaType(file.getContentType());
+          media.setSize((int) file.getSize());
+          media.setUrl(saved.url());
+          media.setUploadedAt(Instant.now());
+          Media savedMedia = mediaRepo.save(media);
+
+          // Link via PostMedia
+          PostMedia pm = new PostMedia();
+          pm.setPostId(post.getId());
+          pm.setMediaId(savedMedia.getId());
+          pm.setPosition(i);
+          pm.setCreatedAt(Instant.now());
+          postMediaRepository.save(pm);
+        }
       }
     }
+  }
 
-    posts.save(post);
-    if (categoryIds != null) {
-      for (UUID cid : categoryIds) {
-        if (!categories.existsById(cid))
-          continue;
+  // Categories (unchanged)
+  if (categoryIds != null) {
+    for (UUID cid : categoryIds) {
+      if (categories.existsById(cid)) {
         PostCategory pc = new PostCategory();
         pc.setPostId(post.getId());
         pc.setCategoryId(cid);
         postCategories.save(pc);
       }
     }
-    List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
-        .map(pc -> categories.findById(pc.getCategoryId())
-            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-            .orElse(null))
-        .filter(Objects::nonNull)
-        .toList();
-    return PostMapper.toDetail(post, categoryDtos, false, false);
   }
 
-  // ✅ Public posts for guests
+ List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+    .map(pc -> categories.findById(pc.getCategoryId())
+        .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))  // UUID, not toString()
+        .orElse(null))
+    .filter(Objects::nonNull)
+    .toList();
+return PostMapper.toDetail(post, categoryDtos, false, false);
+}
+ 
+// ✅ Public posts for guests
   public Page<PostSummaryDto> listPublic(String status, int page, int size) {
     Pageable pageable = PageRequest.of(page, size);
     return posts.findByStatusOrderByCreatedAtDesc(status, pageable)

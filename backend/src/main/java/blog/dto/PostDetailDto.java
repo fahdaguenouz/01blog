@@ -2,6 +2,7 @@
 package blog.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record PostDetailDto(
@@ -13,11 +14,9 @@ public record PostDetailDto(
   UUID authorId,
   int likes,
   int comments,
-  int impressions,
   Instant createdAt,
-  String mediaUrl,
-  String mediaType,
-  java.util.List<CategoryDto> categories,
-  boolean isLiked,    // add this if not present
-  boolean isSaved 
+  List<PostMediaDto> media,
+  List<CategoryDto> categories,
+  boolean isLiked,
+  boolean isSaved
 ) {}
