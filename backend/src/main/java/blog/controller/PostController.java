@@ -84,19 +84,31 @@ public PostDetailDto create(
 
   // Update (multipart to allow media change)
 
-@PutMapping("/{id}")
+@PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 public PostDetailDto update(
     @PathVariable UUID id,
     @RequestParam String title,
-    @RequestParam String description,
-    @RequestParam(required = false) MultipartFile media,
-    @RequestParam(required = false) List<UUID> categoryIds
+    @RequestParam String body,
+    @RequestParam(required = false) List<MultipartFile> mediaFiles,
+    @RequestParam(required = false) List<String> mediaDescriptions,
+    @RequestParam(required = false) List<UUID> categoryId
 ) {
-  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-  if (auth == null || !auth.isAuthenticated())
-    throw new RuntimeException("Unauthorized");
-  return postService.updatePost(auth.getName(), id, title, description, media, categoryIds);
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !auth.isAuthenticated()) {
+        throw new RuntimeException("Unauthorized");
+    }
+
+    return postService.updatePost(
+        auth.getName(),
+        id,
+        title,
+        body,
+        mediaFiles,
+        mediaDescriptions,
+        categoryId
+    );
 }
+
 
 
   // Delete

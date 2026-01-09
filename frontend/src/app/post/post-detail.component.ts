@@ -65,21 +65,7 @@ import { OrderByPositionPipe } from './orderByPosition';
       <h2>{{ post.title }}</h2>
       <small>{{ post.createdAt | date : 'medium' }}</small>
       <!-- ADD THIS BLOCK after <small>{{ post.createdAt | date : 'medium' }}</small> -->
-      <div class="post-author" style="margin: 12px 0;">
-        <div *ngIf="post.media?.length" class="post-media">
-          <ng-container *ngFor="let m of post.media || [] | orderByPosition">
-            <img
-              *ngIf="m.type === 'image'"
-              [src]="m.url"
-              [alt]="m.description || 'Post image'"
-              class="media-item"
-            />
-            <video *ngIf="m.type === 'video'" controls class="media-item">
-              <source [src]="m.url" />
-            </video>
-            <p *ngIf="m.description" class="media-description">{{ m.description }}</p>
-          </ng-container>
-        </div>
+     
         <div style="display: inline-block; vertical-align: middle;">
           <a [routerLink]="['/profile', post.authorUsername]" class="author-link">
             <strong>{{ post.authorName }}</strong>
@@ -87,27 +73,31 @@ import { OrderByPositionPipe } from './orderByPosition';
           <br />
           <small style="color: #666;">@{{ post.authorUsername }}</small>
         </div>
-      </div>
+    
 
       <div *ngIf="post.categories?.length" style="margin: 8px 0;">
         <span *ngFor="let cat of post.categories" style="margin-right: 6px;" class="category-chip">
           #{{ cat.name }}
         </span>
       </div>
-      <img
-        *ngIf="post.mediaUrl && post.mediaType === 'image'"
-        [src]="post.mediaUrl"
-        alt="Post media"
-        style="display:block;margin:12px auto;max-width:440px;width:100%;height:auto;object-fit:cover;border-radius:10px;"
-      />
+      <div *ngIf="post.media?.length" class="post-media">
+        <ng-container *ngFor="let m of post.media | orderByPosition">
+          <img
+            *ngIf="m.type === 'image'"
+            [src]="m.url"
+            [alt]="m.description || 'Post image'"
+            class="media-item"
+          />
 
-      <video
-        *ngIf="post.mediaUrl && post.mediaType === 'video'"
-        controls
-        style="width:100%;max-height:500px;object-fit:cover;margin:12px 0;"
-      >
-        <source [src]="post.mediaUrl" />
-      </video>
+          <video *ngIf="m.type === 'video'" controls class="media-item">
+            <source [src]="m.url" />
+          </video>
+
+          <p *ngIf="m.description" class="media-description">
+            {{ m.description }}
+          </p>
+        </ng-container>
+      </div>
 
       <p>{{ post.body }}</p>
 
@@ -225,6 +215,7 @@ export class PostDetailComponent implements OnInit {
 
   loadPost(id: string) {
     this.posts.getById(id).subscribe((p) => {
+      console.log('POST DETAIL', p);
       this.post = p;
     });
   }
@@ -296,24 +287,24 @@ export class PostDetailComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (!result || !this.post) return;
       console.log('update categoryIds', result.categoryIds);
-      this.posts
-        .updatePost(
-          this.post.id,
-          result.title,
-          result.body,
-          result.media ?? undefined,
-          result.categoryIds || []
-        )
-        .subscribe((updated) => {
-          this.post = {
-            ...this.post!,
-            title: updated.title,
-            body: updated.body,
-            mediaUrl: updated.mediaUrl,
-            mediaType: updated.mediaType,
-            categories: updated.categories,
-          };
-        });
+      // this.posts
+      //   .updatePost(
+      //     this.post.id,
+      //     result.title,
+      //     result.body,
+      //     result.media ?? undefined,
+      //     result.categoryIds || []
+      //   )
+      //   .subscribe((updated) => {
+      //     this.post = {
+      //       ...this.post!,
+      //       title: updated.title,
+      //       body: updated.body,
+      //       mediaUrl: updated.mediaUrl,
+      //       mediaType: updated.mediaType,
+      //       categories: updated.categories,
+      //     };
+      //   });
     });
   }
 

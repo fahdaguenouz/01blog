@@ -392,7 +392,7 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!file) return;
 
     if (file.size > 50 * 1024 * 1024) {
-      this.toastr.error('Max file size is 50MB');
+      this.toastr.error('Max file size is 20MB');
       input.value = '';
       return;
     }

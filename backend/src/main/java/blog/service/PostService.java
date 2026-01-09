@@ -12,6 +12,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -292,77 +294,104 @@ public class PostService {
     });
   }
 
-  public PostDetailDto updatePost(String username,
-      UUID id,
-      String title,
-      String description,
-      MultipartFile media,
-      List<UUID> categoryIds) {
+public PostDetailDto updatePost(
+    String username,
+    UUID postId,
+    String title,
+    String body,
+    List<MultipartFile> mediaFiles,
+    List<String> mediaDescriptions,
+    List<UUID> categoryIds
+) {
 
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-    Post post = posts.findById(id).orElseThrow(() -> new IllegalArgumentException("Post not found"));
-    if (!post.getAuthor().getId().equals(user.getId()))
-      throw new IllegalArgumentException("Forbidden");
+    User user = users.findByUsername(username)
+        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+    Post post = posts.findById(postId)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+    if (!post.getAuthor().getId().equals(user.getId())) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
+    }
 
     post.setTitle(title);
-    post.setBody(description);
-
-    if (media != null && !media.isEmpty()) {
-      var saved = mediaStorage.save(media); // SavedFile
-      if (saved != null) {
-
-        String mt = saved.contentType();
-      }
-    }
-
+    post.setBody(body);
     posts.save(post);
-    // System.out.println("before deleteByPostId");
-    postCategories.deleteByPostId(post.getId());
-    // System.out.println("after deleteByPostId");
 
-    if (categoryIds != null) {
-      categoryIds.stream().distinct().forEach(cid -> {
-        if (!categories.existsById(cid))
-          return;
-        PostCategory pc = new PostCategory();
-        pc.setPostId(post.getId());
-        pc.setCategoryId(cid);
-        postCategories.save(pc);
-      });
+    // -------- MEDIA --------
+    if (mediaFiles != null) {
+
+        if (mediaDescriptions == null || mediaFiles.size() != mediaDescriptions.size()) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Each media must have a description"
+            );
+        }
+
+        postMediaRepository.deleteByPostId(postId);
+
+        for (int i = 0; i < mediaFiles.size(); i++) {
+            MultipartFile file = mediaFiles.get(i);
+            if (file == null || file.isEmpty()) continue;
+
+            var stored = mediaStorage.save(file);
+            if (stored == null) continue;
+
+            Media media = new Media();
+            media.setUserId(user.getId());
+            media.setMediaType(file.getContentType());
+            media.setSize((int) file.getSize());
+            media.setUrl(stored.url());
+            media.setUploadedAt(OffsetDateTime.now());
+            Media savedMedia = mediaRepo.save(media);
+
+            PostMedia pm = new PostMedia();
+            pm.setPostId(postId);
+            pm.setMediaId(savedMedia.getId());
+            pm.setDescription(mediaDescriptions.get(i));
+            pm.setPosition(i);
+            pm.setCreatedAt(Instant.now());
+            postMediaRepository.save(pm);
+        }
     }
 
-    List<CategoryDto> categoryDtos = postCategories.findByPostId(post.getId()).stream()
+    // -------- CATEGORIES --------
+    postCategories.deleteByPostId(postId);
+    if (categoryIds != null) {
+        categoryIds.stream().distinct().forEach(cid -> {
+            if (!categories.existsById(cid)) return;
+            PostCategory pc = new PostCategory();
+            pc.setPostId(postId);
+            pc.setCategoryId(cid);
+            postCategories.save(pc);
+        });
+    }
+
+    List<CategoryDto> categoryDtos = postCategories.findByPostId(postId).stream()
         .map(pc -> categories.findById(pc.getCategoryId())
             .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
             .orElse(null))
         .filter(Objects::nonNull)
         .toList();
-  List<PostMediaDto> mediaDtos =
-    postMediaRepository.findByPostIdOrderByPositionAsc(post.getId()).stream()
+
+    List<PostMediaDto> mediaDtos = postMediaRepository.findByPostIdOrderByPositionAsc(postId).stream()
         .map(pm -> {
-          Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
-          if (m == null) return null;
-          return new PostMediaDto(
-              pm.getId(),
-              m.getId(),
-              m.getUrl(),
-              m.getMediaType(),
-              pm.getDescription(),
-              pm.getPosition()
-          );
+            Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
+            if (m == null) return null;
+            return new PostMediaDto(
+                pm.getId(),
+                m.getId(),
+                m.getUrl(),
+                m.getMediaType(),
+                pm.getDescription(),
+                pm.getPosition()
+            );
         })
         .filter(Objects::nonNull)
         .toList();
 
-return PostMapper.toDetail(
-    post,
-    categoryDtos,
-    mediaDtos,
-    false,
-    false
-);
-
-  }
+    return PostMapper.toDetail(post, categoryDtos, mediaDtos, false, false);
+}
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
