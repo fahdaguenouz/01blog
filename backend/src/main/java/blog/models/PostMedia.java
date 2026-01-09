@@ -8,25 +8,26 @@ import java.util.UUID;
 @Table(name = "post_media")
 @Data  // Lombok generates getters/setters
 public class PostMedia {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)  // Matches uuid_generate_v4()
-    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
-    private UUID id;
 
-    @Column(name = "post_id", nullable = false, columnDefinition = "uuid")
-    private UUID postId;
+  @Id
+  @GeneratedValue
+  @Column(name = "id", nullable = false)
+  private UUID id;
 
-    @Column(name = "media_id", nullable = false, columnDefinition = "uuid")
-    private UUID mediaId;
+  @Column(name = "post_id", nullable = false)
+  private UUID postId;
 
-    @Column(columnDefinition = "text")
-    private String description;
+  @Column(name = "media_id", nullable = false)
+  private UUID mediaId;
 
-    @Column
-    private Integer position;
+  @Column(name = "description")
+  private String description;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
+  @Column(name = "position", nullable = false)
+  private int position;
+
+  @Column(name = "created_at", nullable = false)
+  private Instant createdAt;
 
     // No uniqueConstraints in @Table - handled by DB
 }

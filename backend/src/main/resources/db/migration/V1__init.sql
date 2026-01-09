@@ -12,19 +12,19 @@ CREATE TABLE roles (
 );
 
 -- =====================================================
--- USERS (created first to avoid cycles)
+-- USERS
 -- =====================================================
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR NOT NULL,
+    password VARCHAR(255) NOT NULL,
     bio TEXT,
     age INT NOT NULL CHECK (age >= 0),
     status VARCHAR(20) NOT NULL DEFAULT 'active',
     role VARCHAR(50) NOT NULL DEFAULT 'USER',
-    avatar_media_id UUID,                 -- added FK later
+    avatar_media_id UUID,
     impressions_count INT DEFAULT 0,
     posts_count INT DEFAULT 0,
     readme TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE users (
 CREATE TABLE media (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    media_type VARCHAR NOT NULL,
+    media_type VARCHAR(50) NOT NULL,
     size INT NOT NULL,
     url TEXT NOT NULL,
     uploaded_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -49,7 +49,7 @@ CREATE TABLE media (
 );
 
 -- =====================================================
--- USER AVATAR (break circular dependency safely)
+-- USER AVATAR
 -- =====================================================
 ALTER TABLE users
 ADD CONSTRAINT fk_avatar_media
@@ -73,16 +73,13 @@ CREATE TABLE categories (
 CREATE TABLE posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL,
-  title VARCHAR NOT NULL,
+  title VARCHAR(255) NOT NULL,
   body TEXT NOT NULL,
-  status VARCHAR NOT NULL DEFAULT 'active',
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   likes_count INT DEFAULT 0,
   comments_count INT DEFAULT 0,
   impressions_count INT DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-
-  media_url TEXT,
-  media_type VARCHAR(20),
 
   CONSTRAINT fk_posts_user
     FOREIGN KEY (user_id)
@@ -112,24 +109,18 @@ CREATE TABLE post_categories (
 );
 
 -- =====================================================
--- POST_MEDIA (FIXED – THIS WAS YOUR ERROR)
+-- POST_MEDIA (multi-media)
 -- =====================================================
 CREATE TABLE post_media (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     post_id UUID NOT NULL,
     media_id UUID NOT NULL,
+    description TEXT,
+    position INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (post_id, media_id),
-
-    CONSTRAINT fk_post_media_post
-      FOREIGN KEY (post_id)
-      REFERENCES posts(id)
-      ON DELETE CASCADE,
-
-    CONSTRAINT fk_post_media_media
-      FOREIGN KEY (media_id)
-      REFERENCES media(id)
-      ON DELETE CASCADE
+    CONSTRAINT fk_post_media_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_post_media_media FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE,
+    CONSTRAINT uq_post_media_position UNIQUE (post_id, position)
 );
 
 -- =====================================================
@@ -175,7 +166,7 @@ CREATE TABLE likes (
 );
 
 -- =====================================================
--- SUBSCRIPTIONS (user ↔ user)
+-- SUBSCRIPTIONS
 -- =====================================================
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -205,7 +196,7 @@ CREATE TABLE reports (
     reported_user_id UUID NOT NULL,
     reported_post_id UUID,
     reported_comment_id UUID,
-    category VARCHAR NOT NULL,
+    category VARCHAR(100) NOT NULL,
     reason TEXT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'waiting',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -238,7 +229,7 @@ CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
     post_id UUID,
-    type VARCHAR NOT NULL,
+    type VARCHAR(50) NOT NULL,
     payload JSONB,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 

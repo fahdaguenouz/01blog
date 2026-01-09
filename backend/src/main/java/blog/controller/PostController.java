@@ -6,6 +6,7 @@ import blog.mapper.PostMapper;
 import blog.models.Post;
 import blog.models.User;
 import blog.repository.MediaRepository;
+import blog.repository.PostMediaRepository;
 import blog.repository.UserRepository;
 import blog.service.PostService;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.MediaType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -27,8 +30,11 @@ public class PostController {
   private final MediaRepository mediaRepository;
 private final UserRepository userRepository;
 
-   public PostController(PostService postService, MediaRepository mediaRepository, UserRepository userRepository) {
+private final PostMediaRepository postMediaRepository;
+
+   public PostController(PostService postService, PostMediaRepository postMediaRepository, MediaRepository mediaRepository, UserRepository userRepository) {
     this.postService = postService;
+    this.postMediaRepository = postMediaRepository;
     this.mediaRepository = mediaRepository;
     this.userRepository = userRepository;
   }
@@ -110,7 +116,7 @@ public PostDetailDto update(
     Post post = postService.findPostById(postId);
      boolean isSaved = false;
     boolean isLiked = postService.isPostLikedByUser(postId, username);
-     return PostMapper.toSummary(post, mediaRepository, isLiked, isSaved);
+     return PostMapper.toSummary(post, mediaRepository, postMediaRepository, isLiked, isSaved);
   }
 
   @DeleteMapping("/{postId}/like")
@@ -120,7 +126,7 @@ public PostDetailDto update(
     Post post = postService.findPostById(postId);
     boolean isLiked = postService.isPostLikedByUser(postId, username);
      boolean isSaved = false;
-    return PostMapper.toSummary(post, mediaRepository, isLiked, isSaved);
+    return PostMapper.toSummary(post, mediaRepository, postMediaRepository, isLiked, isSaved);
   }
 
 
