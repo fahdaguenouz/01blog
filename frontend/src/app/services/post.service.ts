@@ -10,6 +10,13 @@ export interface Category {
   name: string;
   slug: string;
 }
+export interface PostMedia {
+  id: string;
+  url: string;
+  description?: string;
+  position: number;
+  type: 'image' | 'video';
+}
 export interface Post {
   id: string;
   authorId: string;
@@ -27,6 +34,7 @@ export interface Post {
   isLiked?: boolean;
    isSaved?: boolean; 
   categories?: Category[]; 
+   media?: PostMedia[];
 }
 
 

@@ -16,6 +16,7 @@ import { EditPostData, EditPostDialogComponent } from './edit-post-component';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReportService } from '../services/report.service';
 import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dialog.component';
+import { OrderByPositionPipe } from './orderByPosition';
 @Component({
   standalone: true,
   selector: 'app-post-detail',
@@ -32,6 +33,7 @@ import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dial
     RouterModule,
     MatInputModule,
     MatTooltipModule,
+    OrderByPositionPipe,
   ],
   template: `
     <mat-card *ngIf="post">
@@ -50,7 +52,7 @@ import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dial
           </button>
         </mat-menu>
       </div>
-       <button
+      <button
         mat-icon-button
         color="warn"
         aria-label="Report this post"
@@ -64,13 +66,20 @@ import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dial
       <small>{{ post.createdAt | date : 'medium' }}</small>
       <!-- ADD THIS BLOCK after <small>{{ post.createdAt | date : 'medium' }}</small> -->
       <div class="post-author" style="margin: 12px 0;">
-        <img
-          *ngIf="post.avatarUrl"
-          [src]="post.avatarUrl"
-          alt="{{ post.authorName }}"
-          class="author-avatar"
-          style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; vertical-align: middle;"
-        />
+        <div *ngIf="post.media?.length" class="post-media">
+          <ng-container *ngFor="let m of post.media || [] | orderByPosition">
+            <img
+              *ngIf="m.type === 'image'"
+              [src]="m.url"
+              [alt]="m.description || 'Post image'"
+              class="media-item"
+            />
+            <video *ngIf="m.type === 'video'" controls class="media-item">
+              <source [src]="m.url" />
+            </video>
+            <p *ngIf="m.description" class="media-description">{{ m.description }}</p>
+          </ng-container>
+        </div>
         <div style="display: inline-block; vertical-align: middle;">
           <a [routerLink]="['/profile', post.authorUsername]" class="author-link">
             <strong>{{ post.authorName }}</strong>
@@ -125,8 +134,6 @@ import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dial
         <p>{{ comment.text }}</p>
       </div>
 
-     
-
       <form (ngSubmit)="addComment()" #commentForm="ngForm">
         <mat-form-field appearance="fill" class="full-width">
           <textarea
@@ -167,6 +174,23 @@ import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dial
       }
       .author-avatar {
         object-fit: cover;
+      }
+      .post-media {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 12px 0;
+      }
+      .media-item {
+        width: 100%;
+        max-width: 600px;
+        border-radius: 10px;
+        object-fit: cover;
+      }
+      .media-description {
+        font-size: 14px;
+        color: #555;
+        margin-top: 4px;
       }
     `,
   ],
@@ -310,38 +334,38 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-
   openReportDialog() {
-  if (!this.post || !this.currentUser) {
-    alert('You must be logged in to report a post.');
-    return;
-  }
+    if (!this.post || !this.currentUser) {
+      alert('You must be logged in to report a post.');
+      return;
+    }
 
-  const dialogRef = this.dialog.open<
-    ReportPostDialogComponent,
-    { authorName: string; postTitle: string },
-    ReportPostDialogResult
-  >(ReportPostDialogComponent, {
-    width: '420px',
-    data: {
-      authorName: this.post.authorName,
-      postTitle: this.post.title,
-    },
-  });
-
-  dialogRef.afterClosed().subscribe((result) => {
-    if (!result) return;
-
-    this.reports.reportPost({
-      reportedUserId: this.post!.authorId,
-      reportedPostId: this.post!.id,
-      category: result.category,
-      reason: result.reason,
-    }).subscribe({
-      next: () => alert('Thank you. Your report has been submitted.'),
-      error: () => alert('Failed to submit report. Please try again later.'),
+    const dialogRef = this.dialog.open<
+      ReportPostDialogComponent,
+      { authorName: string; postTitle: string },
+      ReportPostDialogResult
+    >(ReportPostDialogComponent, {
+      width: '420px',
+      data: {
+        authorName: this.post.authorName,
+        postTitle: this.post.title,
+      },
     });
-  });
-}
 
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) return;
+
+      this.reports
+        .reportPost({
+          reportedUserId: this.post!.authorId,
+          reportedPostId: this.post!.id,
+          category: result.category,
+          reason: result.reason,
+        })
+        .subscribe({
+          next: () => alert('Thank you. Your report has been submitted.'),
+          error: () => alert('Failed to submit report. Please try again later.'),
+        });
+    });
+  }
 }
