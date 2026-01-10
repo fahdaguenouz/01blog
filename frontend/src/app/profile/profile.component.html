@@ -121,13 +121,11 @@
       </mat-card-header>
 
       <!-- Media preview -->
-      <ng-container *ngIf="post.mediaUrl">
-        <div class="media-preview-container">
-          <img *ngIf="post.mediaType === 'image'" [src]="post.mediaUrl" alt="Post image" class="post-media-preview" />
-          <video *ngIf="post.mediaType === 'video'" [src]="post.mediaUrl" class="post-media-preview" muted
-            preload="metadata"></video>
-        </div>
+      <ng-container *ngIf="post.coverMedia as media">
+        <img *ngIf="media.type === 'image'" [src]="media.url" class="post-media-preview" />
+        <video *ngIf="media.type === 'video'" [src]="media.url" muted></video>
       </ng-container>
+
 
 
       <mat-card-content>

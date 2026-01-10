@@ -165,6 +165,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
       )
       .subscribe((posts) => {
         this.posts = posts ?? [];
+        console.log("posts in the profile ,", this.posts);
+        
         try {
           this.cd.detectChanges();
         } catch (e) {

@@ -4,7 +4,6 @@ import { Injectable, Injector } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
 
-
 export interface Category {
   id: string;
   name: string;
@@ -15,7 +14,7 @@ export interface PostMedia {
   url: string;
   description?: string;
   position: number;
-  mediaType: string;        // ← from backend (image/png, video/mp4)
+  mediaType: string; // ← from backend (image/png, video/mp4)
   type?: 'image' | 'video'; // ← derived (frontend)
 }
 export interface Post {
@@ -33,96 +32,72 @@ export interface Post {
   likes: number;
   comments: number;
   isLiked?: boolean;
-   isSaved?: boolean; 
-  categories?: Category[]; 
-   media?: PostMedia[];
-   coverMedia?: PostMedia;
+  isSaved?: boolean;
+  categories?: Category[];
+  media?: PostMedia[];
+  coverMedia?: PostMedia;
 }
-
 
 export interface Comment {
   id: string;
   postId: string;
   userId: string;
   username: string;
- text: string; 
+  text: string;
   createdAt: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class PostService {
-   private base = environment.apiUrl;
+  private base = environment.apiUrl;
   private apiUrl = `${this.base}/api/posts`;
 
-  constructor(private injector: Injector) {
-   
+  constructor(private injector: Injector) {}
+
+  private getHttp(): HttpClient {
+    return this.injector.get(HttpClient);
   }
 
-  private getHttp(): HttpClient { return this.injector.get(HttpClient); }
+  getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observable<Post[]> {
+    const params: any = { sort };
+    if (categoryId) params.categoryId = categoryId;
 
-getFeed(
-  categoryId?: string,
-  sort: 'new' | 'likes' | 'saved' = 'new'
-): Observable<Post[]> {
-
-  const params: any = { sort };
-  if (categoryId) params.categoryId = categoryId;
-
-  return this.getHttp()
-    .get<Post[]>(`${this.apiUrl}/feed`, { params })
-    .pipe(
-      map(posts => posts.map(p => this.normalizePost(p)))
-    );
-}
-
+    return this.getHttp()
+      .get<Post[]>(`${this.apiUrl}/feed`, { params })
+      .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
+  }
 
   getById(postId: string): Observable<Post> {
-  return this.getHttp()
-    .get<Post>(`${this.apiUrl}/${postId}`)
-    .pipe(map(post => this.normalizePost(post)));
-}
+    return this.getHttp()
+      .get<Post>(`${this.apiUrl}/${postId}`)
+      .pipe(map((post) => this.normalizePost(post)));
+  }
 
+  // In your PostService (src/app/services/post.service.ts)
+  createPostFormData(formData: FormData): Observable<any> {
+    return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
+  }
 
-getUserPosts(userId: string): Observable<Post[]> {
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/posts`, { withCredentials: true });  // ← ADD /posts
-}
-// In your PostService (src/app/services/post.service.ts)
-createPostFormData(formData: FormData): Observable<any> {
-  return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
-}
+  updatePost(
+    postId: string,
+    title: string,
+    body: string,
+    mediaFiles?: File[],
+    mediaDescriptions: string[] = [],
+    categoryIds: string[] = []
+  ): Observable<Post> {
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('body', body);
 
+    mediaFiles?.forEach((f) => formData.append('mediaFiles', f));
+    mediaDescriptions.forEach((d) => formData.append('mediaDescriptions', d));
+    categoryIds.forEach((id) => formData.append('categoryId', id));
 
-  // createPost(title: string, description: string, media?: File, categoryIds: string[] = []): Observable<Post> {
-  //   const formData = new FormData();
-  //   formData.append('title', title);
-  //   formData.append('description', description);
-  //   if (media) formData.append('media', media);
-  //   categoryIds.forEach(id => formData.append('categoryIds', id));
-  //   return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
-  // }
-
- updatePost(
-  postId: string,
-  title: string,
-  body: string,
-  mediaFiles?: File[],
-  mediaDescriptions: string[] = [],
-  categoryIds: string[] = []
-): Observable<Post> {
-
-  const formData = new FormData();
-  formData.append('title', title);
-  formData.append('body', body);
-
-  mediaFiles?.forEach(f => formData.append('mediaFiles', f));
-  mediaDescriptions.forEach(d => formData.append('mediaDescriptions', d));
-  categoryIds.forEach(id => formData.append('categoryId', id));
-
-  return this.getHttp()
-    .put<Post>(`${this.apiUrl}/${postId}`, formData)
-    .pipe(map(post => this.normalizePost(post)));
-}
-
+    return this.getHttp()
+      .put<Post>(`${this.apiUrl}/${postId}`, formData)
+      .pipe(map((post) => this.normalizePost(post)));
+  }
 
   deletePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}`);
@@ -131,13 +106,23 @@ createPostFormData(formData: FormData): Observable<any> {
   likePost(postId: string): Observable<void> {
     return this.getHttp().post<void>(`${this.apiUrl}/${postId}/like`, {});
   }
-  getLikedPosts(userId: string): Observable<Post[]> {
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/liked`,{ withCredentials: true });
-}
+  getUserPosts(userId: string): Observable<Post[]> {
+    return this.getHttp()
+      .get<Post[]>(`${this.apiUrl}/user/${userId}/posts`)
+      .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
+  }
 
-getSavedPosts(userId: string): Observable<Post[]> {
-  return this.getHttp().get<Post[]>(`${this.apiUrl}/user/${userId}/saved`,{ withCredentials: true });
-}
+  getLikedPosts(userId: string): Observable<Post[]> {
+    return this.getHttp()
+      .get<Post[]>(`${this.apiUrl}/user/${userId}/liked`)
+      .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
+  }
+
+  getSavedPosts(userId: string): Observable<Post[]> {
+    return this.getHttp()
+      .get<Post[]>(`${this.apiUrl}/user/${userId}/saved`)
+      .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
+  }
 
   unlikePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/like`);
@@ -155,37 +140,34 @@ getSavedPosts(userId: string): Observable<Post[]> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/comments/${commentId}`);
   }
   savePost(postId: string): Observable<void> {
-  return this.getHttp().post<void>(`${this.apiUrl}/${postId}/save`, {});
-}
-
-unsavePost(postId: string): Observable<void> {
-  return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/save`);
-}
-
-private normalizePost(post: Post): Post {
-
-  // RESET (important to avoid leftovers)
-  post.coverMedia = undefined;
-
-  if (post.media && post.media.length > 0) {
-    post.media = post.media.map(m => ({
-      ...m,
-      url: m.url.startsWith('http') ? m.url : `${this.base}${m.url}`,
-      type: m.mediaType.startsWith('image')
-        ? 'image'
-        : m.mediaType.startsWith('video')
-        ? 'video'
-        : undefined
-    }));
-
-    post.coverMedia =
-      post.media.find(m => m.position === 1) ??
-      post.media.sort((a, b) => a.position - b.position)[0];
+    return this.getHttp().post<void>(`${this.apiUrl}/${postId}/save`, {});
   }
 
-  // ❌ NO placeholder
-  return post;
-}
+  unsavePost(postId: string): Observable<void> {
+    return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/save`);
+  }
 
+  private normalizePost(post: Post): Post {
+    // RESET (important to avoid leftovers)
+    post.coverMedia = undefined;
 
+    if (post.media && post.media.length > 0) {
+      post.media = post.media.map((m) => ({
+        ...m,
+        url: m.url.startsWith('http') ? m.url : `${this.base}${m.url}`,
+        type: m.mediaType.startsWith('image')
+          ? 'image'
+          : m.mediaType.startsWith('video')
+          ? 'video'
+          : undefined,
+      }));
+
+      post.coverMedia =
+        post.media.find((m) => m.position === 1) ??
+        post.media.sort((a, b) => a.position - b.position)[0];
+    }
+
+    // ❌ NO placeholder
+    return post;
+  }
 }
