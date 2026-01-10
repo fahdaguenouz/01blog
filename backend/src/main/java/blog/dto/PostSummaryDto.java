@@ -2,6 +2,7 @@
 package blog.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record PostSummaryDto(
@@ -15,8 +16,7 @@ public record PostSummaryDto(
     int likes,
     int comments,
     Instant createdAt,
-    String mediaUrl,
-    String mediaType,
+    List<PostMediaDto> media,
     boolean isLiked,
     boolean isSaved
 ) {}

@@ -215,7 +215,7 @@ export class PostDetailComponent implements OnInit {
 
   loadPost(id: string) {
     this.posts.getById(id).subscribe((p) => {
-      console.log('POST DETAIL', p);
+      // console.log('POST DETAIL', p);
       this.post = p;
     });
   }

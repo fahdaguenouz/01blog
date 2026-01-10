@@ -36,6 +36,7 @@ export interface Post {
    isSaved?: boolean; 
   categories?: Category[]; 
    media?: PostMedia[];
+   coverMedia?: PostMedia;
 }
 
 
@@ -59,11 +60,21 @@ export class PostService {
 
   private getHttp(): HttpClient { return this.injector.get(HttpClient); }
 
-getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observable<Post[]> {
-    const params: any = { sort };
-    if (categoryId) params.categoryId = categoryId;
-    return this.getHttp().get<Post[]>(`${this.apiUrl}/feed`, { params });
-  }
+getFeed(
+  categoryId?: string,
+  sort: 'new' | 'likes' | 'saved' = 'new'
+): Observable<Post[]> {
+
+  const params: any = { sort };
+  if (categoryId) params.categoryId = categoryId;
+
+  return this.getHttp()
+    .get<Post[]>(`${this.apiUrl}/feed`, { params })
+    .pipe(
+      map(posts => posts.map(p => this.normalizePost(p)))
+    );
+}
+
 
   getById(postId: string): Observable<Post> {
   return this.getHttp()
@@ -152,20 +163,29 @@ unsavePost(postId: string): Observable<void> {
 }
 
 private normalizePost(post: Post): Post {
-  if (post.media) {
+
+  // RESET (important to avoid leftovers)
+  post.coverMedia = undefined;
+
+  if (post.media && post.media.length > 0) {
     post.media = post.media.map(m => ({
       ...m,
-      url: m.url.startsWith('http')
-        ? m.url
-        : `${this.base}${m.url}`,
+      url: m.url.startsWith('http') ? m.url : `${this.base}${m.url}`,
       type: m.mediaType.startsWith('image')
         ? 'image'
         : m.mediaType.startsWith('video')
         ? 'video'
         : undefined
     }));
+
+    post.coverMedia =
+      post.media.find(m => m.position === 1) ??
+      post.media.sort((a, b) => a.position - b.position)[0];
   }
+
+  // ❌ NO placeholder
   return post;
 }
+
 
 }

@@ -81,6 +81,8 @@ export class FeedComponent implements OnInit {
     this.postService.getFeed(categoryId, this.sort).subscribe({
       next: (posts) => {
         this.posts = posts;
+        // console.log("the post info in feed ",posts);
+        
         this.loading = false;
       },
       error: () => (this.loading = false),

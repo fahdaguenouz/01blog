@@ -46,15 +46,6 @@ INSERT INTO posts (id, user_id, title, body, status, likes_count, comments_count
   ('770e8400-e29b-41d4-a716-446655440006', '550e8400-e29b-41d4-a716-446655440001', 'TypeScript Generics Explained', 'Generics in TypeScript are powerful but confusing at first. Today I finally got them! Understanding: Generic functions and types, Constraints and extends keyword, Type inference, Utility types like Partial, Pick, Omit. My code is now more type-safe and reusable. No more "any" types!', 'active', 31, 7, 210, CURRENT_TIMESTAMP - INTERVAL '6 days'),
   ('770e8400-e29b-41d4-a716-446655440007', '550e8400-e29b-41d4-a716-446655440002', 'Database Design Best Practices', 'Spent the day optimizing our database schema. Here is what I learned: Best practices: Normalize data properly, Use appropriate indexes, Plan for scalability, Implement proper constraints, Document your schema. Good database design saves performance issues down the line.', 'active', 26, 4, 180, CURRENT_TIMESTAMP - INTERVAL '4 days');
 
--- 4. Insert post_media relationships
-INSERT INTO post_media (post_id, media_id, position, created_at) VALUES
-  ('770e8400-e29b-41d4-a716-446655440001', '660e8400-e29b-41d4-a716-446655440001', 1, CURRENT_TIMESTAMP - INTERVAL '7 days'),
-  ('770e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440002', 1, CURRENT_TIMESTAMP - INTERVAL '5 days'),
-  ('770e8400-e29b-41d4-a716-446655440003', '660e8400-e29b-41d4-a716-446655440003', 1, CURRENT_TIMESTAMP - INTERVAL '3 days'),
-  ('770e8400-e29b-41d4-a716-446655440004', '660e8400-e29b-41d4-a716-446655440004', 1, CURRENT_TIMESTAMP - INTERVAL '2 days'),
-  ('770e8400-e29b-41d4-a716-446655440005', '660e8400-e29b-41d4-a716-446655440005', 1, CURRENT_TIMESTAMP - INTERVAL '1 day');
-
-
 -- Getting Started with React Hooks (React → Tech + Programming + Tutorial)
 INSERT INTO post_categories (post_id, category_id) VALUES
   ('770e8400-e29b-41d4-a716-446655440001', 'c10e8400-e29b-41d4-a716-446655440001'), -- Technology
