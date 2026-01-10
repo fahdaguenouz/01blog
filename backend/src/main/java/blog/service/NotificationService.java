@@ -1,5 +1,6 @@
 package blog.service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import blog.enums.NotificationType;
@@ -26,26 +27,24 @@ public class NotificationService {
     private ObjectMapper mapper;
 
     public void notify(User target, User actor, NotificationType type, Post post) {
-        // Don't notify yourself
+
         if (target.getId().equals(actor.getId()))
             return;
 
-        // Build payload
-        Map<String, Object> payload = Map.of(
-                "actorUsername", actor.getUsername(),
-                "postId", post != null ? post.getId() : null);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("actorUsername", actor.getUsername());
 
-        // Create notification
+        if (post != null) {
+            payload.put("postId", post.getId());
+        }
+
         Notification notif = new Notification();
         notif.setTargetUser(target);
         notif.setType(type);
         notif.setPost(post);
-        notif.setPayload(payload); // ✅ Map stored directly as jsonb
+        notif.setPayload(payload);
 
-        // Save notification
         notificationRepo.save(notif);
-
-        // Save unseen notification for quick access
         unseenRepo.save(new UnseenNotification(target, notif));
     }
 

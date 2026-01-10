@@ -187,7 +187,7 @@ public class UserController {
                 followersCount,
                 followingCount,
                 isSubscribed);
-
+            
         notificationService.notify(
                 targetUser,
                 currentUser,
