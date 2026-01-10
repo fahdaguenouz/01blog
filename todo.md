@@ -65,3 +65,13 @@ cat src/main/resources/db/migration/V2__seed_data.sql | docker exec -i 01blog-po
 List tables in the correct DB:
 
 docker exec -it 01blog-postgres psql -U 01blog -d 01blog -c "\dt"
+
+
+
+
+
+
+the color combos :FF9D00
+7B542F
+B6771D
+FFCF71

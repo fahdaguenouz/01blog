@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DefaultLoginLayoutComponent } from '../components/default-login-layout/default-login-layout.component';
-import { PrimaryInputComponent } from '../components/primary-input/primary-input.component';
 import { LoginService } from '../services/login.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,11 +25,10 @@ interface LoginForm {
     CommonModule,
     DefaultLoginLayoutComponent,
     ReactiveFormsModule,
-    PrimaryInputComponent,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule 
+    MatIconModule
   ],
   providers: [LoginService],
   templateUrl: './login.component.html',
@@ -38,8 +36,9 @@ interface LoginForm {
 })
 export class LoginComponent {
   hidePw = true;
-  loginForm = new FormGroup<LoginForm>({
-    username: new FormControl('', [Validators.required]),
+
+  loginForm = new FormGroup({
+    username: new FormControl('', Validators.required),
     password: new FormControl('', [Validators.required, Validators.minLength(6)])
   });
 
@@ -47,32 +46,39 @@ export class LoginComponent {
     private router: Router,
     private loginService: LoginService,
     private snack: SnackService,
-    private auth: AuthService,
+    private auth: AuthService
   ) {}
+
+  get username() {
+    return this.loginForm.get('username');
+  }
+
+  get password() {
+    return this.loginForm.get('password');
+  }
 
   submit() {
     if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       this.snack.error('Please enter your username and password.');
       return;
     }
-    const v = this.loginForm.value;
-    this.loginService.login(v.username!, v.password!).subscribe({
-     next: () => {
-     
-     setTimeout(() => {
-      if (this.auth.isAdmin()) {
-        this.router.navigate(['/admin/dashboard']);
-      } else {
-        this.router.navigate(['/feed']);
-      }
-    });
-    },
+
+    const { username, password } = this.loginForm.getRawValue();
+
+    this.loginService.login(username!, password!).subscribe({
+      next: () => {
+        this.router.navigate(
+          this.auth.isAdmin() ? ['/admin/dashboard'] : ['/feed']
+        );
+      },
       error: (err) => {
-        const msg = toUserMessage(err, 'Could not log you in.');
-        this.snack.error(msg);
+        this.snack.error(toUserMessage(err, 'Could not log you in.'));
       }
     });
   }
 
-  navigate() { this.router.navigate(['auth/signup']); }
+  navigate() {
+    this.router.navigate(['auth/signup']);
+  }
 }

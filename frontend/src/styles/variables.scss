@@ -1,5 +1,43 @@
-$primary-color: #7001FD;
-$text-color: #555555;
-$secondary-color: #1E2772;
-$gray-bg: #EEEEEE;
-$gray-secondary-bg: #F1F3F6;
+// Sunset & Coffee Theme Colors
+$primary-color: #FF9D00;        // Sunset Orange
+$secondary-color: #B6771D;      // Gold Brown
+$accent-color: #7B542F;         // Coffee Brown
+$light-accent: #FFCF71;         // Peach Light
+
+// Text Colors
+$text-color: #555555;           // Main text
+$text-dark: #333333;            // Darker text
+$text-light: #7B542F;           // Coffee brown for labels
+
+// Background Colors
+$gray-bg: #FFF9F0;              // Light cream background
+$gray-secondary-bg: #FFEFD5;    // Warm peach background
+$white-bg: #FFFFFF;             // Pure white
+
+// Status Colors
+$success-color: #4CAF50;
+$error-color: #d32f2f;
+$warning-color: #FF9D00;
+$info-color: #B6771D;
+
+// Shadows
+$shadow-sm: 0 2px 4px rgba(123, 84, 47, 0.1);
+$shadow-md: 0 4px 12px rgba(123, 84, 47, 0.15);
+$shadow-lg: 0 8px 24px rgba(123, 84, 47, 0.2);
+
+// Border Radius
+$border-radius-sm: 8px;
+$border-radius-md: 12px;
+$border-radius-lg: 16px;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
