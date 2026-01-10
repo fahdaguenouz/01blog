@@ -4,7 +4,6 @@ import java.util.UUID;
 import lombok.Data;
 import jakarta.persistence.*;
 
-
 @Entity
 @Table(name = "unseen_notifications")
 @Data
@@ -19,6 +18,9 @@ public class UnseenNotification {
 
     @ManyToOne
     private Notification notification;
+
+    protected UnseenNotification() {
+    }
 
     public UnseenNotification(User user, Notification notification) {
         this.user = user;

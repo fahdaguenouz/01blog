@@ -40,7 +40,8 @@ public class NotificationController {
         return notificationRepo.findByUser(me.getId())
                 .stream()
                 .map(n -> {
-                    boolean seen = !unseenRepo.existsByNotificationId(n.getId());
+                 boolean seen = !unseenRepo.existsByNotification_Id(n.getId());
+
 
                     String actorUsername = null;
                     if (n.getPayload() != null) {

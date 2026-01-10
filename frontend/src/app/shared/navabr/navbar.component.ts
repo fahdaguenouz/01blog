@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { LoginService } from '../../auth/services/login.service';
 import { UserService } from '../../services/user.service';
-import { AppNotification, NotificationService } from '../../services/NotificationService';
+import { AppNotification, NotificationService } from '../../services/Notification.service';
 
 interface NavItem {
   label: string;
