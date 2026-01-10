@@ -2,7 +2,7 @@ package blog.service;
 
 import blog.controller.PostController;
 import blog.dto.*;
-
+import blog.enums.NotificationType;
 import blog.mapper.PostMapper;
 import blog.models.*;
 
@@ -32,6 +32,8 @@ public class PostService {
   private final PostCategoryRepository postCategories;
   private final SavedPostRepository savedPosts;
   private final PostMediaRepository postMediaRepository;
+  private final NotificationService notificationService;
+
 
   public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
       MediaRepository mediaRepo, LikeRepository likes,
@@ -39,7 +41,8 @@ public class PostService {
       CategoryRepository categories,
       PostCategoryRepository postCategories,
       SavedPostRepository savedPosts,
-      PostMediaRepository postMediaRepository) {
+      PostMediaRepository postMediaRepository,
+     NotificationService notificationService) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
@@ -50,6 +53,7 @@ public class PostService {
     this.postCategories = postCategories;
     this.savedPosts = savedPosts;
     this.postMediaRepository = postMediaRepository;
+     this.notificationService = notificationService;
   }
 
   public PostDetailDto createPost(
@@ -278,6 +282,13 @@ public class PostService {
     post.setLikesCount(Math.max(newCount, 0));
     posts.save(post);
     posts.flush();
+
+    notificationService.notify(
+        post.getAuthor(),
+        user,
+        NotificationType.POST_LIKED,
+        post);
+
   }
 
   // ✅ Unlike post
@@ -294,15 +305,14 @@ public class PostService {
     });
   }
 
-public PostDetailDto updatePost(
-    String username,
-    UUID postId,
-    String title,
-    String body,
-    List<MultipartFile> mediaFiles,
-    List<String> mediaDescriptions,
-    List<UUID> categoryIds
-) {
+  public PostDetailDto updatePost(
+      String username,
+      UUID postId,
+      String title,
+      String body,
+      List<MultipartFile> mediaFiles,
+      List<String> mediaDescriptions,
+      List<UUID> categoryIds) {
 
     User user = users.findByUsername(username)
         .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -311,7 +321,7 @@ public PostDetailDto updatePost(
         .orElseThrow(() -> new IllegalArgumentException("Post not found"));
 
     if (!post.getAuthor().getId().equals(user.getId())) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
     }
 
     post.setTitle(title);
@@ -321,50 +331,52 @@ public PostDetailDto updatePost(
     // -------- MEDIA --------
     if (mediaFiles != null) {
 
-        if (mediaDescriptions == null || mediaFiles.size() != mediaDescriptions.size()) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Each media must have a description"
-            );
-        }
+      if (mediaDescriptions == null || mediaFiles.size() != mediaDescriptions.size()) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Each media must have a description");
+      }
 
-        postMediaRepository.deleteByPostId(postId);
+      postMediaRepository.deleteByPostId(postId);
 
-        for (int i = 0; i < mediaFiles.size(); i++) {
-            MultipartFile file = mediaFiles.get(i);
-            if (file == null || file.isEmpty()) continue;
+      for (int i = 0; i < mediaFiles.size(); i++) {
+        MultipartFile file = mediaFiles.get(i);
+        if (file == null || file.isEmpty())
+          continue;
 
-            var stored = mediaStorage.save(file);
-            if (stored == null) continue;
+        var stored = mediaStorage.save(file);
+        if (stored == null)
+          continue;
 
-            Media media = new Media();
-            media.setUserId(user.getId());
-            media.setMediaType(file.getContentType());
-            media.setSize((int) file.getSize());
-            media.setUrl(stored.url());
-            media.setUploadedAt(OffsetDateTime.now());
-            Media savedMedia = mediaRepo.save(media);
+        Media media = new Media();
+        media.setUserId(user.getId());
+        media.setMediaType(file.getContentType());
+        media.setSize((int) file.getSize());
+        media.setUrl(stored.url());
+        media.setUploadedAt(OffsetDateTime.now());
+        Media savedMedia = mediaRepo.save(media);
 
-            PostMedia pm = new PostMedia();
-            pm.setPostId(postId);
-            pm.setMediaId(savedMedia.getId());
-            pm.setDescription(mediaDescriptions.get(i));
-            pm.setPosition(i);
-            pm.setCreatedAt(Instant.now());
-            postMediaRepository.save(pm);
-        }
+        PostMedia pm = new PostMedia();
+        pm.setPostId(postId);
+        pm.setMediaId(savedMedia.getId());
+        pm.setDescription(mediaDescriptions.get(i));
+        pm.setPosition(i);
+        pm.setCreatedAt(Instant.now());
+        postMediaRepository.save(pm);
+      }
     }
 
     // -------- CATEGORIES --------
     postCategories.deleteByPostId(postId);
     if (categoryIds != null) {
-        categoryIds.stream().distinct().forEach(cid -> {
-            if (!categories.existsById(cid)) return;
-            PostCategory pc = new PostCategory();
-            pc.setPostId(postId);
-            pc.setCategoryId(cid);
-            postCategories.save(pc);
-        });
+      categoryIds.stream().distinct().forEach(cid -> {
+        if (!categories.existsById(cid))
+          return;
+        PostCategory pc = new PostCategory();
+        pc.setPostId(postId);
+        pc.setCategoryId(cid);
+        postCategories.save(pc);
+      });
     }
 
     List<CategoryDto> categoryDtos = postCategories.findByPostId(postId).stream()
@@ -376,22 +388,22 @@ public PostDetailDto updatePost(
 
     List<PostMediaDto> mediaDtos = postMediaRepository.findByPostIdOrderByPositionAsc(postId).stream()
         .map(pm -> {
-            Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
-            if (m == null) return null;
-            return new PostMediaDto(
-                pm.getId(),
-                m.getId(),
-                m.getUrl(),
-                m.getMediaType(),
-                pm.getDescription(),
-                pm.getPosition()
-            );
+          Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
+          if (m == null)
+            return null;
+          return new PostMediaDto(
+              pm.getId(),
+              m.getId(),
+              m.getUrl(),
+              m.getMediaType(),
+              pm.getDescription(),
+              pm.getPosition());
         })
         .filter(Objects::nonNull)
         .toList();
 
     return PostMapper.toDetail(post, categoryDtos, mediaDtos, false, false);
-}
+  }
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -423,6 +435,13 @@ public PostDetailDto updatePost(
     int currentCommentsCount = post.getCommentsCount() == null ? 0 : post.getCommentsCount();
     post.setCommentsCount(currentCommentsCount + 1);
     posts.saveAndFlush(post);
+
+    notificationService.notify(
+        post.getAuthor(),
+        user,
+        NotificationType.POST_COMMENTED,
+        post);
+
   }
 
   public List<PostController.CommentDto> getComments(UUID postId) {
@@ -454,6 +473,16 @@ public PostDetailDto updatePost(
     savedPost.setUserId(user.getId());
     savedPost.setPostId(postId);
     savedPosts.save(savedPost);
+
+    Post post = posts.findById(postId)
+        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+    notificationService.notify(
+        post.getAuthor(),
+        user,
+        NotificationType.POST_SAVED,
+        post);
+
   }
 
   public void unsavePost(String username, UUID postId) {
@@ -491,7 +520,8 @@ public PostDetailDto updatePost(
 
     // long mapTime = System.currentTimeMillis() - mapStart;
     // System.out.println(
-    //     "✅ [PostService] Mapping END: " + mapTime + "ms, Total: " + (System.currentTimeMillis() - start) + "ms");
+    // "✅ [PostService] Mapping END: " + mapTime + "ms, Total: " +
+    // (System.currentTimeMillis() - start) + "ms");
 
     return dtos;
   }

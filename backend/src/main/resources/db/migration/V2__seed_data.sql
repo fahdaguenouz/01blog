@@ -118,15 +118,3 @@ INSERT INTO subscriptions (id, subscriber_id, subscribed_to_id, created_at) VALU
 INSERT INTO reports (id, reporter_id, reported_user_id, reported_post_id, reported_comment_id, category, reason, status, created_at) VALUES
   ('bb0e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440006', NULL, NULL, 'inappropriate_content', 'User is spamming the feed', 'waiting', CURRENT_TIMESTAMP - INTERVAL '3 days');
 
--- 9. Insert notifications
-INSERT INTO notifications (id, user_id, post_id, type, payload, created_at) VALUES
-  ('cc0e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', 'new_post_from_subscriber', '{"username": "bob", "post_title": "Building REST APIs with Spring Boot"}', CURRENT_TIMESTAMP - INTERVAL '5 days'),
-  ('cc0e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440001', 'new_post_from_subscriber', '{"username": "alice", "post_title": "Getting Started with React Hooks"}', CURRENT_TIMESTAMP - INTERVAL '7 days'),
-  ('cc0e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440001', '770e8400-e29b-41d4-a716-446655440002', 'new_comment', '{"username": "bob", "comment": "Spring Boot is amazing!"}', CURRENT_TIMESTAMP - INTERVAL '4 days'),
-  ('cc0e8400-e29b-41d4-a716-446655440004', '550e8400-e29b-41d4-a716-446655440002', '770e8400-e29b-41d4-a716-446655440001', 'new_like', '{"username": "charlie", "post_title": "Getting Started with React Hooks"}', CURRENT_TIMESTAMP - INTERVAL '6 days');
-
--- 10. Insert unseen notifications
-INSERT INTO unseen_notifications (id, user_id, notification_id, created_at) VALUES
-  ('dd0e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'cc0e8400-e29b-41d4-a716-446655440001', CURRENT_TIMESTAMP - INTERVAL '5 days'),
-  ('dd0e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440002', 'cc0e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP - INTERVAL '7 days'),
-  ('dd0e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440001', 'cc0e8400-e29b-41d4-a716-446655440003', CURRENT_TIMESTAMP - INTERVAL '4 days');

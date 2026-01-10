@@ -70,3 +70,18 @@
     margin-right: 4px;
   }
 }
+
+
+.notif-btn {
+  position: relative;
+}
+
+.notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+}

@@ -2,12 +2,14 @@ package blog.controller;
 
 import blog.dto.ReportDto;
 import blog.dto.UserProfileDto;
+import blog.enums.NotificationType;
 import blog.models.Media;
 import blog.models.Subscription;
 import blog.models.User;
 import blog.repository.MediaRepository;
 import blog.repository.SubscriptionRepository;
 import blog.repository.UserRepository;
+import blog.service.NotificationService;
 import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,231 +33,232 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-  private final UserRepository repo;
-  private final MediaRepository mediaRepo;
-  private final UserService userService;
- private final SubscriptionRepository subscriptionRepo;
-  @GetMapping
-  public List<User> all() {
-    return repo.findAll();
-  }
+    private final UserRepository repo;
+    private final MediaRepository mediaRepo;
+    private final UserService userService;
+    private final SubscriptionRepository subscriptionRepo;
+      private final NotificationService notificationService;
 
-  @GetMapping("/{id}")
-  public User one(@PathVariable UUID id) {
-    return repo.findById(id).orElseThrow();
-  }
-
-  @PostMapping
-  public User create(@RequestBody User u) {
-    u.setId(null);
-    return repo.save(u);
-  }
-
-@GetMapping("/by-username/{username}")
-public UserProfileDto getByUsername(@PathVariable String username, Authentication auth) {
-    User user = repo.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    boolean isSubscribed = false;
-    if (auth != null && auth.isAuthenticated()) {
-        UUID currentUserId = repo.findByUsername(auth.getName())
-                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
-                                 .getId();
-        isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUserId, user.getId());
+    @GetMapping
+    public List<User> all() {
+        return repo.findAll();
     }
 
-    return new UserProfileDto(
-        user.getId(), user.getUsername(), user.getName(), user.getEmail(),
-        user.getBio(), user.getAge(), user.getAvatarMediaId() != null ? mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null) : null,
-        (int)subscriptionRepo.countBySubscribedToId(user.getId()),
-        (int)subscriptionRepo.countBySubscriberId(user.getId()),
-        isSubscribed
-    );
-}
-
-// In UserController.java - update getMe() to include role
-@GetMapping("/me")
-public Map<String, Object> getMe(Authentication auth) {  // ← Change return type
-  if (auth == null || !auth.isAuthenticated()) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-  }
-
-  String username = auth.getName();
-  User user = repo.findByUsername(username)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-  String avatarUrl = null;
-  if (user.getAvatarMediaId() != null) {
-    Media media = mediaRepo.findById(user.getAvatarMediaId()).orElse(null);
-    if (media != null) {
-      avatarUrl = media.getUrl();
-    }
-  }
-
-  // Return simple Map with role for frontend validation
-  Map<String, Object> response = new HashMap<>();
-  response.put("id", user.getId());
-  response.put("username", user.getUsername());
-  response.put("name", user.getName());
-  response.put("email", user.getEmail());
-  response.put("bio", user.getBio());
-  response.put("age", user.getAge());
-  response.put("avatarUrl", avatarUrl);
-  response.put("role", user.getRole().toString());  // Frontend needs this
-
-  return response;
-}
-
-
-  @PutMapping("/me")
-  public UserProfileDto updateProfile(@RequestBody Map<String, Object> updates, Authentication auth) {
-    String username = auth.getName();
-    return userService.updateProfileByUsername(username, updates);
-  }
-
-  @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<Void> uploadAvatar(@RequestPart("avatar") MultipartFile avatar, Authentication auth) {
-    String username = auth.getName();
-    userService.updateAvatar(username, avatar);
-    return ResponseEntity.ok().build();
-  }
-
-
-  @PostMapping("/{userId}/subscribe")
-  @Transactional
-public ResponseEntity<UserProfileDto> subscribe(@PathVariable UUID userId, Authentication auth) {
-if (auth == null) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-}
-
-
-if (!auth.isAuthenticated()) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-}
-
-String currentUsername = auth.getName();
-
-User currentUser = repo.findByUsername(currentUsername)
-    .orElseThrow(() -> {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found");
-    });
-
-
-
-if (currentUser.getId().equals(userId)) {
-  
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot follow yourself");
-}
-
-boolean alreadySubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
-
-if (alreadySubscribed) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already following this user");
-}
-
-Subscription subscription = Subscription.builder()
-    .subscriberId(currentUser.getId())
-    .subscribedToId(userId)
-    .createdAt(OffsetDateTime.now())
-    .build();
-
-
-subscriptionRepo.save(subscription);
-subscriptionRepo.flush();
-
-User targetUser = repo.findById(userId).orElseThrow(() -> {
-    return new ResponseStatusException(HttpStatus.NOT_FOUND);
-});
-
-
-boolean isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
-
-String avatarUrl = null;
-if (targetUser.getAvatarMediaId() != null) {
-    avatarUrl = mediaRepo.findById(targetUser.getAvatarMediaId())
-        .map(Media::getUrl)
-        .orElse(null);
-} else {
-    System.out.println("[subscribe] Target user has no avatarMediaId");
-}
-
-int followersCount = (int) subscriptionRepo.countBySubscribedToId(targetUser.getId());
-int followingCount = (int) subscriptionRepo.countBySubscriberId(targetUser.getId());
-
-UserProfileDto dto = new UserProfileDto(
-    targetUser.getId(), targetUser.getUsername(), targetUser.getName(), targetUser.getEmail(),
-    targetUser.getBio(), targetUser.getAge(), avatarUrl,
-    followersCount,
-    followingCount,
-    isSubscribed
-);
-
-return ResponseEntity.ok(dto);
-
-}
-
-@DeleteMapping("/{userId}/subscribe")
-@Transactional
-public ResponseEntity<UserProfileDto> unsubscribe(@PathVariable UUID userId, Authentication auth) {
-    if (auth == null || !auth.isAuthenticated()) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+    @GetMapping("/{id}")
+    public User one(@PathVariable UUID id) {
+        return repo.findById(id).orElseThrow();
     }
 
-    String currentUsername = auth.getName();
-    User currentUser = repo.findByUsername(currentUsername)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
+    @PostMapping
+    public User create(@RequestBody User u) {
+        u.setId(null);
+        return repo.save(u);
+    }
 
-    subscriptionRepo.deleteBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
-    subscriptionRepo.flush();
+    @GetMapping("/by-username/{username}")
+    public UserProfileDto getByUsername(@PathVariable String username, Authentication auth) {
+        User user = repo.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    // Return updated profile DTO for the target user
-    User targetUser = repo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    boolean isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
-    String avatarUrl = targetUser.getAvatarMediaId() != null ? mediaRepo.findById(targetUser.getAvatarMediaId()).map(Media::getUrl).orElse(null) : null;
+        boolean isSubscribed = false;
+        if (auth != null && auth.isAuthenticated()) {
+            UUID currentUserId = repo.findByUsername(auth.getName())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
+                    .getId();
+            isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUserId, user.getId());
+        }
 
-    UserProfileDto dto = new UserProfileDto(
-        targetUser.getId(), targetUser.getUsername(), targetUser.getName(), targetUser.getEmail(),
-        targetUser.getBio(), targetUser.getAge(), avatarUrl,
-        (int) subscriptionRepo.countBySubscribedToId(targetUser.getId()),
-        (int) subscriptionRepo.countBySubscriberId(targetUser.getId()),
-        isSubscribed
-    );
+        return new UserProfileDto(
+                user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+                user.getBio(), user.getAge(),
+                user.getAvatarMediaId() != null
+                        ? mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null)
+                        : null,
+                (int) subscriptionRepo.countBySubscribedToId(user.getId()),
+                (int) subscriptionRepo.countBySubscriberId(user.getId()),
+                isSubscribed);
+    }
 
-    return ResponseEntity.ok(dto);
-}
+    // In UserController.java - update getMe() to include role
+    @GetMapping("/me")
+    public Map<String, Object> getMe(Authentication auth) { // ← Change return type
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
 
-@GetMapping("/{userId}/followers")
-public List<UserProfileDto> getFollowers(@PathVariable UUID userId, Authentication auth) {
-    List<UUID> followerIds = subscriptionRepo.findSubscriberIdsBySubscribedToId(userId);
-    return followerIds.stream()
-        .map(id -> repo.findById(id).orElseThrow())
-        .map(this::buildProfileDto)
-        .toList();
-}
+        String username = auth.getName();
+        User user = repo.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-@GetMapping("/{userId}/following")
-public List<UserProfileDto> getFollowing(@PathVariable UUID userId, Authentication auth) {
-    List<UUID> followingIds = subscriptionRepo.findSubscribedToIdsBySubscriberId(userId);
-    return followingIds.stream()
-        .map(id -> repo.findById(id).orElseThrow())
-        .map(this::buildProfileDto)
-        .toList();
-}
+        String avatarUrl = null;
+        if (user.getAvatarMediaId() != null) {
+            Media media = mediaRepo.findById(user.getAvatarMediaId()).orElse(null);
+            if (media != null) {
+                avatarUrl = media.getUrl();
+            }
+        }
 
-// Helper method
-private UserProfileDto buildProfileDto(User user) {
-    String avatarUrl = user.getAvatarMediaId() != null ? 
-        mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null) : null;
-    
-    return new UserProfileDto(
-        user.getId(), user.getUsername(), user.getName(), user.getEmail(),
-        user.getBio(), user.getAge(), avatarUrl,
-        (int)subscriptionRepo.countBySubscribedToId(user.getId()),
-        (int)subscriptionRepo.countBySubscriberId(user.getId()),
-        false // isSubscribed not needed for lists
-    );
-}
+        // Return simple Map with role for frontend validation
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("bio", user.getBio());
+        response.put("age", user.getAge());
+        response.put("avatarUrl", avatarUrl);
+        response.put("role", user.getRole().toString()); // Frontend needs this
 
+        return response;
+    }
 
+    @PutMapping("/me")
+    public UserProfileDto updateProfile(@RequestBody Map<String, Object> updates, Authentication auth) {
+        String username = auth.getName();
+        return userService.updateProfileByUsername(username, updates);
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> uploadAvatar(@RequestPart("avatar") MultipartFile avatar, Authentication auth) {
+        String username = auth.getName();
+        userService.updateAvatar(username, avatar);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{userId}/subscribe")
+    @Transactional
+    public ResponseEntity<UserProfileDto> subscribe(@PathVariable UUID userId, Authentication auth) {
+        if (auth == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        if (!auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        String currentUsername = auth.getName();
+
+        User currentUser = repo.findByUsername(currentUsername)
+                .orElseThrow(() -> {
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found");
+                });
+
+        if (currentUser.getId().equals(userId)) {
+
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot follow yourself");
+        }
+
+        boolean alreadySubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
+
+        if (alreadySubscribed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already following this user");
+        }
+
+        Subscription subscription = Subscription.builder()
+                .subscriberId(currentUser.getId())
+                .subscribedToId(userId)
+                .createdAt(OffsetDateTime.now())
+                .build();
+
+        subscriptionRepo.save(subscription);
+        subscriptionRepo.flush();
+
+        User targetUser = repo.findById(userId).orElseThrow(() -> {
+            return new ResponseStatusException(HttpStatus.NOT_FOUND);
+        });
+
+        boolean isSubscribed = subscriptionRepo.existsBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
+
+        String avatarUrl = null;
+        if (targetUser.getAvatarMediaId() != null) {
+            avatarUrl = mediaRepo.findById(targetUser.getAvatarMediaId())
+                    .map(Media::getUrl)
+                    .orElse(null);
+        } else {
+            System.out.println("[subscribe] Target user has no avatarMediaId");
+        }
+
+        int followersCount = (int) subscriptionRepo.countBySubscribedToId(targetUser.getId());
+        int followingCount = (int) subscriptionRepo.countBySubscriberId(targetUser.getId());
+
+        UserProfileDto dto = new UserProfileDto(
+                targetUser.getId(), targetUser.getUsername(), targetUser.getName(), targetUser.getEmail(),
+                targetUser.getBio(), targetUser.getAge(), avatarUrl,
+                followersCount,
+                followingCount,
+                isSubscribed);
+
+        notificationService.notify(
+                targetUser,
+                currentUser,
+                NotificationType.USER_FOLLOWED,
+                null);
+
+        return ResponseEntity.ok(dto);
+
+    }
+
+    @DeleteMapping("/{userId}/subscribe")
+    @Transactional
+    public ResponseEntity<UserProfileDto> unsubscribe(@PathVariable UUID userId, Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        String currentUsername = auth.getName();
+        User currentUser = repo.findByUsername(currentUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
+
+        subscriptionRepo.deleteBySubscriberIdAndSubscribedToId(currentUser.getId(), userId);
+        subscriptionRepo.flush();
+
+        // Return updated profile DTO for the target user
+        User targetUser = repo.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        String avatarUrl = targetUser.getAvatarMediaId() != null
+                ? mediaRepo.findById(targetUser.getAvatarMediaId()).map(Media::getUrl).orElse(null)
+                : null;
+
+        UserProfileDto dto = new UserProfileDto(
+                targetUser.getId(), targetUser.getUsername(), targetUser.getName(), targetUser.getEmail(),
+                targetUser.getBio(), targetUser.getAge(), avatarUrl,
+                (int) subscriptionRepo.countBySubscribedToId(targetUser.getId()),
+                (int) subscriptionRepo.countBySubscriberId(targetUser.getId()),
+                true);
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{userId}/followers")
+    public List<UserProfileDto> getFollowers(@PathVariable UUID userId, Authentication auth) {
+        List<UUID> followerIds = subscriptionRepo.findSubscriberIdsBySubscribedToId(userId);
+        return followerIds.stream()
+                .map(id -> repo.findById(id).orElseThrow())
+                .map(this::buildProfileDto)
+                .toList();
+    }
+
+    @GetMapping("/{userId}/following")
+    public List<UserProfileDto> getFollowing(@PathVariable UUID userId, Authentication auth) {
+        List<UUID> followingIds = subscriptionRepo.findSubscribedToIdsBySubscriberId(userId);
+        return followingIds.stream()
+                .map(id -> repo.findById(id).orElseThrow())
+                .map(this::buildProfileDto)
+                .toList();
+    }
+
+    // Helper method
+    private UserProfileDto buildProfileDto(User user) {
+        String avatarUrl = user.getAvatarMediaId() != null
+                ? mediaRepo.findById(user.getAvatarMediaId()).map(Media::getUrl).orElse(null)
+                : null;
+
+        return new UserProfileDto(
+                user.getId(), user.getUsername(), user.getName(), user.getEmail(),
+                user.getBio(), user.getAge(), avatarUrl,
+                (int) subscriptionRepo.countBySubscribedToId(user.getId()),
+                (int) subscriptionRepo.countBySubscriberId(user.getId()),
+                false // isSubscribed not needed for lists
+        );
+    }
 
 }

@@ -33,6 +33,23 @@
 
         <!-- Navbar toolbar snippet -->
         <ng-container *ngIf="loggedIn">
+          <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn">
+            <mat-icon>notifications</mat-icon>
+            <span *ngIf="hasUnseen" class="notif-dot"></span>
+          </button>
+
+          <mat-menu #notifMenu="matMenu">
+            <ng-container *ngIf="notifications.length; else empty">
+              <button mat-menu-item *ngFor="let n of notifications" (click)="openNotification(n)">
+                {{ formatNotification(n) }}
+              </button>
+            </ng-container>
+
+            <ng-template #empty>
+              <span class="empty">No notifications</span>
+            </ng-template>
+          </mat-menu>
+
           <button mat-raised-button color="accent" routerLink="/post/create" class="create-btn">
             <mat-icon>edit</mat-icon>
             Create Post
@@ -59,7 +76,7 @@
               <mat-icon>group</mat-icon>
               Users
             </button>
-             <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/reports">
+            <button mat-menu-item *ngIf="isAdmin" routerLink="/admin/reports">
               <mat-icon>group</mat-icon>
               Reports
             </button>

@@ -28,22 +28,20 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
             .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
-            
+
             // Public profile view
             .requestMatchers("/api/users/by-username/**").permitAll()
             // ADMIN ONLY endpoints
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.GET,    "/api/reports/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.PATCH,  "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.GET, "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PATCH, "/api/reports/**").hasRole("ADMIN")
             .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers("/api/notifications/**").authenticated()
 
-            
-      
-            
             // Public posts/categories
             .requestMatchers("/api/categories/**").permitAll()
             .requestMatchers("/api/posts/user/**").permitAll()
-            
+
             .anyRequest().authenticated())
         .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
@@ -51,7 +49,7 @@ public class SecurityConfig {
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder(){
+  public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
