@@ -165,7 +165,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       )
       .subscribe((posts) => {
         this.posts = posts ?? [];
-        console.log("posts in the profile ,", this.posts);
+        // console.log("posts in the profile ,", this.posts);
         
         try {
           this.cd.detectChanges();
@@ -396,4 +396,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFollowers = false;
     this.showFollowing = false;
   }
+  
+  formatDate(date: string | Date): string {
+  const d = new Date(date);
+  const now = new Date();
+
+  // Normalize to midnight (important!)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const postDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+  const diffDays =
+    (today.getTime() - postDay.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 }

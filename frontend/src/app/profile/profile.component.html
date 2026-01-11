@@ -1,53 +1,116 @@
-<mat-card class="profile-card" *ngIf="user; else errTpl">
-  <div class="profile-header">
-    <!-- Circular avatar with fixed size -->
-    <div class="avatar-container">
-      <img *ngIf="user.avatarUrl; else defaultAvatar" [src]="user.avatarUrl" alt="Avatar" class="profile-avatar" />
-      <ng-template #defaultAvatar>
-        <div class="avatar-placeholder">
-          <mat-icon class="placeholder-icon">account_circle</mat-icon>
-        </div>
-      </ng-template>
-    </div>
-
-    <div class="profile-info">
-      <div class="name-row">
-        <h2 class="user-name">{{ user.name }}</h2>
-        <div class="username">@{{ user.username }}</div>
-      </div>
-      <div class="profile-meta">
-        <span *ngIf="user.age !== null" class="meta-item">Age: {{ user.age }}</span>
-        <span *ngIf="user.email" class="meta-item email">{{ user.email }}</span>
-        <span class="meta-item clickable" (click)="showFollowersList()">
-          <strong>{{ user.subscribersCount || 0 }}</strong>
-          <span>{{ user.subscribersCount === 1 ? 'follower' : 'followers' }}</span>
-        </span>
-
-        <span class="meta-item clickable" (click)="showFollowingList()">
-          <strong>{{ user.subscriptionsCount || 0 }}</strong>
-          <span>{{ user.subscriptionsCount === 1 ? 'following' : 'following' }}</span>
-        </span>
-      </div>
-
-      <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
-    </div>
+<!-- profile.component.html -->
+<div class="profile-wrapper">
+  <!-- Loading/Error States -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="48" color="primary"></mat-spinner>
   </div>
 
-  <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
-    <button mat-button color="primary" class="follow-btn" [disabled]="currentUserId === user?.id"
-      (click)="toggleFollow()">
-      {{ user?.isSubscribed ? 'Unfollow' : 'Follow' }}
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="error-container">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <h3>{{ error }}</h3>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!loading && !error && user" class="profile-container">
+    
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="avatar-container">
+        <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" alt="Avatar" class="profile-avatar" />
+        <div *ngIf="!user.avatarUrl" class="avatar-placeholder">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+      </div>
+
+      <div class="profile-info">
+        <div class="name-row">
+          <h1 class="user-name">{{ user.name }}</h1>
+          <div class="username">@{{ user.username }}</div>
+        </div>
+        
+        <div class="profile-meta">
+          <span *ngIf="user.age !== null" class="meta-item">Age: {{ user.age }}</span>
+          <span *ngIf="user.email" class="meta-item email">{{ user.email }}</span>
+          <span class="meta-item clickable" (click)="showFollowersList()">
+            <strong>{{ user.subscribersCount || 0 }}</strong>
+            <span>{{ user.subscribersCount === 1 ? 'follower' : 'followers' }}</span>
+          </span>
+          <span class="meta-item clickable" (click)="showFollowingList()">
+            <strong>{{ user.subscriptionsCount || 0 }}</strong>
+            <span>{{ user.subscriptionsCount === 1 ? 'following' : 'followings' }}</span>
+          </span>
+        </div>
+
+        <div *ngIf="user.bio" class="bio">{{ user.bio }}</div>
+      </div>
+    </div>
+
+    <!-- Follow/Edit Buttons -->
+    <div *ngIf="user && currentUserId && user.id !== currentUserId" class="follow-btn-container">
+      <button mat-button color="primary" class="follow-btn" (click)="toggleFollow()">
+        {{ user.isSubscribed ? 'Unfollow' : 'Follow' }}
+      </button>
+    </div>
+
+    <button *ngIf="currentUserId && user.id === currentUserId" mat-stroked-button class="edit-profile-btn"
+      (click)="editProfile()">
+      Edit Profile
     </button>
 
+    <!-- Tab Navigation -->
+    <div class="profile-menu">
+      <button mat-button [class.active]="selectedTab === 'my'" (click)="onTabChange('my')">
+        My posts
+      </button>
+      <button mat-button [class.active]="selectedTab === 'saved'" (click)="onTabChange('saved')">
+        Saved
+      </button>
+      <button mat-button [class.active]="selectedTab === 'liked'" (click)="onTabChange('liked')">
+        Liked
+      </button>
+    </div>
+
+    <!-- Posts Section -->
+    <div class="posts-container">
+      <mat-spinner *ngIf="loadingPosts"></mat-spinner>
+
+      <div *ngIf="!loadingPosts && posts.length === 0" class="empty-state">
+        <mat-icon class="empty-icon">article</mat-icon>
+        <h3>No posts found</h3>
+        <p *ngIf="selectedTab === 'my'">You haven't published anything yet.</p>
+        <p *ngIf="selectedTab === 'saved'">No saved posts yet.</p>
+        <p *ngIf="selectedTab === 'liked'">No liked posts yet.</p>
+      </div>
+
+      <!-- Posts List - Medium Feed Style -->
+      <article *ngFor="let post of posts" class="post-card" (click)="goToPostDetail(post)">
+        <!-- Post Header -->
+        <div class="post-header">
+          <div class="post-meta">
+            <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Post Content -->
+        <div class="post-body">
+          <h2 class="post-title">{{ post.title || 'Untitled' }}</h2>
+          <p class="post-excerpt">{{ post.excerpt }}</p>
+        </div>
+
+        <!-- Cover Media -->
+        <div *ngIf="post.coverMedia as media" class="post-media">
+          <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="post.title" class="post-image" />
+          <video *ngIf="media.type === 'video'" controls class="post-video">
+            <source [src]="media.url" />
+          </video>
+        </div>
+      </article>
+    </div>
   </div>
+</div>
 
-  <button *ngIf="currentUserId && user?.id === currentUserId" mat-stroked-button class="edit-profile-btn"
-    (click)="editProfile()">
-    Edit Profile
-  </button>
-</mat-card>
-
-<!-- Followers/Following Modal Overlay -->
+<!-- Followers/Following Modal (unchanged) -->
 <div class="modal-overlay" *ngIf="showFollowers || showFollowing" (click)="closeList()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -56,18 +119,15 @@
         <mat-icon>close</mat-icon>
       </button>
     </div>
-
     <div class="modal-body">
       <mat-spinner *ngIf="loadingFollowers || loadingFollowing"></mat-spinner>
-
-      <div *ngIf="!loadingFollowers && !loadingFollowing" class="users-list">
+      <div *ngIf="!loadingFollowers && !loadingFollowers" class="users-list">
         <div *ngIf="showFollowers && followers.length === 0" class="empty-state">
           No followers yet.
         </div>
         <div *ngIf="showFollowing && following.length === 0" class="empty-state">
           Not following anyone yet.
         </div>
-
         <div *ngFor="let u of (showFollowers ? followers : following)" class="user-item"
           (click)="goToUserProfile(u.username)">
           <div class="user-avatar">
@@ -83,59 +143,4 @@
       </div>
     </div>
   </div>
-</div>
-
-
-<!-- Error template -->
-<ng-template #errTpl>
-  <mat-card class="profile-card error">
-    <p *ngIf="error">{{ error }}</p>
-    <mat-spinner *ngIf="loading"></mat-spinner>
-  </mat-card>
-</ng-template>
-
-<!-- MENU OUTSIDE CARD -->
-<div class="profile-menu" *ngIf="user">
-  <button mat-button [class.active]="selectedTab === 'my'" (click)="onTabChange('my')">
-    My posts
-  </button>
-  <button mat-button [class.active]="selectedTab === 'saved'" (click)="onTabChange('saved')">
-    Saved
-  </button>
-  <button mat-button [class.active]="selectedTab === 'liked'" (click)="onTabChange('liked')">
-    Liked
-  </button>
-</div>
-
-<!-- POSTS GRID: each post is its own card -->
-<div class="posts-section" *ngIf="user">
-  <mat-spinner *ngIf="loadingPosts"></mat-spinner>
-  <div class="posts-grid" *ngIf="!loadingPosts && posts.length">
-    <mat-card class="post-card" *ngFor="let post of posts" (click)="goToPostDetail(post)">
-      <mat-card-header>
-        <mat-card-title>{{ post.title }}</mat-card-title>
-        <mat-card-subtitle>
-          {{ post.createdAt | date: 'short' }} ·
-          {{ post.likes }} likes · {{ post.comments }} comments
-        </mat-card-subtitle>
-      </mat-card-header>
-
-      <!-- Media preview -->
-      <ng-container *ngIf="post.coverMedia as media">
-        <img *ngIf="media.type === 'image'" [src]="media.url" class="post-media-preview" />
-        <video *ngIf="media.type === 'video'" [src]="media.url" muted></video>
-      </ng-container>
-
-
-
-      <mat-card-content>
-        <p>{{ post.excerpt }}</p>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-
-  <p *ngIf="!loadingPosts && !posts.length">
-    No posts to show.
-  </p>
 </div>
