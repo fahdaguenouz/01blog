@@ -41,3 +41,158 @@ $spacing-xl: 32px;
 $transition-fast: 0.2s ease;
 $transition-normal: 0.3s ease;
 $transition-slow: 0.5s ease;
+
+
+::ng-deep {
+  // Primary Buttons (Flat, Raised, Unelevated)
+  .mat-mdc-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary,
+  .mat-mdc-flat-button.mat-primary,
+  .mat-mdc-unelevated-button.mat-primary {
+    --mdc-filled-button-container-color: #{$primary-color};
+    --mdc-filled-button-label-text-color: #FFFFFF;
+    --mdc-protected-button-container-color: #{$primary-color};
+    --mdc-protected-button-label-text-color: #FFFFFF;
+    background-color: $primary-color !important;
+    color: #FFFFFF !important;
+
+    &:hover:not(:disabled) {
+      --mdc-filled-button-container-color: #{darken($primary-color, 5%)};
+      --mdc-protected-button-container-color: #{darken($primary-color, 5%)};
+      background-color: darken($primary-color, 5%) !important;
+    }
+
+    &:disabled {
+      --mdc-filled-button-container-color: rgba(0, 0, 0, 0.12);
+      --mdc-filled-button-label-text-color: rgba(0, 0, 0, 0.38);
+      background-color: rgba(0, 0, 0, 0.12) !important;
+      color: rgba(0, 0, 0, 0.38) !important;
+    }
+
+    .mat-mdc-button-persistent-ripple::before {
+      background-color: $primary-color;
+    }
+  }
+
+  // Accent Buttons
+  .mat-mdc-button.mat-accent,
+  .mat-mdc-raised-button.mat-accent,
+  .mat-mdc-flat-button.mat-accent,
+  .mat-mdc-unelevated-button.mat-accent {
+    --mdc-filled-button-container-color: #{$secondary-color};
+    --mdc-filled-button-label-text-color: #FFFFFF;
+    --mdc-protected-button-container-color: #{$secondary-color};
+    --mdc-protected-button-label-text-color: #FFFFFF;
+    background-color: $secondary-color !important;
+    color: #FFFFFF !important;
+
+    &:hover:not(:disabled) {
+      --mdc-filled-button-container-color: #{darken($secondary-color, 5%)};
+      --mdc-protected-button-container-color: #{darken($secondary-color, 5%)};
+      background-color: darken($secondary-color, 5%) !important;
+    }
+
+    .mat-mdc-button-persistent-ripple::before {
+      background-color: $secondary-color;
+    }
+  }
+
+  // Outlined/Stroked Buttons
+  .mat-mdc-outlined-button,
+  .mat-mdc-stroked-button {
+    &.mat-primary {
+      --mdc-outlined-button-label-text-color: #{$primary-color};
+      --mdc-outlined-button-outline-color: #{$light-accent};
+      color: $primary-color !important;
+      border-color: $light-accent !important;
+
+      &:hover:not(:disabled) {
+        --mdc-outlined-button-outline-color: #{$primary-color};
+        background-color: rgba(255, 157, 0, 0.05) !important;
+        border-color: $primary-color !important;
+      }
+    }
+
+    &.mat-accent {
+      --mdc-outlined-button-label-text-color: #{$secondary-color};
+      --mdc-outlined-button-outline-color: #{$secondary-color};
+      color: $secondary-color !important;
+      border-color: $secondary-color !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba(182, 119, 29, 0.05) !important;
+      }
+    }
+  }
+
+  // Text Buttons
+  .mat-mdc-button:not(.mat-mdc-raised-button):not(.mat-mdc-flat-button):not(.mat-mdc-outlined-button) {
+    &.mat-primary {
+      --mdc-text-button-label-text-color: #{$primary-color};
+      color: $primary-color !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba(255, 157, 0, 0.05) !important;
+      }
+    }
+
+    &.mat-accent {
+      --mdc-text-button-label-text-color: #{$secondary-color};
+      color: $secondary-color !important;
+
+      &:hover:not(:disabled) {
+        background-color: rgba(182, 119, 29, 0.05) !important;
+      }
+    }
+  }
+
+  // Icon Buttons
+  .mat-mdc-icon-button {
+    &.mat-primary {
+      --mdc-icon-button-icon-color: #{$primary-color};
+      color: $primary-color !important;
+    }
+
+    &.mat-accent {
+      --mdc-icon-button-icon-color: #{$secondary-color};
+      color: $secondary-color !important;
+    }
+  }
+
+  // Progress Spinner
+  .mat-mdc-progress-spinner {
+    &.mat-primary {
+      --mdc-circular-progress-active-indicator-color: #{$primary-color};
+    }
+
+    &.mat-accent {
+      --mdc-circular-progress-active-indicator-color: #{$secondary-color};
+    }
+  }
+
+  // Fix Material Toolbar colors
+  .mat-toolbar {
+    &.mat-primary {
+      background-color: $primary-color !important;
+      color: #FFFFFF !important;
+    }
+
+    &.mat-accent {
+      background-color: $secondary-color !important;
+      color: #FFFFFF !important;
+    }
+  }
+
+  // Fix Menu colors
+  .mat-mdc-menu-panel {
+    .mat-mdc-menu-item {
+      &:hover {
+        background-color: rgba(255, 157, 0, 0.08) !important;
+      }
+
+      mat-icon {
+        color: $accent-color;
+      }
+    }
+  }
+}
