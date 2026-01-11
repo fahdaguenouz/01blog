@@ -261,4 +261,16 @@ public class UserController {
         );
     }
 
+
+    @GetMapping("/search")
+public List<UserProfileDto> search(@RequestParam String q) {
+  return repo.findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(q, q)
+    .stream().map(this::buildProfileDto).toList();
+}
+
+
+
+
+
+
 }

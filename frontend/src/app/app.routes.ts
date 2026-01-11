@@ -13,10 +13,12 @@ import { AdminGuard } from './auth/services/admin.guard';
 import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.component';
 import { AdminUsersComponent } from './admin/users/admin-users.component';
 import { AdminReportsComponent } from './admin/reports/admin-reports.component';
+import { UsersComponent } from './users/users.component';
 
 export const routes: Routes = [
   { path: '', component: Home, canActivate: [GuestGuard] }, // root -> feed
   { path: 'feed', component: FeedComponent, canActivate: [AuthGuard] },
+  { path: 'users', component: UsersComponent, canActivate: [AuthGuard] },
   { path: 'post/create', component: CreatePostComponent, canActivate: [AuthGuard] },
   { path: 'post/:id', component: PostDetailComponent, canActivate: [AuthGuard] },
   { path: 'profile/:username', component: ProfileComponent, canActivate: [AuthGuard] },

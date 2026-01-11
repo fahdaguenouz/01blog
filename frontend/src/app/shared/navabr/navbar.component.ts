@@ -90,12 +90,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.auth.validateAdminRole().subscribe((isAdmin) => {
         this.isAdmin = isAdmin;
 
-        this.navItems = [{ label: 'Feed', icon: 'dynamic_feed', route: '/feed' }];
+this.navItems = [
+        { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
+        { label: 'Users', icon: 'group', route: '/users' }  // <-- NEW: Users page for all users
+      ];
 
         if (this.isAdmin) {
           this.navItems.push({ label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' });
-          this.navItems.push({ label: 'Users', icon: 'group', route: '/admin/users' });
-          this.navItems.push({ label: 'Reports', icon: 'group', route: '/admin/reports' });
+          this.navItems.push({ label: 'Manage Users', icon: 'group', route: '/admin/users' });
+          this.navItems.push({ label: 'Reports', icon: 'flag', route: '/admin/reports' });
         }
 
         this.cd.detectChanges();

@@ -1,0 +1,46 @@
+.users-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.search-section {
+  margin-bottom: 2rem;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 500px;
+}
+
+.results-section {
+  text-align: center;
+}
+
+.no-results {
+  padding: 3rem;
+  color: rgba(0,0,0,0.6);
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.user-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  }
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: rgba(0,0,0,0.6);
+  margin-top: 0.5rem;
+}
