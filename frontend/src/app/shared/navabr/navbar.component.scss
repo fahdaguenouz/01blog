@@ -1,13 +1,17 @@
+@import "../../../styles/variables.scss";
+
 .sidenav-container {
   height: 100vh;
 }
 
 .sidenav {
   width: 220px;
+  
   .sidenav-header {
     font-size: 1.5rem;
     font-weight: bold;
     text-align: center;
+    background-color: $primary-color !important;
   }
 
   .mat-list-item.active {
@@ -19,26 +23,25 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  background-color: $primary-color !important;
 }
 
 .toolbar-title {
   font-weight: 700;
   font-size: 1.3rem;
   text-decoration: none;
-  color: white; // or inherit from toolbar
+  color: white;
   cursor: pointer;
   &:hover {
     opacity: 0.8;
   }
 }
 
-
 .menu-icon {
   display: inline-flex;
   cursor: pointer;
-  margin-right: 16px; /* optional spacing */
+  margin-right: 16px;
 }
-
 
 .spacer {
   flex: 1;
@@ -48,29 +51,18 @@
   padding: 20px;
 }
 
-/* navbar.component.scss */
 .avatar-icon {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 8px;
-  margin-top:15px ;
+  margin-top: 15px;
 }
 
-// Add to src/app/shared/navabr/navbar.component.scss
 .create-btn {
   margin-right: 16px;
+  background-color: $secondary-color !important;
+  color: white !important;
 }
-
-@media (max-width: 600px) {
-  .create-btn {
-    margin-right: 8px;
-  }
-
-  .create-btn mat-icon {
-    margin-right: 4px;
-  }
-}
-
 
 .notif-btn {
   position: relative;
@@ -84,4 +76,14 @@
   height: 8px;
   background: red;
   border-radius: 50%;
+}
+
+@media (max-width: 600px) {
+  .create-btn {
+    margin-right: 8px;
+  }
+
+  .create-btn mat-icon {
+    margin-right: 4px;
+  }
 }

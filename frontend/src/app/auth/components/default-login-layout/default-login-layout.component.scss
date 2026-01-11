@@ -3,7 +3,8 @@
 main {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135deg, #FFF9F0 0%, #FFEFD5 100%);
 
   section {
@@ -16,16 +17,19 @@ main {
     background: #FFFFFF;
     padding: 40px 24px;
     box-shadow: 4px 0 24px rgba(123, 84, 47, 0.08);
+    overflow-y: auto;
+    overflow-x: hidden;
 
     .form-container {
       width: 100%;
       max-width: 440px;
       display: flex;
       flex-direction: column;
+      padding: 20px 0;
     }
 
     .logo-wrapper {
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       text-align: center;
 
       img {
@@ -45,7 +49,7 @@ main {
     .subtitle {
       font-size: 15px;
       color: #B6771D;
-      margin-bottom: 40px;
+      margin-bottom: 32px;
       text-align: center;
       opacity: 0.9;
     }
@@ -126,11 +130,13 @@ main {
 @media (max-width: 960px) {
   main {
     grid-template-columns: 1fr;
-    min-height: auto;
+    height: auto;
+    min-height: 100vh;
 
     .hero-section {
       order: -1;
       padding: 32px 20px;
+      overflow: visible;
 
       .hero-content {
         h1 {
@@ -151,6 +157,7 @@ main {
     .form-section {
       padding: 32px 20px;
       box-shadow: none;
+      overflow-y: visible;
 
       .form-container {
         max-width: 100%;
@@ -184,7 +191,11 @@ main {
 
       .subtitle {
         font-size: 14px;
-        margin-bottom: 32px;
+        margin-bottom: 24px;
+      }
+
+      .form-container {
+        padding: 10px 0;
       }
     }
   }
