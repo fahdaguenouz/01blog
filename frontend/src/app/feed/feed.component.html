@@ -1,87 +1,131 @@
-<div *ngIf="!authResolved">
-  <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-</div>
-
-<div *ngIf="authResolved && loading">
-  <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-</div>
-
-<div *ngIf="authResolved && !loading" class="feed-container">
-  <div class="filter-bar">
-    <mat-form-field appearance="fill" class="category-field">
-      <mat-label>Category</mat-label>
-      <mat-select [value]="selectedCategoryId" (selectionChange)="onCategoryChange($event.value)">
-        <mat-option value="all">All</mat-option>
-        <mat-option *ngFor="let c of categories" [value]="c.id">
-          {{ c.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-button-toggle-group [value]="sort" (change)="onSortChange($event.value)" aria-label="Sort posts"
-      class="sort-toggle">
-      <mat-button-toggle value="new">Newest</mat-button-toggle>
-      <mat-button-toggle value="likes">Most liked</mat-button-toggle>
-      <mat-button-toggle value="saved">Most saved</mat-button-toggle>
-    </mat-button-toggle-group>
+<div class="feed-wrapper">
+  <!-- Loading States -->
+  <div *ngIf="!authResolved || loading" class="loading-container">
+    <mat-spinner diameter="48" color="primary"></mat-spinner>
   </div>
 
-  <div class="posts-list">
-    <mat-card *ngFor="let post of posts" class="post-card" appearance="outlined" (click)="open(post)">
-      <!-- Post Header with Avatar or icon -->
-      <mat-card-header class="post-header">
-        <div mat-card-avatar class="post-avatar" [ngStyle]="{
-                'background-image': post.avatarUrl ? 'url(' + post.avatarUrl + ')' : 'none'
-              }">
-          <mat-icon *ngIf="!post.avatarUrl">account_circle</mat-icon>
+  <!-- Main Feed Content -->
+  <div *ngIf="authResolved && !loading" class="feed-container">
+    
+    <!-- Feed Header -->
+    <div class="feed-header">
+      <h1 class="feed-title">Your Feed</h1>
+      <p class="feed-subtitle">Discover new stories </p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+      <div class="filter-bar">
+        <mat-form-field appearance="outline" class="category-field">
+          <mat-label>Filter by topic</mat-label>
+          <mat-select [value]="selectedCategoryId" (selectionChange)="onCategoryChange($event.value)">
+            <mat-option value="all">All Topics</mat-option>
+            <mat-option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="sort-tabs">
+          <button 
+            mat-button 
+            [class.active]="sort === 'new'"
+            (click)="onSortChange('new')"
+            class="sort-tab">
+            Newest
+          </button>
+          <button 
+            mat-button 
+            [class.active]="sort === 'likes'"
+            (click)="onSortChange('likes')"
+            class="sort-tab">
+            Popular
+          </button>
+          <button 
+            mat-button 
+            [class.active]="sort === 'saved'"
+            (click)="onSortChange('saved')"
+            class="sort-tab">
+            Saved
+          </button>
         </div>
-        <div class="header-info">
-          <mat-card-title class="post-title">
-            {{ post.title || 'Untitled' }}
-          </mat-card-title>
-          <mat-card-subtitle class="post-subtitle">
-            <span class="author">{{ post.authorUsername }}</span>
-            <span class="separator">•</span>
-            <span class="date">{{ post.createdAt | date : 'short' }}</span>
-          </mat-card-subtitle>
+      </div>
+    </div>
+
+    <!-- Posts List -->
+    <div class="posts-container">
+      <article *ngFor="let post of posts" class="post-card" (click)="open(post)">
+        
+        <!-- Post Header -->
+        <div class="post-header">
+          <div class="author-section">
+            <div class="author-avatar" [ngStyle]="{
+              'background-image': post.avatarUrl ? 'url(' + post.avatarUrl + ')' : 'none'
+            }">
+              <mat-icon *ngIf="!post.avatarUrl">account_circle</mat-icon>
+            </div>
+            <div class="author-info">
+              <span class="author-name">{{ post.authorUsername }}</span>
+              <div class="post-meta">
+                <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+                <span class="meta-separator">·</span>
+              
+              </div>
+            </div>
+          </div>
         </div>
-      </mat-card-header>
 
+        <!-- Post Content -->
+        <div class="post-body">
+          <h2 class="post-title">{{ post.title || 'Untitled' }}</h2>
+          <p class="post-excerpt">{{ post.excerpt }}</p>
+        </div>
 
-      <!-- Cover Media -->
-      <ng-container *ngIf="post.coverMedia as media">
-        <img *ngIf="media.type === 'image'" mat-card-image [src]="media.url" class="post-image" />
+        <!-- Cover Media (if exists) -->
+        <div *ngIf="post.coverMedia as media" class="post-media">
+          <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="post.title" class="post-image" />
+          <video *ngIf="media.type === 'video'" controls class="post-video">
+            <source [src]="media.url" />
+          </video>
+        </div>
 
-        <video *ngIf="media.type === 'video'" mat-card-image controls class="post-video">
-          <source [src]="media.url" />
-        </video>
-      </ng-container>
+        <!-- Post Footer -->
+        <div class="post-footer">
+          <div class="post-actions">
+            <button 
+              mat-button 
+              class="action-btn" 
+              [class.liked]="post.isLiked"
+              (click)="toggleLike(post); $event.stopPropagation()">
+              <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+              <span>{{ post.likes ?? 0 }}</span>
+            </button>
+            
+            <button 
+              mat-button 
+              class="action-btn" 
+              (click)="goToPostDetail(post); $event.stopPropagation()">
+              <mat-icon>chat_bubble_outline</mat-icon>
+              <span>{{ post.comments ?? 0 }}</span>
+            </button>
+          </div>
 
+          <button 
+            mat-icon-button 
+            class="save-btn" 
+            [class.saved]="post.isSaved"
+            (click)="toggleSave(post); $event.stopPropagation()">
+            <mat-icon>{{ post.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+          </button>
+        </div>
+      </article>
 
-
-      <!-- Post Content -->
-      <mat-card-content class="post-content">
-        <p>{{ post.excerpt }}</p>
-      </mat-card-content>
-
-      <!-- Post Actions -->
-      <mat-card-actions class="post-actions">
-        <button mat-button class="action-btn" (click)="toggleLike(post); $event.stopPropagation()">
-          <mat-icon [color]="post.isLiked ? 'warn' : ''">
-            {{ post.isLiked ? 'favorite' : 'favorite_border' }}
-          </mat-icon>
-          <span class="action-count">{{ post.likes ?? 0 }}</span>
-        </button>
-        <button mat-button class="action-btn" (click)="goToPostDetail(post); $event.stopPropagation()">
-          <mat-icon>comment</mat-icon>
-          <span class="action-count">{{ post.comments ?? 0 }}</span>
-        </button>
-        <button mat-button class="action-btn" (click)="toggleSave(post); $event.stopPropagation()">
-          <mat-icon [color]="post.isSaved ? 'primary' : ''">
-            {{ post.isSaved ? 'bookmark' : 'bookmark_border' }}
-          </mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
+      <!-- Empty State -->
+      <div *ngIf="posts.length === 0" class="empty-state">
+        <mat-icon class="empty-icon">article</mat-icon>
+        <h3>No posts found</h3>
+        <p>Try adjusting your filters or follow more writers</p>
+      </div>
+    </div>
   </div>
 </div>
