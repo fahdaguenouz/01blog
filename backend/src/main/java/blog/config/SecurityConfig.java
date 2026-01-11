@@ -26,7 +26,6 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/error").permitAll()
             .requestMatchers("/uploads/**").permitAll()
-            .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
 
             // Public profile view

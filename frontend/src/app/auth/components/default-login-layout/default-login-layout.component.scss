@@ -29,11 +29,11 @@ main {
     }
 
     .logo-wrapper {
-      margin-bottom: 24px;
+      // margin-bottom: 24px;
       text-align: center;
 
       img {
-        height: 48px;
+        height: 100px;
         width: auto;
       }
     }
@@ -96,7 +96,8 @@ main {
 
       .illustration-wrapper {
         .hero-img {
-          max-width: 480px;
+          max-width: 300px;
+          border-radius: 40px;
           width: 100%;
           height: auto;
           filter: drop-shadow(0 8px 24px rgba(123, 84, 47, 0.2));

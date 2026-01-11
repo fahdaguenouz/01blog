@@ -73,7 +73,7 @@ export class PostService {
       .pipe(map((post) => this.normalizePost(post)));
   }
 
-  // In your PostService (src/app/services/post.service.ts)
+
   createPostFormData(formData: FormData): Observable<any> {
     return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
@@ -167,7 +167,7 @@ export class PostService {
         post.media.sort((a, b) => a.position - b.position)[0];
     }
 
-    // ❌ NO placeholder
+   
     return post;
   }
 }
