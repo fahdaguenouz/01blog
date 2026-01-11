@@ -290,8 +290,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   editProfile() {
     if (!this.user) return;
+    
     const dialogRef = this.dialog.open(EditProfileDialogComponent, {
-      width: '400px',
+      maxWidth: 'none',
+      width: '760px',
+      height: 'auto',
+      panelClass: 'profile-edit-dialog',
       data: { ...this.user },
     });
 

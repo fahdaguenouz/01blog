@@ -525,3 +525,19 @@
   }
 }
 
+
+::ng-deep .profile-edit-dialog {
+  .mat-mdc-dialog-container {
+    max-width: none !important;     /* Override Material max-width */
+    max-height: 95vh !important;    /* Allow taller dialog */
+    padding: 0 !important;
+  }
+  
+  .mat-mdc-dialog-surface {
+    max-height: 95vh !important;
+    border-radius: 16px;
+    margin: 0 !important;
+    width: 760px !important;
+    max-width: 95vw !important;
+  }
+}
