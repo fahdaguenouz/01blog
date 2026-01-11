@@ -1,34 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home </title>
-</head>
-
-<body>
-    <div class="home">
-        <h1>Welcome to 01Blog</h1>
-        <p>Share your learning journey with others 🚀</p>
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Welcome to 01Blog</h1>
+      <p class="hero-subtitle">Discover stories, thinking, and expertise from writers on any topic.</p>
+      <div class="cta-buttons">
+        <a mat-flat-button color="primary" routerLink="/auth/signup" class="cta-primary">
+          Start Reading
+        </a>
+      </div>
     </div>
+  </section>
 
-    <div class="home-container">
-      <div class="hero-section">
-        <h1>Welcome to 01Blog</h1>
-        <p>Share your learning journey with the community</p>
-        <div class="cta-buttons">
-          <a mat-raised-button color="primary" routerLink="/auth/login">Login</a>
-          <a mat-raised-button color="accent" routerLink="/auth/signup">Sign Up</a>
+  <!-- Trending Section -->
+  <section class="trending-section">
+    <div class="section-header">
+      <mat-icon class="trending-icon">trending_up</mat-icon>
+      <h2>Trending on 01Blog</h2>
+    </div>
+    <div class="trending-grid">
+      <div class="trending-item" *ngFor="let item of [1,2,3,4,5,6]; let i = index" (click)="goToLogin()">
+        <span class="trending-number">0{{ i + 1 }}</span>
+        <div class="trending-content">
+          <div class="trending-author">
+            <div class="author-avatar"></div>
+            <span>Author Name</span>
+          </div>
+          <h3 class="trending-title">{{ getTrendingTitle(i) }}</h3>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="features-section">
-        <h2>Latest posts</h2>
-        <app-guest-post-list></app-guest-post-list>
+  <!-- Posts Section -->
+  <section class="posts-section">
+    <div class="posts-header">
+      <h2>Latest Stories</h2>
+      <div class="divider"></div>
+    </div>
+    <app-home-post-list></app-home-post-list>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner">
+    <div class="cta-content">
+      <h2>Ready to dive deeper?</h2>
+      <p>Join our community of writers and readers sharing knowledge every day.</p>
+      <div class="cta-actions">
+        <a mat-flat-button color="primary" routerLink="/auth/signup">Get Started</a>
+        <a mat-stroked-button routerLink="/auth/login">Sign In</a>
       </div>
     </div>
-
-</body>
-
-</html>
+  </section>
+</div>
