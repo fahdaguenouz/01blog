@@ -17,6 +17,7 @@ public interface UnseenNotificationRepository
     void deleteByNotification_IdAndUser_Id(UUID notificationId, UUID userId);
 
     Optional<UnseenNotification> findByNotification_IdAndUser_Id(UUID notificationId, UUID userId);
+
 }
 
 

@@ -7,13 +7,10 @@
         <span class="logo-text">01Blog</span>
       </div>
     </div>
-    
+
     <mat-nav-list class="nav-list">
-      <a mat-list-item 
-         *ngFor="let item of navItems" 
-         [routerLink]="item.route" 
-         routerLinkActive="active"
-         class="nav-item">
+      <a mat-list-item *ngFor="let item of navItems" [routerLink]="item.route" routerLinkActive="active"
+        class="nav-item">
         <mat-icon matListItemIcon class="nav-icon">{{ item.icon }}</mat-icon>
         <span matListItemTitle class="nav-label">{{ item.label }}</span>
       </a>
@@ -58,10 +55,7 @@
           </button>
 
           <button mat-icon-button [matMenuTriggerFor]="menu" class="user-btn">
-            <img *ngIf="avatarUrl; else defaultIcon" 
-                 [src]="avatarUrl" 
-                 class="user-avatar" 
-                 alt="User Avatar" />
+            <img *ngIf="avatarUrl; else defaultIcon" [src]="avatarUrl" class="user-avatar" alt="User Avatar" />
             <ng-template #defaultIcon>
               <mat-icon class="default-avatar">account_circle</mat-icon>
             </ng-template>
@@ -71,21 +65,29 @@
           <mat-menu #notifMenu="matMenu" class="notification-menu" xPosition="before">
             <div class="menu-header">
               <h3>Notifications</h3>
+              <button *ngIf="hasUnseen" mat-button (click)="markAllSeen(); $event.stopPropagation()"
+                class="mark-all-btn">
+                Mark all read
+              </button>
             </div>
             <div class="menu-content">
               <ng-container *ngIf="notifications.length; else emptyNotif">
-                <button mat-menu-item 
-                        *ngFor="let n of notifications" 
-                        (click)="openNotification(n)"
-                        class="notification-item"
-                        [class.unread]="!n.seen">
+                <button mat-menu-item *ngFor="let n of notifications" class="notification-item"
+                  [class.unread]="!n.seen">
                   <div class="notification-content">
-                    <span class="notification-text">{{ formatNotification(n) }}</span>
-                    <span *ngIf="!n.seen" class="unread-indicator"></span>
+                    <div class="notif-main">
+                      <span class="notification-text">{{ formatNotification(n) }}</span>
+                      <small class="notif-time">{{ n.createdAt | date:'short' }}</small>
+                    </div>
+                    <div class="notif-actions">
+                      <button mat-icon-button (click)="toggleSeen(n); $event.stopPropagation()"
+                        [attr.aria-label]="n.seen ? 'Mark unread' : 'Mark read'" size="small">
+                        <mat-icon>{{ n.seen ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      </button>
+                    </div>
                   </div>
                 </button>
               </ng-container>
-
               <ng-template #emptyNotif>
                 <div class="empty-notifications">
                   <mat-icon>notifications_none</mat-icon>
@@ -94,6 +96,7 @@
               </ng-template>
             </div>
           </mat-menu>
+
 
           <!-- User Menu -->
           <mat-menu #menu="matMenu" class="user-menu" xPosition="before">

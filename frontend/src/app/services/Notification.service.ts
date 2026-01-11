@@ -23,4 +23,7 @@ export class NotificationService {
   markSeen(id: string) {
     return this.http.post(`${this.base}/${id}/seen`, {});
   }
+  markUnseen(id: string) {
+    return this.http.post(`${this.base}/${id}/unseen`, {});
+  }
 }

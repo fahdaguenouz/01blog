@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd, RouterOutlet } from '@angular/router';
-import { NgIf, NgClass, NgFor } from '@angular/common';
+import { NgIf, NgClass, NgFor, CommonModule } from '@angular/common';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,6 +32,7 @@ interface NavItem {
     NgClass,
     NgFor,
     MatToolbarModule,
+    CommonModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
@@ -145,19 +146,53 @@ loadNotifications() {
   });
 }
 
+markAllSeen() {
+  const unseenIds = this.notifications.filter(n => !n.seen).map(n => n.id);
+  if (unseenIds.length === 0) return;
 
- openNotification(n: AppNotification) {
-  if (!n.seen) {
+  // Sequential calls for simplicity
+  unseenIds.forEach(id => 
+    this.notificationService.markSeen(id).subscribe({
+      next: () => {
+        const notif = this.notifications.find(n => n.id === id);
+        if (notif) notif.seen = true;
+      }
+    })
+  );
+  this.hasUnseen = false;
+}
+
+toggleSeen(n: AppNotification) {
+  if (n.seen) {
+    this.notificationService.markUnseen(n.id).subscribe({
+      next: () => n.seen = false,
+      error: () => this.toastr.error('Failed to mark unread')
+    });
+  } else {
     this.notificationService.markSeen(n.id).subscribe({
       next: () => {
-        n.seen = true; // <-- mark it locally
+        n.seen = true;
         this.hasUnseen = this.notifications.some(x => !x.seen);
       },
-      error: () => {
-        this.toastr.error('Failed to mark notification as seen');
-      }
+      error: () => this.toastr.error('Failed to mark read')
     });
   }
+}
+
+
+
+ openNotification(n: AppNotification) {
+  // if (!n.seen) {
+  //   this.notificationService.markSeen(n.id).subscribe({
+  //     next: () => {
+  //       n.seen = true; // <-- mark it locally
+  //       this.hasUnseen = this.notifications.some(x => !x.seen);
+  //     },
+  //     error: () => {
+  //       this.toastr.error('Failed to mark notification as seen');
+  //     }
+  //   });
+  // }
 
   if (n.type === 'USER_FOLLOWED') {
     this.router.navigate(['/profile', n.actorUsername]);

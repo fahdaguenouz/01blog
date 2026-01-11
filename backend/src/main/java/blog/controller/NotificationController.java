@@ -10,6 +10,7 @@ import blog.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.Authentication;
 
+import blog.models.Notification;
 import blog.models.UnseenNotification;
 import blog.models.User;
 import org.springframework.web.bind.annotation.RestController;
@@ -75,6 +76,29 @@ public void markSeen(@PathVariable UUID id, Authentication auth) {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found or already seen"));
 
     unseenRepo.delete(unseen);
+}
+
+
+@PostMapping("/{id}/unseen")
+public void markUnseen(@PathVariable UUID id, Authentication auth) {
+  if (auth == null || auth.getName() == null) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+  }
+
+  User me = users.findByUsername(auth.getName())
+    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+  // Check if notification exists for user
+  Notification notif = notificationRepo.findById(id)
+    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+
+  if (!notif.getTargetUser().getId().equals(me.getId())) {
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your notification");
+  }
+
+  // Delete existing unseen if any, then create new
+  unseenRepo.deleteByNotification_IdAndUser_Id(id, me.getId());
+  unseenRepo.save(new UnseenNotification(me, notif));
 }
 
 
