@@ -1,6 +1,110 @@
- .kpi-card{width:220px;padding:12px;display:flex;flex-direction:column;gap:6px}
-    .value{font-size:1.6rem;font-weight:700}
-    .label{color:rgba(0,0,0,0.6);font-size:.9rem}
-    .sub{font-size:.85rem;color:rgba(0,0,0,0.55)}
-    .delta{margin-top:auto;font-size:.85rem}
-    .up{color:#2e7d32}.down{color:#c62828}
+@import "../../../../styles/variables.scss";
+
+.kpi-card {
+  background: $white-bg;
+  border-radius: $border-radius-md;
+  padding: 20px;
+  border: 1px solid rgba(123, 84, 47, 0.1);
+  box-shadow: 0 2px 8px rgba(123, 84, 47, 0.04);
+  transition: all $transition-fast;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 4px 12px rgba(255, 157, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 157, 0, 0.1), rgba(182, 119, 29, 0.1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        color: $primary-color;
+      }
+    }
+  }
+
+  .kpi-content {
+    flex: 1;
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: $text-dark;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .kpi-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: $accent-color;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .kpi-sub {
+      font-size: 13px;
+      color: $text-color;
+      opacity: 0.8;
+    }
+  }
+
+  .kpi-delta {
+    margin-top: auto;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.up {
+        color: $success-color;
+        background-color: rgba(76, 175, 80, 0.1);
+      }
+
+      &.down {
+        color: $error-color;
+        background-color: rgba(211, 47, 47, 0.1);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-card {
+    .kpi-content {
+      .kpi-value {
+        font-size: 28px;
+      }
+    }
+  }
+}

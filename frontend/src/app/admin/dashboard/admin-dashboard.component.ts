@@ -18,6 +18,7 @@ import {
 import { SvgLineChartComponent } from '../components/line-chart/line-chart.component';
 import { SvgDonutChartComponent } from '../components/donuts-chart/donut-chart.component';
 import { TopContributorsComponent } from '../components/top-contributors/top-contributors.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -32,6 +33,7 @@ import { TopContributorsComponent } from '../components/top-contributors/top-con
     SvgLineChartComponent,
     SvgDonutChartComponent,
     TopContributorsComponent,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],

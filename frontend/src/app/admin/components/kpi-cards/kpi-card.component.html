@@ -1,12 +1,20 @@
- <mat-card class="kpi-card mat-elevation-z2">
-      <div class="top">
-        <div class="value">{{ value | number }}</div>
-        <div class="label">{{ label }}</div>
-      </div>
-      <div class="sub" *ngIf="sub">{{ sub }}</div>
-      <div class="delta" *ngIf="delta !== undefined">
-        <span [class.up]="delta >= 0" [class.down]="delta < 0">
-          {{ delta >= 0 ? '+' : ''}}{{ delta }}%
-        </span>
-      </div>
-    </mat-card>
+<div class="kpi-card">
+  <div class="kpi-header">
+    <div class="kpi-icon">
+      <mat-icon>{{ getIcon() }}</mat-icon>
+    </div>
+  </div>
+  
+  <div class="kpi-content">
+    <div class="kpi-value">{{ value !== null ? (value | number) : '—' }}</div>
+    <div class="kpi-label">{{ label }}</div>
+    <div class="kpi-sub" *ngIf="sub">{{ sub }}</div>
+  </div>
+
+  <div class="kpi-delta" *ngIf="delta !== undefined">
+    <span [class.up]="delta >= 0" [class.down]="delta < 0">
+      <mat-icon>{{ delta >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+      {{ delta >= 0 ? '+' : ''}}{{ delta }}%
+    </span>
+  </div>
+</div>

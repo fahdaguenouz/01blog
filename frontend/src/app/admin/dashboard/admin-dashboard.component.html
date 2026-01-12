@@ -1,75 +1,113 @@
-<mat-toolbar color="primary">
-  <span>Admin Dashboard</span>
-  <span class="spacer"></span>
-</mat-toolbar>
+<div class="dashboard-wrapper">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">Monitor your platform's performance and activity</p>
+      </div>
+    </div>
+  </header>
 
-<div class="dashboard-root p-16">
-  <div *ngIf="loading">Loading stats...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
-
-  <div class="kpi-row" *ngIf="stats">
-    <!-- your KPI cards as before -->
-    <app-kpi-card
-      label="Total Users"
-      [value]="stats?.totalUsers ?? null"
-      sub="All time">
-    </app-kpi-card>
-
-    <app-kpi-card
-      label="Total Posts"
-      [value]="stats?.totalPosts ?? null"
-      sub="All time">
-    </app-kpi-card>
-
-    <app-kpi-card
-      label="Total Reports"
-      [value]="stats?.totalReports ?? null"
-      sub="All time">
-    </app-kpi-card>
-
-    <app-kpi-card
-      label="Categories"
-      [value]="stats?.totalCategories ?? null"
-      sub="Defined categories">
-    </app-kpi-card>
-
-    <app-kpi-card
-      label="Open Reports"
-      [value]="stats?.openReports ?? null"
-      sub="Waiting moderation">
-    </app-kpi-card>
+  <!-- Loading & Error States -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="48" color="primary"></mat-spinner>
+    <p>Loading dashboard data...</p>
   </div>
 
-  <div class="chart-section">
-   
+  <div *ngIf="error" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-flat-button color="primary" (click)="loadStats()">Retry</button>
+  </div>
 
-    <!-- posts over time line chart -->
-    <div class="chart-section" *ngIf="trendDataPosts?.length">
-      <div class="trend-filters">
-        <button mat-button (click)="setPeriod('7d')">Last 7 Days</button>
-        <button mat-button (click)="setPeriod('30d')">Last 30 Days</button>
-        <button mat-button (click)="setPeriod('6m')">Last 6 Months</button>
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && !error && stats" class="dashboard-content">
+    
+    <!-- KPI Cards -->
+    <section class="kpi-section">
+      <app-kpi-card
+        label="Total Users"
+        [value]="stats.totalUsers"
+        sub="Registered members">
+      </app-kpi-card>
+
+      <app-kpi-card
+        label="Total Posts"
+        [value]="stats.totalPosts"
+        sub="Published stories">
+      </app-kpi-card>
+
+      <app-kpi-card
+        label="Open Reports"
+        [value]="stats.openReports"
+        sub="Pending review"
+        [delta]="undefined">
+      </app-kpi-card>
+
+      <app-kpi-card
+        label="Total Reports"
+        [value]="stats.totalReports"
+        sub="All time reports">
+      </app-kpi-card>
+
+      <app-kpi-card
+        label="Categories"
+        [value]="stats.totalCategories"
+        sub="Active topics">
+      </app-kpi-card>
+    </section>
+
+    <!-- Charts Grid -->
+    <section class="charts-section">
+      
+      <!-- Posts Trend Chart -->
+      <div class="chart-card full-width" *ngIf="trendDataPosts?.length">
+        <div class="chart-header">
+          <h3 class="chart-title">Posts Activity</h3>
+          <div class="period-selector">
+            <button 
+              mat-button 
+              [class.active]="period === '7d'"
+              (click)="setPeriod('7d')">
+              7 Days
+            </button>
+            <button 
+              mat-button 
+              [class.active]="period === '30d'"
+              (click)="setPeriod('30d')">
+              30 Days
+            </button>
+            <button 
+              mat-button 
+              [class.active]="period === '6m'"
+              (click)="setPeriod('6m')">
+              6 Months
+            </button>
+          </div>
+        </div>
+        
+        <app-svg-line-chart
+          [title]="''"
+          [labels]="trendLabels"
+          [data]="trendDataPosts">
+        </app-svg-line-chart>
       </div>
 
-      <app-svg-line-chart
-        [title]="'Posts over time'"
-        [labels]="trendLabels"
-        [data]="trendDataPosts">
-      </app-svg-line-chart>
-    </div>
+      <!-- Reports Donut Chart -->
+      <div class="chart-card" *ngIf="reportDonutData?.length">
+        <app-svg-donut-chart
+          [title]="'Reports by Category'"
+          [labels]="reportDonutLabels"
+          [data]="reportDonutData">
+        </app-svg-donut-chart>
+      </div>
 
-     <!-- donut: only report categories -->
-    <app-svg-donut-chart
-      *ngIf="reportDonutData?.length"
-      [title]="'Reports by category'"
-      [labels]="reportDonutLabels"
-      [data]="reportDonutData">
-    </app-svg-donut-chart>
-
-
-    <app-top-contributors
-    *ngIf="topContributors?.length"
-    [items]="topContributors">
-  </app-top-contributors>
+      <!-- Top Contributors Table -->
+      <div class="chart-card" *ngIf="topContributors?.length">
+        <app-top-contributors [items]="topContributors">
+        </app-top-contributors>
+      </div>
+    </section>
   </div>
 </div>

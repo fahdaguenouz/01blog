@@ -1,0 +1,110 @@
+@import "../../../../styles/variables.scss";
+
+::ng-deep {
+  .mat-mdc-card {
+    box-shadow: none !important;
+    border: none !important;
+
+    .mat-mdc-card-header {
+      padding: 0 0 16px 0;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(123, 84, 47, 0.08);
+
+      .mat-mdc-card-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: $text-dark;
+        margin: 0;
+      }
+    }
+
+    .mat-mdc-card-content {
+      padding: 0;
+    }
+  }
+
+  // Table Styling
+  .mat-mdc-table {
+    width: 100%;
+    background: transparent;
+    box-shadow: none !important;
+    border: 1px solid rgba(123, 84, 47, 0.1);
+    border-radius: $border-radius-md;
+    overflow: hidden;
+
+    .mat-mdc-header-row {
+      background: rgba(255, 157, 0, 0.05);
+      height: 48px;
+    }
+
+    .mat-mdc-header-cell {
+      font-size: 13px;
+      font-weight: 600;
+      color: $accent-color;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(123, 84, 47, 0.1);
+    }
+
+    .mat-mdc-row {
+      height: 56px;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba(255, 157, 0, 0.03);
+      }
+    }
+
+    .mat-mdc-cell {
+      font-size: 14px;
+      color: $text-dark;
+      border-bottom: 1px solid rgba(123, 84, 47, 0.06);
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .mat-mdc-row:last-child .mat-mdc-cell {
+      border-bottom: none;
+    }
+  }
+
+  // Chips
+  .mat-mdc-chip {
+    --mdc-chip-container-height: 28px;
+    font-size: 13px;
+    font-weight: 500;
+
+    &.mat-warn {
+      --mdc-chip-elevated-container-color: rgba(231, 76, 60, 0.1);
+      --mdc-chip-label-text-color: #e74c3c;
+    }
+
+    &:not(.mat-warn) {
+      --mdc-chip-elevated-container-color: rgba(76, 175, 80, 0.1);
+      --mdc-chip-label-text-color: #4CAF50;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  ::ng-deep {
+    .mat-mdc-table {
+      font-size: 13px;
+
+      .mat-mdc-header-cell,
+      .mat-mdc-cell {
+        padding: 8px;
+      }
+
+      .mat-mdc-header-cell {
+        font-size: 12px;
+      }
+
+      .mat-mdc-cell {
+        font-size: 13px;
+      }
+    }
+  }
+}

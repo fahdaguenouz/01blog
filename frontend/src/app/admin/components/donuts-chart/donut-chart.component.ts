@@ -16,7 +16,17 @@ export class SvgDonutChartComponent implements OnChanges {
 
   segments: { path: string; color: string; label: string; value: number }[] = [];
   total = 0;
-  colors = ['#1976d2', '#26a69a', '#ffb300', '#ef5350', '#7e57c2'];
+  
+  // Updated colors to match theme
+  colors = [
+    '#FF9D00',  // Primary orange
+    '#B6771D',  // Secondary gold brown
+    '#26a69a',  // Teal
+    '#66bb6a',  // Green
+    '#ef5350',  // Red
+    '#7e57c2',  // Purple
+    '#FFCF71'   // Light accent
+  ];
 
   ngOnChanges(changes: SimpleChanges) {
     this.buildSegments();

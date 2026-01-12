@@ -1,33 +1,94 @@
+@import "../../../../styles/variables.scss";
+
+$colors: $primary-color, #26a69a, $secondary-color, #ef5350, #7e57c2, #66bb6a, #ffa726;
+
+::ng-deep .mat-mdc-card {
+  box-shadow: none !important;
+  border: none !important;
+
+  .mat-mdc-card-header {
+    padding: 0 0 16px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(123, 84, 47, 0.08);
+
+    .mat-mdc-card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-dark;
+      margin: 0;
+    }
+  }
+
+  .mat-mdc-card-content {
+    padding: 0;
+  }
+}
+
 .donut-content {
   display: flex;
-  gap: 12px;
+  gap: 24px;
   align-items: center;
+  justify-content: center;
 }
 
 .donut-svg {
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+
+  text {
+    font-weight: 700;
+    fill: #333333;
+  }
 }
 
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
+  flex: 1;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 157, 0, 0.05);
+  }
 }
 
 .swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
   display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .lbl {
-  font-size: 0.9rem;
+  font-size: 14px;
+  color: #555555;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .donut-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .donut-svg {
+    width: 180px;
+    height: 180px;
+  }
+
+  .legend {
+    width: 100%;
+  }
 }
