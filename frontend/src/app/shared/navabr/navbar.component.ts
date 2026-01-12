@@ -50,7 +50,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   userName: string | null = null;
   isAdmin = false;
   notifications: AppNotification[] = [];
-
+notificationTab: 'unseen' | 'seen' = 'unseen';
   hasUnseen = false;
   private sub?: Subscription;
 
@@ -181,19 +181,19 @@ toggleSeen(n: AppNotification) {
 
 
 
- openNotification(n: AppNotification) {
-  // if (!n.seen) {
-  //   this.notificationService.markSeen(n.id).subscribe({
-  //     next: () => {
-  //       n.seen = true; // <-- mark it locally
-  //       this.hasUnseen = this.notifications.some(x => !x.seen);
-  //     },
-  //     error: () => {
-  //       this.toastr.error('Failed to mark notification as seen');
-  //     }
-  //   });
-  // }
+openNotification(n: AppNotification) {
+  // Mark as seen if not already
+  if (!n.seen) {
+    this.notificationService.markSeen(n.id).subscribe({
+      next: () => {
+        n.seen = true;
+        this.hasUnseen = this.notifications.some(x => !x.seen);
+      },
+      error: () => this.toastr.error('Failed to mark notification as seen')
+    });
+  }
 
+  // Navigate based on type
   if (n.type === 'USER_FOLLOWED') {
     this.router.navigate(['/profile', n.actorUsername]);
   } else if (n.postId) {
@@ -201,6 +201,20 @@ toggleSeen(n: AppNotification) {
   }
 }
 
+get unseenNotifications(): AppNotification[] {
+  return this.notifications?.filter(n => !n.seen) || [];
+}
+
+get seenNotifications(): AppNotification[] {
+  return this.notifications?.filter(n => n.seen) || [];
+}
+showUnseenTab() {
+  this.notificationTab = 'unseen';
+}
+
+showSeenTab() {
+  this.notificationTab = 'seen';
+}
 
 formatNotification(n: AppNotification): string {
   switch (n.type) {

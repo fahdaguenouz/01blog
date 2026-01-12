@@ -70,30 +70,60 @@
                 Mark all read
               </button>
             </div>
+
+
+            <!-- Tab Buttons -->
+            <div class="notification-tabs">
+              <button mat-button [ngClass]="{'active-tab': notificationTab === 'unseen'}"
+                (click)="showUnseenTab(); $event.stopPropagation()">
+                Unseen ({{ unseenNotifications.length }})
+              </button>
+              <button mat-button [ngClass]="{'active-tab': notificationTab === 'seen'}"
+                (click)="showSeenTab(); $event.stopPropagation()">
+                Seen ({{ seenNotifications.length }})
+              </button>
+            </div>
+
+
+
             <div class="menu-content">
-              <ng-container *ngIf="notifications.length; else emptyNotif">
-                <button mat-menu-item *ngFor="let n of notifications" class="notification-item"
-                  [class.unread]="!n.seen">
-                  <div class="notification-content">
-                    <div class="notif-main">
+              <!-- Unseen Tab -->
+              <ng-container *ngIf="notificationTab === 'unseen'">
+                <ng-container *ngIf="unseenNotifications.length > 0; else noUnseen">
+                  <button mat-menu-item *ngFor="let n of unseenNotifications" class="notification-item unread"
+                    (click)="openNotification(n)">
+                    <div class="notification-content">
                       <span class="notification-text">{{ formatNotification(n) }}</span>
                       <small class="notif-time">{{ n.createdAt | date:'short' }}</small>
                     </div>
-                    <div class="notif-actions">
-                      <button mat-icon-button (click)="toggleSeen(n); $event.stopPropagation()"
-                        [attr.aria-label]="n.seen ? 'Mark unread' : 'Mark read'" size="small">
-                        <mat-icon>{{ n.seen ? 'visibility_off' : 'visibility' }}</mat-icon>
-                      </button>
-                    </div>
+                  </button>
+                </ng-container>
+                <ng-template #noUnseen>
+                  <div class="empty-notifications">
+                    <mat-icon>notifications_none</mat-icon>
+                    <p>No unseen notifications</p>
                   </div>
-                </button>
+                </ng-template>
               </ng-container>
-              <ng-template #emptyNotif>
-                <div class="empty-notifications">
-                  <mat-icon>notifications_none</mat-icon>
-                  <p>No notifications yet</p>
-                </div>
-              </ng-template>
+
+              <!-- Seen Tab -->
+              <ng-container *ngIf="notificationTab === 'seen'">
+                <ng-container *ngIf="seenNotifications.length > 0; else noSeen">
+                  <button mat-menu-item *ngFor="let n of seenNotifications" class="notification-item"
+                    (click)="openNotification(n)">
+                    <div class="notification-content">
+                      <span class="notification-text">{{ formatNotification(n) }}</span>
+                      <small class="notif-time">{{ n.createdAt | date:'short' }}</small>
+                    </div>
+                  </button>
+                </ng-container>
+                <ng-template #noSeen>
+                  <div class="empty-notifications">
+                    <mat-icon>notifications_none</mat-icon>
+                    <p>No seen notifications</p>
+                  </div>
+                </ng-template>
+              </ng-container>
             </div>
           </mat-menu>
 
