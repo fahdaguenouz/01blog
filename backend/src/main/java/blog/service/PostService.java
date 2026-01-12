@@ -146,6 +146,7 @@ public class PostService {
 
     return PostMapper.toDetail(
         post,
+        mediaRepo,
         categoryDtos,
         mediaDtos,
         false,
@@ -208,6 +209,7 @@ public class PostService {
 
     return PostMapper.toDetail(
         p,
+        mediaRepo,
         categoryDtos,
         mediaDtos,
         isLiked,
@@ -402,7 +404,7 @@ public class PostService {
         .filter(Objects::nonNull)
         .toList();
 
-    return PostMapper.toDetail(post, categoryDtos, mediaDtos, false, false);
+    return PostMapper.toDetail(post,mediaRepo, categoryDtos, mediaDtos, false, false);
   }
 
   public void deletePost(String username, UUID id) {
@@ -444,13 +446,33 @@ public class PostService {
 
   }
 
-  public List<PostController.CommentDto> getComments(UUID postId) {
-    return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
-        .map(c -> new PostController.CommentDto(
-            c.getId(), c.getPostId(), users.findById(c.getUserId()).map(User::getUsername).orElse("user"),
-            c.getText(), c.getCreatedAt().toString()))
-        .toList();
-  }
+ public List<CommentDto> getComments(UUID postId) {
+  return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
+      .map(c -> {
+        User user = users.findById(c.getUserId()).orElse(null);
+
+        String username = user != null ? user.getUsername() : "user";
+
+        String avatarUrl = "svg/avatar.png"; // ✅ default
+
+        if (user != null && user.getAvatarMediaId() != null) {
+          avatarUrl = mediaRepo.findById(user.getAvatarMediaId())
+              .map(Media::getUrl)
+              .orElse("svg/avatar.png");
+        }
+
+        return new CommentDto(
+            c.getId(),
+            c.getPostId(),
+            username,
+            avatarUrl,
+            c.getText(),
+            c.getCreatedAt().toString()
+        );
+      })
+      .toList();
+}
+
 
   public void deleteComment(String username, UUID postId, UUID commentId) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));

@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.MediaType;
-
+import blog.dto.CommentDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
@@ -215,6 +215,5 @@ public PostDetailDto getOne(@PathVariable UUID id, Authentication authentication
   public record CommentReq(String content) {
   }
 
-  public record CommentDto(UUID id, UUID postId, String username, String text, String createdAt) {
-  }
+
 }

@@ -39,15 +39,19 @@ import { OrderByPositionPipe } from './orderByPosition';
   template: `
     <div class="post-detail-wrapper" *ngIf="post">
       <article class="post-detail-container">
-        
         <!-- Post Header -->
         <header class="post-header">
           <h1 class="post-title">{{ post.title }}</h1>
-          
+
           <!-- Author Section -->
           <div class="author-section">
             <a [routerLink]="['/profile', post.authorUsername]" class="author-link">
-              <div class="author-avatar"></div>
+              <img
+                class="author-avatar"
+                [src]="post.avatarUrl || 'svg/avatar.png'"
+                alt="author avatar"
+              />
+
               <div class="author-info">
                 <span class="author-name">{{ post.authorName }}</span>
                 <div class="post-meta">
@@ -55,7 +59,7 @@ import { OrderByPositionPipe } from './orderByPosition';
                   <span class="meta-separator">·</span>
                   <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                   <span class="meta-separator">·</span>
-                  <span class="read-time">8 min read</span>
+                  
                 </div>
               </div>
             </a>
@@ -66,7 +70,8 @@ import { OrderByPositionPipe } from './orderByPosition';
                 mat-icon-button
                 class="report-btn"
                 matTooltip="Report this post"
-                (click)="openReportDialog()">
+                (click)="openReportDialog()"
+              >
                 <mat-icon>flag</mat-icon>
               </button>
 
@@ -74,7 +79,8 @@ import { OrderByPositionPipe } from './orderByPosition';
                 *ngIf="currentUser && post?.authorId === currentUser.id"
                 mat-icon-button
                 [matMenuTriggerFor]="menu"
-                class="more-btn">
+                class="more-btn"
+              >
                 <mat-icon>more_horiz</mat-icon>
               </button>
 
@@ -129,60 +135,46 @@ import { OrderByPositionPipe } from './orderByPosition';
         <!-- Post Actions -->
         <div class="post-actions">
           <div class="action-buttons">
-            <button mat-button class="action-btn" [class.liked]="post.isLiked" (click)="toggleLike()">
+            <button
+              mat-button
+              class="action-btn"
+              [class.liked]="post.isLiked"
+              (click)="toggleLike()"
+            >
               <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
               <span>{{ post.likes ?? 0 }}</span>
             </button>
-            
+
             <button mat-button class="action-btn">
               <mat-icon>chat_bubble_outline</mat-icon>
               <span>{{ comments.length }}</span>
             </button>
           </div>
 
-          <button mat-icon-button class="save-btn" [class.saved]="post?.isSaved" (click)="toggleSave()">
+          <button
+            mat-icon-button
+            class="save-btn"
+            [class.saved]="post?.isSaved"
+            (click)="toggleSave()"
+          >
             <mat-icon>{{ post?.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
           </button>
         </div>
 
         <!-- Comments Section -->
         <section class="comments-section">
-          <h3 class="comments-title">
-            Responses ({{ comments.length }})
-          </h3>
-
-          <!-- Add Comment Form -->
-          <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
-            <div class="comment-input-wrapper">
-              <mat-form-field appearance="outline" class="comment-field">
-                <mat-label>Share your thoughts...</mat-label>
-                <textarea
-                  matInput
-                  [(ngModel)]="newComment"
-                  name="comment"
-                  required
-                  rows="3"
-                  placeholder="What are your thoughts?"
-                ></textarea>
-              </mat-form-field>
-            </div>
-            <div class="comment-actions">
-              <button 
-                mat-flat-button 
-                color="primary" 
-                type="submit" 
-                [disabled]="commentForm.invalid"
-                class="submit-comment-btn">
-                Respond
-              </button>
-            </div>
-          </form>
+          <h3 class="comments-title">Responses ({{ comments.length }})</h3>
 
           <!-- Comments List -->
           <div class="comments-list">
             <div *ngFor="let comment of comments" class="comment-item">
               <div class="comment-header">
-                <div class="comment-avatar"></div>
+                <img
+                  class="comment-avatar"
+                  [src]="comment.avatarUrl || 'svg/avatar.png'"
+                  alt="comment avatar"
+                />
+
                 <div class="comment-meta">
                   <span class="comment-author">{{ comment.username }}</span>
                   <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
@@ -198,12 +190,40 @@ import { OrderByPositionPipe } from './orderByPosition';
               <p>No responses yet</p>
               <span>Be the first to share your thoughts</span>
             </div>
+
+            <!-- Add Comment Form -->
+            <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
+              <div class="comment-input-wrapper">
+                <mat-form-field appearance="outline" class="comment-field">
+                  <mat-label>Share your thoughts...</mat-label>
+                  <textarea
+                    matInput
+                    [(ngModel)]="newComment"
+                    name="comment"
+                    required
+                    rows="3"
+                    placeholder="What are your thoughts?"
+                  ></textarea>
+                </mat-form-field>
+              </div>
+              <div class="comment-actions">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="submit"
+                  [disabled]="commentForm.invalid"
+                  class="submit-comment-btn"
+                >
+                  Respond
+                </button>
+              </div>
+            </form>
           </div>
         </section>
       </article>
     </div>
   `,
-  styleUrls: ['./post-detail.component.scss']
+  styleUrls: ['./post-detail.component.scss'],
 })
 export class PostDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -236,6 +256,7 @@ export class PostDetailComponent implements OnInit {
   loadPost(id: string) {
     this.posts.getById(id).subscribe((p) => {
       this.post = p;
+      console.log('Loaded post:', p);
     });
   }
 
@@ -364,16 +385,13 @@ export class PostDetailComponent implements OnInit {
   }
 
   formatDate(date: string | Date): string {
-    const d = new Date(date);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - d.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return new Date(date).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
 }

@@ -6,7 +6,7 @@
 
   <!-- Main Feed Content -->
   <div *ngIf="authResolved && !loading" class="feed-container">
-    
+
     <!-- Feed Header -->
     <div class="feed-header">
       <h1 class="feed-title">Your Feed</h1>
@@ -27,25 +27,13 @@
         </mat-form-field>
 
         <div class="sort-tabs">
-          <button 
-            mat-button 
-            [class.active]="sort === 'new'"
-            (click)="onSortChange('new')"
-            class="sort-tab">
+          <button mat-button [class.active]="sort === 'new'" (click)="onSortChange('new')" class="sort-tab">
             Newest
           </button>
-          <button 
-            mat-button 
-            [class.active]="sort === 'likes'"
-            (click)="onSortChange('likes')"
-            class="sort-tab">
+          <button mat-button [class.active]="sort === 'likes'" (click)="onSortChange('likes')" class="sort-tab">
             Popular
           </button>
-          <button 
-            mat-button 
-            [class.active]="sort === 'saved'"
-            (click)="onSortChange('saved')"
-            class="sort-tab">
+          <button mat-button [class.active]="sort === 'saved'" (click)="onSortChange('saved')" class="sort-tab">
             Saved
           </button>
         </div>
@@ -55,21 +43,18 @@
     <!-- Posts List -->
     <div class="posts-container">
       <article *ngFor="let post of posts" class="post-card" (click)="open(post)">
-        
+
         <!-- Post Header -->
         <div class="post-header">
           <div class="author-section">
-            <div class="author-avatar" [ngStyle]="{
-              'background-image': post.avatarUrl ? 'url(' + post.avatarUrl + ')' : 'none'
-            }">
-              <mat-icon *ngIf="!post.avatarUrl">account_circle</mat-icon>
-            </div>
+            <img class="author-avatar" [src]="post.avatarUrl || 'svg/avatar.png'" alt="author avatar" />
+
             <div class="author-info">
               <span class="author-name">{{ post.authorUsername }}</span>
               <div class="post-meta">
                 <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                 <span class="meta-separator">·</span>
-              
+
               </div>
             </div>
           </div>
@@ -92,28 +77,19 @@
         <!-- Post Footer -->
         <div class="post-footer">
           <div class="post-actions">
-            <button 
-              mat-button 
-              class="action-btn" 
-              [class.liked]="post.isLiked"
+            <button mat-button class="action-btn" [class.liked]="post.isLiked"
               (click)="toggleLike(post); $event.stopPropagation()">
               <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
               <span>{{ post.likes ?? 0 }}</span>
             </button>
-            
-            <button 
-              mat-button 
-              class="action-btn" 
-              (click)="goToPostDetail(post); $event.stopPropagation()">
+
+            <button mat-button class="action-btn" (click)="goToPostDetail(post); $event.stopPropagation()">
               <mat-icon>chat_bubble_outline</mat-icon>
               <span>{{ post.comments ?? 0 }}</span>
             </button>
           </div>
 
-          <button 
-            mat-icon-button 
-            class="save-btn" 
-            [class.saved]="post.isSaved"
+          <button mat-icon-button class="save-btn" [class.saved]="post.isSaved"
             (click)="toggleSave(post); $event.stopPropagation()">
             <mat-icon>{{ post.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
           </button>
