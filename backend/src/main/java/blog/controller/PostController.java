@@ -83,15 +83,16 @@ public PostDetailDto create(
 
 
   // Update (multipart to allow media change)
-
 @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 public PostDetailDto update(
-    @PathVariable UUID id,
-    @RequestParam String title,
-    @RequestParam String body,
-    @RequestParam(required = false) List<MultipartFile> mediaFiles,
-    @RequestParam(required = false) List<String> mediaDescriptions,
-    @RequestParam(required = false) List<UUID> categoryId
+        @PathVariable UUID id,
+        @RequestParam String title,
+        @RequestParam String body,
+        @RequestParam(required = false) List<MultipartFile> mediaFiles,
+        @RequestParam(required = false) List<String> mediaDescriptions,
+        @RequestParam(required = false) List<UUID> existingMediaIds,
+        @RequestParam(required = false) List<Boolean> removeExistingFlags,
+        @RequestParam(required = false) List<UUID> categoryIds
 ) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth == null || !auth.isAuthenticated()) {
@@ -99,15 +100,19 @@ public PostDetailDto update(
     }
 
     return postService.updatePost(
-        auth.getName(),
-        id,
-        title,
-        body,
-        mediaFiles,
-        mediaDescriptions,
-        categoryId
+            auth.getName(),
+            id,
+            title,
+            body,
+            mediaFiles,
+            mediaDescriptions,
+            existingMediaIds, // ✅ correct
+            removeExistingFlags, // ✅ correct
+            categoryIds // ✅ correct
     );
 }
+
+
 
 
 

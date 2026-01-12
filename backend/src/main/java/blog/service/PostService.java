@@ -8,6 +8,8 @@ import blog.models.*;
 
 import blog.repository.*;
 import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +36,6 @@ public class PostService {
   private final PostMediaRepository postMediaRepository;
   private final NotificationService notificationService;
 
-
   public PostService(PostRepository posts, UserRepository users, CommentRepository comments,
       MediaRepository mediaRepo, LikeRepository likes,
       LocalMediaStorage mediaStorage,
@@ -42,7 +43,7 @@ public class PostService {
       PostCategoryRepository postCategories,
       SavedPostRepository savedPosts,
       PostMediaRepository postMediaRepository,
-     NotificationService notificationService) {
+      NotificationService notificationService) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
@@ -53,7 +54,7 @@ public class PostService {
     this.postCategories = postCategories;
     this.savedPosts = savedPosts;
     this.postMediaRepository = postMediaRepository;
-     this.notificationService = notificationService;
+    this.notificationService = notificationService;
   }
 
   public PostDetailDto createPost(
@@ -307,105 +308,137 @@ public class PostService {
     });
   }
 
-  public PostDetailDto updatePost(
-      String username,
-      UUID postId,
-      String title,
-      String body,
-      List<MultipartFile> mediaFiles,
-      List<String> mediaDescriptions,
-      List<UUID> categoryIds) {
+@Transactional
+public PostDetailDto updatePost(
+    String username,
+    UUID postId,
+    String title,
+    String body,
+    List<MultipartFile> newMediaFiles,
+    List<String> mediaDescriptions,
+    List<UUID> existingMediaIds,
+    List<Boolean> removeExistingFlags,
+    List<UUID> categoryIds
+) {
 
     User user = users.findByUsername(username)
-        .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
     Post post = posts.findById(postId)
-        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (!post.getAuthor().getId().equals(user.getId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     post.setTitle(title);
     post.setBody(body);
     posts.save(post);
 
-    // -------- MEDIA --------
-    if (mediaFiles != null) {
+    /* ---------- LOAD CURRENT MEDIA ---------- */
+    List<PostMedia> existingMedia =
+        postMediaRepository.findByPostIdOrderByPositionAsc(postId);
 
-      if (mediaDescriptions == null || mediaFiles.size() != mediaDescriptions.size()) {
-        throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Each media must have a description");
-      }
+    Map<UUID, PostMedia> dbMap = existingMedia.stream()
+        .collect(Collectors.toMap(PostMedia::getId, pm -> pm));
 
-      postMediaRepository.deleteByPostId(postId);
+    int position = 1;
 
-      for (int i = 0; i < mediaFiles.size(); i++) {
-        MultipartFile file = mediaFiles.get(i);
-        if (file == null || file.isEmpty())
-          continue;
+    /* ---------- EXISTING MEDIA ---------- */
+    if (existingMediaIds != null) {
+        for (int i = 0; i < existingMediaIds.size(); i++) {
+            UUID id = existingMediaIds.get(i);
+            boolean remove = removeExistingFlags != null
+                && removeExistingFlags.size() > i
+                && Boolean.TRUE.equals(removeExistingFlags.get(i));
 
-        var stored = mediaStorage.save(file);
-        if (stored == null)
-          continue;
+            PostMedia pm = dbMap.get(id);
+            if (pm == null) continue;
 
-        Media media = new Media();
-        media.setUserId(user.getId());
-        media.setMediaType(file.getContentType());
-        media.setSize((int) file.getSize());
-        media.setUrl(stored.url());
-        media.setUploadedAt(OffsetDateTime.now());
-        Media savedMedia = mediaRepo.save(media);
-
-        PostMedia pm = new PostMedia();
-        pm.setPostId(postId);
-        pm.setMediaId(savedMedia.getId());
-        pm.setDescription(mediaDescriptions.get(i));
-        pm.setPosition(i);
-        pm.setCreatedAt(Instant.now());
-        postMediaRepository.save(pm);
-      }
+            if (remove) {
+                postMediaRepository.delete(pm);
+            } else {
+                pm.setDescription(
+                    mediaDescriptions != null && mediaDescriptions.size() > i
+                        ? mediaDescriptions.get(i)
+                        : null
+                );
+                pm.setPosition(position++);
+                postMediaRepository.save(pm);
+            }
+        }
     }
 
-    // -------- CATEGORIES --------
+    /* ---------- NEW MEDIA ---------- */
+    if (newMediaFiles != null) {
+        for (MultipartFile file : newMediaFiles) {
+            if (file.isEmpty()) continue;
+
+            var stored = mediaStorage.save(file);
+
+            Media media = new Media();
+            media.setUserId(user.getId());
+            media.setUrl(stored.url());
+            media.setMediaType(file.getContentType());
+            media.setSize((int) file.getSize());
+            mediaRepo.save(media);
+
+            PostMedia pm = new PostMedia();
+            pm.setPostId(postId);
+            pm.setMediaId(media.getId());
+            pm.setPosition(position++);
+            pm.setCreatedAt(Instant.now());
+            postMediaRepository.save(pm);
+        }
+    }
+
+    /* ---------- CATEGORIES ---------- */
     postCategories.deleteByPostId(postId);
     if (categoryIds != null) {
-      categoryIds.stream().distinct().forEach(cid -> {
-        if (!categories.existsById(cid))
-          return;
-        PostCategory pc = new PostCategory();
-        pc.setPostId(postId);
-        pc.setCategoryId(cid);
-        postCategories.save(pc);
-      });
+        categoryIds.forEach(cid -> {
+            PostCategory pc = new PostCategory();
+            pc.setPostId(postId);
+            pc.setCategoryId(cid);
+            postCategories.save(pc);
+        });
     }
 
     List<CategoryDto> categoryDtos = postCategories.findByPostId(postId).stream()
-        .map(pc -> categories.findById(pc.getCategoryId())
-            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-            .orElse(null))
-        .filter(Objects::nonNull)
-        .toList();
+    .map(pc -> categories.findById(pc.getCategoryId())
+        .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+        .orElse(null))
+    .filter(Objects::nonNull)
+    .toList();
 
-    List<PostMediaDto> mediaDtos = postMediaRepository.findByPostIdOrderByPositionAsc(postId).stream()
-        .map(pm -> {
-          Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
-          if (m == null)
-            return null;
-          return new PostMediaDto(
-              pm.getId(),
-              m.getId(),
-              m.getUrl(),
-              m.getMediaType(),
-              pm.getDescription(),
-              pm.getPosition());
-        })
-        .filter(Objects::nonNull)
-        .toList();
+List<PostMediaDto> mediaDtos = postMediaRepository
+    .findByPostIdOrderByPositionAsc(postId)
+    .stream()
+    .map(pm -> {
+        Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
+        if (m == null) return null;
 
-    return PostMapper.toDetail(post,mediaRepo, categoryDtos, mediaDtos, false, false);
-  }
+        return new PostMediaDto(
+            pm.getId(),
+            m.getId(),
+            m.getUrl(),
+            m.getMediaType(),
+            pm.getDescription(),
+            pm.getPosition()
+        );
+    })
+    .filter(Objects::nonNull)
+    .toList();
+
+return PostMapper.toDetail(
+    post,
+    mediaRepo,
+    categoryDtos,
+    mediaDtos,
+    false,
+    false
+);
+
+}
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -446,33 +479,31 @@ public class PostService {
 
   }
 
- public List<CommentDto> getComments(UUID postId) {
-  return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
-      .map(c -> {
-        User user = users.findById(c.getUserId()).orElse(null);
+  public List<CommentDto> getComments(UUID postId) {
+    return comments.findByPostIdOrderByCreatedAtDesc(postId).stream()
+        .map(c -> {
+          User user = users.findById(c.getUserId()).orElse(null);
 
-        String username = user != null ? user.getUsername() : "user";
+          String username = user != null ? user.getUsername() : "user";
 
-        String avatarUrl = "svg/avatar.png"; // ✅ default
+          String avatarUrl = "svg/avatar.png"; // ✅ default
 
-        if (user != null && user.getAvatarMediaId() != null) {
-          avatarUrl = mediaRepo.findById(user.getAvatarMediaId())
-              .map(Media::getUrl)
-              .orElse("svg/avatar.png");
-        }
+          if (user != null && user.getAvatarMediaId() != null) {
+            avatarUrl = mediaRepo.findById(user.getAvatarMediaId())
+                .map(Media::getUrl)
+                .orElse("svg/avatar.png");
+          }
 
-        return new CommentDto(
-            c.getId(),
-            c.getPostId(),
-            username,
-            avatarUrl,
-            c.getText(),
-            c.getCreatedAt().toString()
-        );
-      })
-      .toList();
-}
-
+          return new CommentDto(
+              c.getId(),
+              c.getPostId(),
+              username,
+              avatarUrl,
+              c.getText(),
+              c.getCreatedAt().toString());
+        })
+        .toList();
+  }
 
   public void deleteComment(String username, UUID postId, UUID commentId) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));

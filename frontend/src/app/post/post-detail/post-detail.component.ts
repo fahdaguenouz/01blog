@@ -5,18 +5,18 @@ import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { PostService, Post, Comment } from '../services/post.service';
+import { PostService, Post, Comment } from '../../services/post.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { UserProfile, UserService } from '../services/user.service';
+import { UserProfile, UserService } from '../../services/user.service';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { EditPostData, EditPostDialogComponent } from './edit-post-component';
+import { EditPostData, EditPostDialogComponent } from '../edit-post/edit-post-component';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ReportService } from '../services/report.service';
-import { ReportPostDialogComponent, ReportPostDialogResult } from './report-dialog.component';
-import { OrderByPositionPipe } from './orderByPosition';
+import { ReportService } from '../../services/report.service';
+import { ReportPostDialogComponent, ReportPostDialogResult } from '../report-dialog.component';
+import { OrderByPositionPipe } from '../orderByPosition';
 
 @Component({
   standalone: true,
@@ -59,7 +59,6 @@ import { OrderByPositionPipe } from './orderByPosition';
                   <span class="meta-separator">·</span>
                   <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                   <span class="meta-separator">·</span>
-                  
                 </div>
               </div>
             </a>
@@ -256,7 +255,7 @@ export class PostDetailComponent implements OnInit {
   loadPost(id: string) {
     this.posts.getById(id).subscribe((p) => {
       this.post = p;
-      console.log('Loaded post:', p);
+      // console.log('Loaded post:', p);
     });
   }
 
@@ -318,17 +317,32 @@ export class PostDetailComponent implements OnInit {
       {
         width: '500px',
         data: {
+          id: this.post.id,
           title: this.post.title,
           body: this.post.body ?? '',
-          media: null,
+          mediaBlocks:
+            this.post.media?.map((m, idx) => ({
+              id: m.id,
+              url: m.url,
+              description: m.description ?? '',
+              position: idx + 1,
+            })) || [],
           categoryIds: (this.post.categories || []).map((c) => c.id),
         },
       }
     );
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result || !this.post) return;
-      console.log('update categoryIds', result.categoryIds);
+    dialogRef.afterClosed().subscribe((updatedPost) => {
+      if (!updatedPost) return;
+
+      // 🔥 Update the post locally (NO REFRESH)
+      this.post = {
+        ...this.post!,
+        ...updatedPost,
+      };
+
+      // Optional: update comments count, likes, flags if backend returns them
+      this.comments = this.comments; // no-op, just clarity
     });
   }
 
@@ -385,13 +399,12 @@ export class PostDetailComponent implements OnInit {
   }
 
   formatDate(date: string | Date): string {
-  return new Date(date).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 }

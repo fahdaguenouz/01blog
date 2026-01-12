@@ -1,0 +1,166 @@
+@import '../../../styles/variables.scss';
+
+.edit-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-post-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.edit-post-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.post-header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    color: #555;
+    margin: 0;
+  }
+}
+
+/* Form fields */
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .form-section {
+    width: 100%;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+/* Media section */
+.media-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .media-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .media-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fff;
+      width: 100%;
+
+      .media-block-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .media-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .upload-area,
+        .media-preview {
+          width: 100%;
+          max-width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          border: 2px dashed rgba(123, 84, 47, 0.3);
+          border-radius: 12px;
+          padding: 16px;
+          background: #fff9f0;
+          cursor: pointer;
+
+          img,
+          video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+          }
+        }
+
+        .change-media-btn {
+          align-self: center;
+          margin-top: 8px;
+        }
+      }
+
+      .caption-field {
+        width: 100%;
+      }
+    }
+  }
+
+  .add-media-btn,
+  .add-first-btn {
+    align-self: flex-start;
+  }
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+
+  .cancel-btn {
+    color: #555;
+  }
+
+  .publish-btn {
+    color: #fff;
+  }
+}
+
+/* Make dialog scrollable on small screens */
+@media (max-width: 768px) {
+  .edit-post-container {
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .media-section .media-block {
+    flex-direction: column;
+  }
+}

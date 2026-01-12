@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
+import { EditMediaBlock } from '../post/edit-post/edit-post-component';
 
 export interface Category {
   id: string;
@@ -14,8 +15,8 @@ export interface PostMedia {
   url: string;
   description?: string;
   position: number;
-  mediaType: string; // ← from backend (image/png, video/mp4)
-  type?: 'image' | 'video'; // ← derived (frontend)
+  mediaType: string; 
+  type?: 'image' | 'video'; 
 }
 export interface Post {
   id: string;
@@ -79,26 +80,39 @@ export class PostService {
     return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
 
-  updatePost(
-    postId: string,
-    title: string,
-    body: string,
-    mediaFiles?: File[],
-    mediaDescriptions: string[] = [],
-    categoryIds: string[] = []
-  ): Observable<Post> {
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('body', body);
+updatePost(
+  postId: string,
+  title: string,
+  body: string,
+  mediaBlocks: EditMediaBlock[],
+  categoryIds: string[]
+): Observable<Post> {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('body', body);
 
-    mediaFiles?.forEach((f) => formData.append('mediaFiles', f));
-    mediaDescriptions.forEach((d) => formData.append('mediaDescriptions', d));
-    categoryIds.forEach((id) => formData.append('categoryId', id));
+  const existingMediaIds: string[] = [];
+  const removeFlags: boolean[] = [];
 
-    return this.getHttp()
-      .put<Post>(`${this.apiUrl}/${postId}`, formData)
-      .pipe(map((post) => this.normalizePost(post)));
-  }
+  mediaBlocks.forEach(block => {
+    if (block.id) {
+      existingMediaIds.push(block.id);
+      removeFlags.push(!!block.removed);
+    } else if (block.file) {
+      formData.append('mediaFiles', block.file);
+    }
+
+    formData.append('mediaDescriptions', block.description || '');
+  });
+
+  categoryIds.forEach(id => formData.append('categoryId', id));
+  existingMediaIds.forEach(id => formData.append('existingMediaIds', id));
+  removeFlags.forEach(flag => formData.append('removeExistingFlags', flag.toString()));
+
+  return this.getHttp().put<Post>(`${this.apiUrl}/${postId}`, formData)
+    .pipe(map(post => this.normalizePost(post)));
+}
+
 
   deletePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}`);

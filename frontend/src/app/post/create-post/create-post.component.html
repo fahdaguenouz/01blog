@@ -1,0 +1,208 @@
+<div class="create-post-wrapper">
+  <div class="create-post-container">
+    
+    <!-- Header -->
+    <header class="post-header">
+      <h1 class="page-title">Create Story</h1>
+      <p class="page-subtitle">Share your knowledge and experiences with the community</p>
+    </header>
+
+    <!-- Form -->
+    <form [formGroup]="postForm" (ngSubmit)="createPost()" class="post-form">
+      
+      <!-- Title Field -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="title-field">
+          <mat-label>Title</mat-label>
+          <input 
+            matInput 
+            formControlName="title" 
+            placeholder="Write a captivating title..." 
+            class="title-input"
+          />
+          <mat-error *ngIf="postForm.get('title')?.hasError('required')">
+            Title is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Body Field -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="body-field">
+          <mat-label>Tell your story...</mat-label>
+          <textarea
+            matInput
+            rows="12"
+            formControlName="body"
+            placeholder="Share your thoughts, experiences, and insights..."
+            class="body-textarea"
+          ></textarea>
+          <mat-error *ngIf="postForm.get('body')?.hasError('required')">
+            Story content is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Categories -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="category-field">
+          <mat-label>Add topics (at least 1)</mat-label>
+          <mat-select formControlName="categoryIds" multiple>
+            <mat-option *ngFor="let cat of allCategories" [value]="cat.id">
+              {{ cat.name }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Help readers discover your story</mat-hint>
+          <mat-error *ngIf="postForm.get('categoryIds')?.hasError('required')">
+            At least one topic is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Media Blocks -->
+      <div class="media-section" *ngIf="mediaBlocks.length > 0">
+        <div class="section-title">
+          <h3>Media Attachments</h3>
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="addMediaBlock()"
+            *ngIf="mediaBlocks.length < 10"
+            class="add-media-btn">
+            <mat-icon>add_photo_alternate</mat-icon>
+            Add More
+          </button>
+        </div>
+
+        <div class="media-list">
+          <div
+            class="media-block"
+            *ngFor="let block of mediaBlocks; let i = index"
+            [attr.data-id]="block.tempId">
+            
+            <!-- Media Header -->
+            <div class="media-block-header">
+              <div class="media-position">
+                <span class="position-label">Position {{ i + 1 }}</span>
+                <div class="position-controls">
+                  <button
+                    type="button"
+                    mat-icon-button
+                    (click)="moveMediaUp(i)"
+                    [disabled]="i === 0"
+                    matTooltip="Move up">
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    (click)="moveMediaDown(i)"
+                    [disabled]="i === mediaBlocks.length - 1"
+                    matTooltip="Move down">
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                mat-icon-button 
+                color="warn" 
+                (click)="removeMediaBlock(i)"
+                matTooltip="Remove media">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <!-- File Input -->
+            <input
+              #fileInput
+              type="file"
+              hidden
+              accept="image/*,video/*"
+              (change)="onFileSelected($event, i)"
+            />
+
+            <!-- Upload Button or Preview -->
+            <div class="media-content">
+              <div *ngIf="!getFileName(i)" class="upload-area" (click)="triggerFileInput(i)">
+                <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                <p class="upload-text">Click to upload image or video</p>
+                <span class="upload-hint">Max size: 20MB</span>
+              </div>
+
+              <div *ngIf="getFileName(i)" class="media-preview">
+                <div class="preview-wrapper">
+                  <img
+                    *ngIf="mediaBlocks[i].file && isImage(mediaBlocks[i].file!)"
+                    [src]="getPreview(i)"
+                    alt="Preview"
+                    class="preview-image"
+                  />
+                  <video
+                    *ngIf="mediaBlocks[i].file && isVideo(mediaBlocks[i].file!)"
+                    [src]="getPreview(i)"
+                    controls
+                    class="preview-video"
+                  ></video>
+                </div>
+                <button
+                  type="button"
+                  mat-stroked-button
+                  (click)="triggerFileInput(i)"
+                  class="change-media-btn">
+                  <mat-icon>edit</mat-icon>
+                  Change Media
+                </button>
+              </div>
+            </div>
+
+            <!-- Caption -->
+            <mat-form-field appearance="outline" class="caption-field" *ngIf="getFileName(i)">
+              <mat-label>Add a caption (optional)</mat-label>
+              <textarea
+                matInput
+                [(ngModel)]="block.description"
+                [ngModelOptions]="{ standalone: true }"
+                maxlength="500"
+                rows="2"
+                placeholder="Describe this image or video..."
+              ></textarea>
+              <mat-hint align="end">{{ block.description.length }}/500</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add First Media -->
+      <div class="add-first-media" *ngIf="mediaBlocks.length === 0">
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="addMediaBlock()"
+          class="add-first-btn">
+          <mat-icon>add_photo_alternate</mat-icon>
+          Add images or videos to your story
+        </button>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" mat-button (click)="cancel()" class="cancel-btn">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          mat-flat-button
+          color="primary"
+          [disabled]="isSubmitting || postForm.invalid || hasInvalidMedia"
+          class="publish-btn">
+          <span *ngIf="!isSubmitting">Publish</span>
+          <span *ngIf="isSubmitting" class="submitting">
+            <mat-icon class="spin-icon">autorenew</mat-icon>
+            Publishing...
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
