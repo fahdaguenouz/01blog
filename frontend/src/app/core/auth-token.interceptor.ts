@@ -7,15 +7,16 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const token = auth.getToken();
 
-  if (req.url.includes('/api/public/')) {
-    return next(req);
-  }
+  if (req.url.includes('/api/public/')) return next(req);
 
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  return next(req.clone({
-    setHeaders: headers,
-    withCredentials: true
-  }));
+  return next(
+    req.clone({
+      setHeaders: headers,
+      // ✅ remove this unless you really need cookies for backend session auth
+      withCredentials: false,
+    })
+  );
 };

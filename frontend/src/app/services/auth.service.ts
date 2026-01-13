@@ -2,11 +2,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { BehaviorSubject, catchError, map, Observable, of } from 'rxjs';
+import { Router } from '@angular/router';
 
 export interface AuthData {
   token: string;
   username: string;
-  role?: 'USER' | 'ADMIN'; // ADD THIS
+  role?: 'USER' | 'ADMIN';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -14,41 +15,52 @@ export class AuthService {
   private _isLoggedIn$ = new BehaviorSubject<boolean>(this.hasToken());
   private _authResolved$ = new BehaviorSubject<boolean>(false);
   public readonly authResolved$: Observable<boolean> = this._authResolved$.asObservable();
-
-  // Expose auth status as observable
   public readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
-  constructor(private injector: Injector) {
-    // ADD Injector
+
+  constructor(private injector: Injector, private router: Router) {
     this._isLoggedIn$.next(this.hasToken());
     this._authResolved$.next(true);
   }
+
   setAuth(data: AuthData): void {
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem('auth-token', data.token);
       if (data.username) window.sessionStorage.setItem('username', data.username);
-      if (data.role) window.sessionStorage.setItem('role', data.role); // store role in session
+      if (data.role) window.sessionStorage.setItem('role', data.role);
     }
 
-    this.setCookie('auth-token', data.token, 1);
-    if (data.username) this.setCookie('username', data.username, 1);
-    if (data.role) this.setCookie('role', data.role, 1); // NEW: store role in cookie
+    // ✅ 24h cookie (1 day)
+    this.setCookieHours('auth-token', data.token, 24);
+    if (data.username) this.setCookieHours('username', data.username, 24);
+    if (data.role) this.setCookieHours('role', data.role, 24);
 
     this._isLoggedIn$.next(true);
     this._authResolved$.next(true);
   }
+
   clearAuth(): void {
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem('auth-token');
       window.sessionStorage.removeItem('username');
-      window.sessionStorage.removeItem('role'); // NEW
+      window.sessionStorage.removeItem('role');
     }
     this.deleteCookie('auth-token');
     this.deleteCookie('username');
-    this.deleteCookie('role'); // NEW
+    this.deleteCookie('role');
 
     this._isLoggedIn$.next(false);
     this._authResolved$.next(true);
   }
+
+  /** ✅ call this when you receive 401 (session invalidated on server) */
+  forceLogout(reason: 'expired' | 'invalid' | 'conflict' = 'invalid'): void {
+    this.clearAuth();
+    // optional: show toast later
+    this.router.navigate(['/auth/login'], {
+      queryParams: { reason },
+    });
+  }
+
   validateAdminRole(): Observable<boolean> {
     const token = this.getToken();
     if (!token) return of(false);
@@ -82,10 +94,11 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  private setCookie(name: string, value: string, days: number) {
+  /** ✅ 24h cookie helper */
+  private setCookieHours(name: string, value: string, hours: number) {
     if (typeof document === 'undefined') return;
     const d = new Date();
-    d.setTime(d.getTime() + days * 864e5);
+    d.setTime(d.getTime() + hours * 60 * 60 * 1000);
     document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
   }
 
@@ -99,20 +112,18 @@ export class AuthService {
     if (typeof document === 'undefined') return;
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
   }
+
   getRole(): 'USER' | 'ADMIN' | null {
     if (typeof window === 'undefined') return null;
 
     const ssRole = window.sessionStorage.getItem('role') as 'USER' | 'ADMIN' | null;
     if (ssRole) return ssRole;
 
-    // Fallback to cookie
     const cookieRole = this.getCookie('role') as 'USER' | 'ADMIN' | null;
     if (cookieRole) {
-      // restore sessionStorage for smoother next access
       window.sessionStorage.setItem('role', cookieRole);
       return cookieRole;
     }
-
     return null;
   }
 

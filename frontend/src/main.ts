@@ -8,6 +8,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authTokenInterceptor } from './app/core/auth-token.interceptor';
+import { authErrorInterceptor } from './app/core/auth-error.interceptor';
 
 bootstrapApplication(App, {
   providers: [
@@ -16,7 +17,7 @@ bootstrapApplication(App, {
     provideToastr(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authTokenInterceptor])
+      withInterceptors([authTokenInterceptor,authErrorInterceptor])
     )
   ]
 }).catch(err => console.error(err));

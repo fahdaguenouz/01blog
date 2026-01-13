@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { catchError, tap, of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +16,7 @@ export class LoginService {
       this.auth.setAuth({
         token: response.token, 
         username: response.user.username,  
-        role: response.role as 'USER' | 'ADMIN' // ADD
+        role: response.role as 'USER' | 'ADMIN' 
       });
   }));
   }
@@ -36,9 +36,24 @@ export class LoginService {
     return this.getHttp().post<any>(`${this.apiUrl}/register`, form);
   }
 
-  logout() {
+ logout() {
     const token = this.auth.getToken();
-    return this.getHttp().post<any>(`${this.apiUrl}/logout`, {}, { headers: { Authorization: `Bearer ${token}` } })
-      .pipe(tap(() => { this.auth.clearAuth(); this.router.navigate(['/']); }));
+
+    // ✅ If no token, just clear locally
+    if (!token) {
+      this.auth.clearAuth();
+      this.router.navigate(['/auth/login']);
+      return of(null);
+    }
+
+    return this.getHttp()
+      .post<any>(`${this.apiUrl}/logout`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      .pipe(
+        catchError(() => of(null)), // ✅ ignore 401/any error
+        tap(() => {
+          this.auth.clearAuth();
+          this.router.navigate(['/auth/login']);
+        })
+      );
   }
 }
