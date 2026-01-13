@@ -3,8 +3,10 @@ package blog.service;
 
 import blog.dto.CreateReportRequest;
 import blog.dto.ReportDto;
+import blog.models.Media;
 import blog.models.Report;
 import blog.models.User;
+import blog.repository.MediaRepository;
 import blog.repository.PostRepository;
 import blog.repository.ReportRepository;
 import blog.repository.UserRepository;
@@ -22,6 +24,8 @@ public class ReportService {
   private final ReportRepository repo;
   private final UserRepository userRepo;
   private final PostRepository postRepo;
+  private final MediaRepository mediaRepo;
+
 
   private final JdbcTemplate jdbc;
 
@@ -70,33 +74,45 @@ public class ReportService {
     return toDto(repo.save(r));
   }
 
-  private ReportDto toDto(Report r) {
+private ReportDto toDto(Report r) {
 
-    String reporterUsername = userRepo.findById(r.getReporterId())
-        .map(User::getUsername)
-        .orElse("unknown");
+  User reporter = userRepo.findById(r.getReporterId()).orElse(null);
+  User reported = userRepo.findById(r.getReportedUserId()).orElse(null);
 
-    String reportedUsername = userRepo.findById(r.getReportedUserId())
-        .map(User::getUsername)
-        .orElse("unknown");
-
-    return new ReportDto(
-        r.getId(),
-
-        r.getReporterId(),
-        reporterUsername,
-
-        r.getReportedUserId(),
-        reportedUsername,
-
-        r.getReportedPostId(),
-        r.getReportedCommentId(),
-
-        r.getCategory(),
-        r.getReason(),
-        r.getStatus(),
-        r.getCreatedAt());
+  String reporterAvatarUrl = null;
+  if (reporter != null && reporter.getAvatarMediaId() != null) {
+    reporterAvatarUrl = mediaRepo.findById(reporter.getAvatarMediaId())
+        .map(Media::getUrl)
+        .orElse(null);
   }
+
+  String reportedAvatarUrl = null;
+  if (reported != null && reported.getAvatarMediaId() != null) {
+    reportedAvatarUrl = mediaRepo.findById(reported.getAvatarMediaId())
+        .map(Media::getUrl)
+        .orElse(null);
+  }
+
+  return new ReportDto(
+      r.getId(),
+
+      r.getReporterId(),
+      reporter != null ? reporter.getUsername() : "unknown",
+      reporterAvatarUrl,
+
+      r.getReportedUserId(),
+      reported != null ? reported.getUsername() : "unknown",
+      reportedAvatarUrl,
+
+      r.getReportedPostId(),
+      r.getReportedCommentId(),
+
+      r.getCategory(),
+      r.getReason(),
+      r.getStatus(),
+      r.getCreatedAt()
+  );
+}
 
   public void deleteReportedPost(UUID postId) {
     postRepo.deleteById(postId);

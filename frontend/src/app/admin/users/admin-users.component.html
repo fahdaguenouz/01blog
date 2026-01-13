@@ -1,0 +1,99 @@
+<div class="users-wrapper">
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">Users Management</h1>
+            <p class="page-subtitle">Manage user accounts, roles, and permissions</p>
+        </div>
+    </header>
+
+    <!-- Users Content -->
+    <div class="users-content">
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="table-title">All Users</h3>
+                <div class="table-info">
+                    <span class="count-badge">{{ users.length }} users</span>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table mat-table [dataSource]="users" class="users-table">
+
+                    <ng-container matColumnDef="username">
+                        <th mat-header-cell *matHeaderCellDef>User</th>
+                        <td mat-cell *matCellDef="let u">
+                            <div class="user-cell">
+                                <div class="user-avatar">
+                                    <img [src]="u.avatarUrl || 'svg/avatar.png'" alt="avatar" class="avatar-img" />
+                                </div>
+
+                                <div class="user-info">
+                                    <span class="username">{{ u.username }}</span>
+
+                                </div>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="email">
+                        <th mat-header-cell *matHeaderCellDef>Email</th>
+                        <td mat-cell *matCellDef="let u">
+                            <span class="email">{{ u.email }}</span>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+                        <td mat-cell *matCellDef="let u">
+                            <div class="status-cell">
+                                <span class="status-badge" [class.active]="u.status === 'active'"
+                                    [class.banned]="u.status === 'banned'">
+                                    {{ u.status }}
+                                </span>
+                                <div class="status-actions">
+                                    <button mat-button class="status-btn warn"
+                                        *ngIf="u.status === 'active' && !isSelf(u)" (click)="ban(u); $event.stopPropagation()">
+                                        <mat-icon>block</mat-icon>
+                                        Ban
+                                    </button>
+                                    <button mat-button class="status-btn success"
+                                        *ngIf="u.status === 'banned' && !isSelf(u)"   (click)="unban(u); $event.stopPropagation()">
+                                        <mat-icon>check_circle</mat-icon>
+                                        Unban
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="role">
+                        <th mat-header-cell *matHeaderCellDef>Role</th>
+                        <td mat-cell *matCellDef="let u">
+                            <mat-select [value]="u.role" (selectionChange)="changeRole(u, $event.value)" (click)="$event.stopPropagation()"
+                                [disabled]="isSelf(u)" class="role-select">
+                                <mat-option value="USER">User</mat-option>
+                                <mat-option value="ADMIN">Admin</mat-option>
+                            </mat-select>
+                        </td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let u">
+                            <button mat-icon-button class="delete-btn" (click)="confirmRemove(u); $event.stopPropagation()" [disabled]="isSelf(u)"
+                                matTooltip="Delete user">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="cols"></tr>
+                    <tr mat-row *matRowDef="let row; columns: cols" class="user-row clickable"
+                        (click)="goToProfile(row)"></tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

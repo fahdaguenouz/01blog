@@ -1,0 +1,369 @@
+@import "../../../styles/variables.scss";
+
+.users-wrapper {
+  min-height: calc(100vh - 64px);
+  background: $gray-bg;
+}
+
+// Page Header
+.page-header {
+  background: $white-bg;
+  border-bottom: 1px solid rgba(123, 84, 47, 0.1);
+  padding: 32px 24px;
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: $text-dark;
+      margin: 0 0 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: $text-color;
+      margin: 0;
+    }
+  }
+}
+
+// Users Content
+.users-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+// Table Card
+.table-card {
+  background: $white-bg;
+  border-radius: $border-radius-md;
+  border: 1px solid rgba(123, 84, 47, 0.1);
+  box-shadow: 0 2px 8px rgba(123, 84, 47, 0.04);
+  overflow: hidden;
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 1px solid rgba(123, 84, 47, 0.08);
+
+    .table-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: $text-dark;
+      margin: 0;
+    }
+
+    .table-info {
+      .count-badge {
+        display: inline-flex;
+        padding: 6px 16px;
+        background: rgba(255, 157, 0, 0.1);
+        color: $primary-color;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+// Users Table
+.users-table {
+  width: 100%;
+  background: transparent;
+
+  .mat-mdc-header-row {
+    background: rgba(255, 157, 0, 0.03);
+    height: 56px;
+  }
+
+  .mat-mdc-header-cell {
+    font-size: 13px;
+    font-weight: 600;
+    color: $accent-color;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(123, 84, 47, 0.1);
+    padding: 16px;
+  }
+
+  .mat-mdc-row {
+    height: auto;
+    min-height: 64px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 157, 0, 0.02);
+    }
+  }
+
+  .mat-mdc-cell {
+    font-size: 14px;
+    color: $text-dark;
+    border-bottom: 1px solid rgba(123, 84, 47, 0.06);
+    padding: 16px;
+  }
+
+  .user-row:last-child .mat-mdc-cell {
+    border-bottom: none;
+  }
+
+  // User Cell
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $primary-color, $secondary-color);
+      flex-shrink: 0;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .username {
+        font-weight: 600;
+        color: $text-dark;
+        font-size: 15px;
+      }
+
+      .user-id {
+        font-size: 12px;
+        color: $text-color;
+        font-family: 'Courier New', monospace;
+      }
+    }
+  }
+
+  // Email
+  .email {
+    color: $text-color;
+    font-size: 14px;
+  }
+
+  // Status Cell
+  .status-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .status-badge {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: capitalize;
+
+      &.active {
+        background: rgba(76, 175, 80, 0.1);
+        color: $success-color;
+      }
+
+      &.banned {
+        background: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+      }
+    }
+
+    .status-actions {
+      display: flex;
+      gap: 8px;
+
+      .status-btn {
+        min-width: auto;
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all $transition-fast;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          margin-right: 4px;
+        }
+
+        &.warn {
+          color: #ff9800;
+          background: rgba(255, 152, 0, 0.08);
+
+          &:hover {
+            background: rgba(255, 152, 0, 0.15);
+          }
+        }
+
+        &.success {
+          color: $success-color;
+          background: rgba(76, 175, 80, 0.08);
+
+          &:hover {
+            background: rgba(76, 175, 80, 0.15);
+          }
+        }
+      }
+    }
+  }
+
+  // Role Select
+  .role-select {
+    width: 120px;
+
+    ::ng-deep {
+      .mat-mdc-select-trigger {
+        border: 1px solid rgba(123, 84, 47, 0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 157, 0, 0.05);
+        transition: all $transition-fast;
+
+        &:hover {
+          border-color: $primary-color;
+          background: rgba(255, 157, 0, 0.08);
+        }
+      }
+
+      .mat-mdc-select-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: $text-dark;
+      }
+
+      .mat-mdc-select-arrow {
+        color: $primary-color;
+      }
+
+      &.mat-mdc-select-disabled {
+        .mat-mdc-select-trigger {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Delete Button
+  .delete-btn {
+    color: #e74c3c;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+      background: rgba(231, 76, 60, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .page-header {
+    padding: 24px 16px;
+
+    .header-content {
+      .page-title {
+        font-size: 24px;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+      }
+    }
+  }
+
+  .users-content {
+    padding: 24px 16px 60px;
+  }
+
+  .table-card {
+    .table-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+
+  .users-table {
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+
+    .user-cell {
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+      }
+
+      .user-info {
+        .username {
+          font-size: 14px;
+        }
+
+        .user-id {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .status-cell {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+
+      .status-actions {
+        width: 100%;
+
+        .status-btn {
+          flex: 1;
+        }
+      }
+    }
+  }
+}
+
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-row.clickable {
+  cursor: pointer;
+}
+
+.user-row.clickable:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+

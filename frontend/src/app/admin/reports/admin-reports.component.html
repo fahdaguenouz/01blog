@@ -1,54 +1,112 @@
-<h2>Reported Content</h2>
-<mat-progress-spinner *ngIf="loading" mode="indeterminate"></mat-progress-spinner>
+<div class="reports-wrapper">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Reports Management</h1>
+      <p class="page-subtitle">Review and moderate reported content</p>
+    </div>
+  </header>
 
-<div class="table-wrapper" *ngIf="!loading && reports.length">
-  <table mat-table [dataSource]="reports" class="mat-elevation-z2">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="48" color="primary"></mat-spinner>
+    <p>Loading reports...</p>
+  </div>
 
-    <ng-container matColumnDef="reporter">
-      <th mat-header-cell *matHeaderCellDef>Reporter</th>
-      <td mat-cell *matCellDef="let r">{{ r.reporterUsername }}</td>
-    </ng-container>
+  <!-- Reports Table -->
+  <div class="reports-content" *ngIf="!loading">
+    <div class="table-card" *ngIf="reports.length">
+      <div class="table-header">
+        <h3 class="table-title">Active Reports</h3>
+        <div class="table-info">
+          <span class="count-badge">{{ reports.length }} reports</span>
+        </div>
+      </div>
 
-    <ng-container matColumnDef="reported">
-      <th mat-header-cell *matHeaderCellDef>Reported</th>
-      <td mat-cell *matCellDef="let r">{{ r.reportedUsername }}</td>
-    </ng-container>
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="reports" class="reports-table">
 
-    <ng-container matColumnDef="category">
-      <th mat-header-cell *matHeaderCellDef>Category</th>
-      <td mat-cell *matCellDef="let r">{{ r.category }}</td>
-    </ng-container>
+          <ng-container matColumnDef="reporter">
+            <th mat-header-cell *matHeaderCellDef>Reporter</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="user-cell">
+                <img class="user-avatar small" [src]="r.reporterAvatarUrl || 'svg/avatar.png'" alt="Reporter avatar" />
+                <span class="username">{{ r.reporterUsername }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-    <ng-container matColumnDef="reason">
-      <th mat-header-cell *matHeaderCellDef>Reason</th>
-      <td mat-cell *matCellDef="let r">{{ r.reason }}</td>
-    </ng-container>
+          <ng-container matColumnDef="reported">
+            <th mat-header-cell *matHeaderCellDef>Reported User</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="user-cell">
+                <img class="user-avatar small reported" [src]="r.reportedAvatarUrl || 'svg/avatar.png'"
+                  alt="Reported user avatar" />
+                <span class="username">{{ r.reportedUsername }}</span>
+              </div>
+            </td>
+          </ng-container>
 
-    <ng-container matColumnDef="post">
-      <th mat-header-cell *matHeaderCellDef>Post</th>
-      <td mat-cell *matCellDef="let r">
-        <a *ngIf="r.reportedPostId" [routerLink]="['/post', r.reportedPostId]">
-          View post
-        </a>
-        <span *ngIf="!r.reportedPostId">—</span>
-      </td>
-    </ng-container>
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="category-chip">{{ r.category }}</span>
+            </td>
+          </ng-container>
 
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef>Actions</th>
-      <td mat-cell *matCellDef="let r">
-        <button mat-button color="warn" (click)="banUser(r)">Ban User</button>
-        <button mat-button color="warn" (click)="deleteUser(r)">Delete User</button>
-        <button mat-button color="primary" *ngIf="r.reportedPostId" (click)="deletePost(r)">Delete Post</button>
-      </td>
-    </ng-container>
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let r">
+              <p class="reason-text">{{ r.reason }}</p>
+            </td>
+          </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="cols"></tr>
-    <tr mat-row *matRowDef="let row; columns: cols"></tr>
-  </table>
+          <ng-container matColumnDef="post">
+            <th mat-header-cell *matHeaderCellDef>Post</th>
+            <td mat-cell *matCellDef="let r">
+              <a *ngIf="r.reportedPostId" [routerLink]="['/post', r.reportedPostId]" class="post-link">
+                <mat-icon>visibility</mat-icon>
+                View Post
+              </a>
+              <span *ngIf="!r.reportedPostId" class="no-post">No post</span>
+            </td>
+          </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let r">
+              <div class="action-buttons">
+                <button mat-button class="action-btn warn" (click)="banUser(r)">
+                  <mat-icon>block</mat-icon>
+                  Ban User
+                </button>
+                <button mat-button class="action-btn danger" (click)="deleteUser(r)">
+                  <mat-icon>person_remove</mat-icon>
+                  Delete User
+                </button>
+                <button mat-button class="action-btn primary" *ngIf="r.reportedPostId" (click)="deletePost(r)">
+                  <mat-icon>delete</mat-icon>
+                  Delete Post
+                </button>
+                <button mat-button class="action-btn success" (click)="resolve(r)">
+                  <mat-icon>check_circle</mat-icon>
+                  Resolve
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols" class="report-row"></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!reports.length">
+      <mat-icon class="empty-icon">check_circle</mat-icon>
+      <h3>No Active Reports</h3>
+      <p>All reports have been resolved. Great work!</p>
+    </div>
+  </div>
 </div>
-
-<p *ngIf="!loading && !reports.length">
-  No reports found 🎉
-</p>

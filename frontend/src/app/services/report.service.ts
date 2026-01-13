@@ -6,10 +6,18 @@ import { environment } from '../../environment/environment';
 
 export interface Report {
   id: string;
+
   reporterId: string;
+  reporterUsername: string;
+  reporterAvatarUrl?: string;
+
   reportedUserId: string;
+  reportedUsername: string;
+  reportedAvatarUrl?: string; 
+
   reportedPostId?: string;
   reportedCommentId?: string;
+
   category: string;
   reason: string;
   status: 'waiting' | 'reviewed' | 'resolved';

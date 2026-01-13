@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AdminService, AdminUser } from '../../services/admin.service';
 import { Observable } from 'rxjs';
 import { ConfirmDialogComponent } from './ConfirmDialogComponent';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -25,72 +26,8 @@ import { ConfirmDialogComponent } from './ConfirmDialogComponent';
     MatDialogModule,
     MatSnackBarModule,
   ],
-  template: `
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Manage Users</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <table mat-table [dataSource]="users" class="mat-elevation-z1" style="width:100%">
-
-          <ng-container matColumnDef="username">
-            <th mat-header-cell *matHeaderCellDef> Username </th>
-            <td mat-cell *matCellDef="let u">{{ u.username }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef> Email </th>
-            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef> Status </th>
-            <td mat-cell *matCellDef="let u">
-              {{ u.status }}
-              <button mat-button color="warn" *ngIf="u.status === 'active' && !isSelf(u)" (click)="ban(u)">
-                Ban
-              </button>
-              <button mat-button color="primary" *ngIf="u.status === 'banned' && !isSelf(u)" (click)="unban(u)">
-                Unban
-              </button>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef> Role </th>
-            <td mat-cell *matCellDef="let u">
-              <mat-select [value]="u.role" (selectionChange)="changeRole(u, $event.value)" [disabled]="isSelf(u)">
-                <mat-option value="USER">USER</mat-option>
-                <mat-option value="ADMIN">ADMIN</mat-option>
-              </mat-select>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Actions </th>
-            <td mat-cell *matCellDef="let u">
-              <button mat-icon-button color="warn" (click)="confirmRemove(u)" [disabled]="isSelf(u)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="cols"></tr>
-          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
-        </table>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Simple confirm dialog template (inlined) -->
-    <ng-template #confirmDialog let-data>
-      <h2 mat-dialog-title>{{ data.title }}</h2>
-      <mat-dialog-content>{{ data.message }}</mat-dialog-content>
-      <mat-dialog-actions align="end">
-        <button mat-button mat-dialog-close>No</button>
-        <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Yes</button>
-      </mat-dialog-actions>
-    </ng-template>
-  `,
+  templateUrl: './admin-users.component.html',
+  styleUrls: ['./admin-users.component.scss'],
 })
 export class AdminUsersComponent implements OnInit {
   users: AdminUser[] = [];
@@ -99,6 +36,8 @@ export class AdminUsersComponent implements OnInit {
   private admin = inject(AdminService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
+  private router = inject(Router);
+
 
   // optionally set currentAdminId from a trusted source (AuthService / JWT / separate endpoint)
   currentAdminId: string | null = null;
@@ -183,6 +122,10 @@ export class AdminUsersComponent implements OnInit {
       });
     });
   }
+  goToProfile(u: AdminUser) {
+  this.router.navigate(['/profile', u.username]);
+}
+
 
   confirmRemove(u: AdminUser) {
     const ref = this.dialog.open(ConfirmDialogComponent, {

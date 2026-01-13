@@ -10,6 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../users/ConfirmDialogComponent';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-admin-reports',
@@ -21,6 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatChipsModule,
     MatProgressSpinnerModule,
     RouterModule,
+    MatIconModule,
   ],
   templateUrl: './admin-reports.component.html',
   styleUrls: ['./admin-reports.component.scss'],
