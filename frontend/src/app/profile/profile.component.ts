@@ -419,4 +419,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+onImgError(ev: Event) {
+  (ev.target as HTMLImageElement).src = 'svg/avatar.png';
+}
+
 }

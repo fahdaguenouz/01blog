@@ -110,36 +110,63 @@
   </div>
 </div>
 
-<!-- Followers/Following Modal (unchanged) -->
+<!-- Followers/Following Modal -->
 <div class="modal-overlay" *ngIf="showFollowers || showFollowing" (click)="closeList()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ showFollowers ? 'Followers' : 'Following' }}</h3>
-      <button mat-icon-button class="close-btn" (click)="closeList()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-head">
+      <div class="modal-head-left">
+        <h3 class="modal-title">{{ showFollowers ? 'Followers' : 'Following' }}</h3>
+        <span class="count-badge">
+          {{ (showFollowers ? followers.length : following.length) }} users
+        </span>
+      </div>
+
+      <button mat-icon-button class="close-btn" type="button" (click)="closeList()">
         <mat-icon>close</mat-icon>
       </button>
     </div>
+
+    <!-- Body -->
     <div class="modal-body">
-      <mat-spinner *ngIf="loadingFollowers || loadingFollowing"></mat-spinner>
-      <div *ngIf="!loadingFollowers && !loadingFollowers" class="users-list">
-        <div *ngIf="showFollowers && followers.length === 0" class="empty-state">
-          No followers yet.
-        </div>
-        <div *ngIf="showFollowing && following.length === 0" class="empty-state">
-          Not following anyone yet.
-        </div>
-        <div *ngFor="let u of (showFollowers ? followers : following)" class="user-item"
-          (click)="goToUserProfile(u.username)">
-          <div class="user-avatar">
-            <img *ngIf="u.avatarUrl" [src]="u.avatarUrl" alt="Avatar" />
-            <mat-icon *ngIf="!u.avatarUrl">account_circle</mat-icon>
-          </div>
+      <!-- Loading -->
+      <div *ngIf="loadingFollowers || loadingFollowing" class="modal-loading">
+        <mat-spinner diameter="44" color="primary"></mat-spinner>
+        <p>Loading {{ showFollowers ? 'followers' : 'following' }}...</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!(loadingFollowers || loadingFollowing) && (showFollowers ? followers.length === 0 : following.length === 0)"
+           class="modal-empty">
+        <mat-icon class="empty-icon">group_off</mat-icon>
+        <h4>{{ showFollowers ? 'No followers yet' : 'Not following anyone yet' }}</h4>
+        <p>{{ showFollowers ? 'When people follow you, they’ll appear here.' : 'Users you follow will appear here.' }}</p>
+      </div>
+
+      <!-- List -->
+      <div *ngIf="!(loadingFollowers || loadingFollowing) && (showFollowers ? followers.length : following.length)"
+           class="users-list">
+        <button
+          type="button"
+          class="user-row"
+          *ngFor="let u of (showFollowers ? followers : following)"
+          (click)="goToUserProfile(u.username)"
+        >
+          <img
+            class="user-avatar"
+            [src]="u.avatarUrl?.trim() ? u.avatarUrl : 'svg/avatar.png'"
+            (error)="onImgError($event)"
+            alt="Avatar"
+          />
+
           <div class="user-info">
-            <div class="user-name">{{ u.name }}</div>
+            <div class="user-name">{{ u.name || u.username }}</div>
             <div class="user-username">@{{ u.username }}</div>
           </div>
-          <mat-icon class="arrow-icon">chevron_right</mat-icon>
-        </div>
+
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </button>
       </div>
     </div>
   </div>
