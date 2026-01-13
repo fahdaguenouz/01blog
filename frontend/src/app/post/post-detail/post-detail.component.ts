@@ -17,6 +17,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ReportService } from '../../services/report.service';
 import { ReportPostDialogComponent, ReportPostDialogResult } from '../report-dialog.component';
 import { OrderByPositionPipe } from '../orderByPosition';
+import { AuthService } from '../../services/auth.service';
+import { SnackService } from '../../core/snack.service';
+import { AdminService } from '../../services/admin.service';
 
 @Component({
   standalone: true,
@@ -36,192 +39,7 @@ import { OrderByPositionPipe } from '../orderByPosition';
     MatTooltipModule,
     OrderByPositionPipe,
   ],
-  template: `
-    <div class="post-detail-wrapper" *ngIf="post">
-      <article class="post-detail-container">
-        <!-- Post Header -->
-        <header class="post-header">
-          <h1 class="post-title">{{ post.title }}</h1>
-
-          <!-- Author Section -->
-          <div class="author-section">
-            <a [routerLink]="['/profile', post.authorUsername]" class="author-link">
-              <img
-                class="author-avatar"
-                [src]="post.avatarUrl || 'svg/avatar.png'"
-                alt="author avatar"
-              />
-
-              <div class="author-info">
-                <span class="author-name">{{ post.authorName }}</span>
-                <div class="post-meta">
-                  <span class="author-username">@{{ post.authorUsername }}</span>
-                  <span class="meta-separator">·</span>
-                  <span class="post-date">{{ formatDate(post.createdAt) }}</span>
-                  <span class="meta-separator">·</span>
-                </div>
-              </div>
-            </a>
-
-            <!-- Action Buttons -->
-            <div class="header-actions">
-              <button
-                mat-icon-button
-                class="report-btn"
-                matTooltip="Report this post"
-                (click)="openReportDialog()"
-              >
-                <mat-icon>flag</mat-icon>
-              </button>
-
-              <button
-                *ngIf="currentUser && post?.authorId === currentUser.id"
-                mat-icon-button
-                [matMenuTriggerFor]="menu"
-                class="more-btn"
-              >
-                <mat-icon>more_horiz</mat-icon>
-              </button>
-
-              <mat-menu #menu="matMenu" class="post-menu">
-                <button mat-menu-item (click)="onEditPost()">
-                  <mat-icon>edit</mat-icon>
-                  <span>Edit Post</span>
-                </button>
-                <button mat-menu-item (click)="onDeletePost()" class="delete-item">
-                  <mat-icon>delete</mat-icon>
-                  <span>Delete Post</span>
-                </button>
-              </mat-menu>
-            </div>
-          </div>
-
-          <!-- Categories -->
-          <div *ngIf="post.categories?.length" class="categories">
-            <span *ngFor="let cat of post.categories" class="category-tag">
-              {{ cat.name }}
-            </span>
-          </div>
-        </header>
-
-        <!-- Post Media -->
-        <div *ngIf="post.media?.length" class="post-media">
-          <ng-container *ngFor="let m of post.media | orderByPosition">
-            <div class="media-wrapper">
-              <img
-                *ngIf="m.type === 'image'"
-                [src]="m.url"
-                [alt]="m.description || 'Post image'"
-                class="media-image"
-              />
-
-              <video *ngIf="m.type === 'video'" controls class="media-video">
-                <source [src]="m.url" />
-              </video>
-
-              <p *ngIf="m.description" class="media-caption">
-                {{ m.description }}
-              </p>
-            </div>
-          </ng-container>
-        </div>
-
-        <!-- Post Content -->
-        <div class="post-content">
-          <p>{{ post.body }}</p>
-        </div>
-
-        <!-- Post Actions -->
-        <div class="post-actions">
-          <div class="action-buttons">
-            <button
-              mat-button
-              class="action-btn"
-              [class.liked]="post.isLiked"
-              (click)="toggleLike()"
-            >
-              <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
-              <span>{{ post.likes ?? 0 }}</span>
-            </button>
-
-            <button mat-button class="action-btn">
-              <mat-icon>chat_bubble_outline</mat-icon>
-              <span>{{ comments.length }}</span>
-            </button>
-          </div>
-
-          <button
-            mat-icon-button
-            class="save-btn"
-            [class.saved]="post?.isSaved"
-            (click)="toggleSave()"
-          >
-            <mat-icon>{{ post?.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-          </button>
-        </div>
-
-        <!-- Comments Section -->
-        <section class="comments-section">
-          <h3 class="comments-title">Responses ({{ comments.length }})</h3>
-
-          <!-- Comments List -->
-          <div class="comments-list">
-            <div *ngFor="let comment of comments" class="comment-item">
-              <div class="comment-header">
-                <img
-                  class="comment-avatar"
-                  [src]="comment.avatarUrl || 'svg/avatar.png'"
-                  alt="comment avatar"
-                />
-
-                <div class="comment-meta">
-                  <span class="comment-author">{{ comment.username }}</span>
-                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                </div>
-              </div>
-              <div class="comment-content">
-                <p>{{ comment.text }}</p>
-              </div>
-            </div>
-
-            <div *ngIf="comments.length === 0" class="no-comments">
-              <mat-icon>chat_bubble_outline</mat-icon>
-              <p>No responses yet</p>
-              <span>Be the first to share your thoughts</span>
-            </div>
-
-            <!-- Add Comment Form -->
-            <form (ngSubmit)="addComment()" #commentForm="ngForm" class="comment-form">
-              <div class="comment-input-wrapper">
-                <mat-form-field appearance="outline" class="comment-field">
-                  <mat-label>Share your thoughts...</mat-label>
-                  <textarea
-                    matInput
-                    [(ngModel)]="newComment"
-                    name="comment"
-                    required
-                    rows="3"
-                    placeholder="What are your thoughts?"
-                  ></textarea>
-                </mat-form-field>
-              </div>
-              <div class="comment-actions">
-                <button
-                  mat-flat-button
-                  color="primary"
-                  type="submit"
-                  [disabled]="commentForm.invalid"
-                  class="submit-comment-btn"
-                >
-                  Respond
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
-      </article>
-    </div>
-  `,
+  templateUrl: './post-detail.component.html',
   styleUrls: ['./post-detail.component.scss'],
 })
 export class PostDetailComponent implements OnInit {
@@ -229,6 +47,10 @@ export class PostDetailComponent implements OnInit {
   private posts = inject(PostService);
   private userService = inject(UserService);
   private reports = inject(ReportService);
+  private admin = inject(AdminService);
+  private auth = inject(AuthService);
+  private snack = inject(SnackService);
+
   post: Post | null = null;
   comments: Comment[] = [];
   newComment = '';
@@ -405,6 +227,33 @@ export class PostDetailComponent implements OnInit {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+    });
+  }
+
+  get isAdmin(): boolean {
+    return this.auth.isAdmin();
+  }
+
+  get canManagePost(): boolean {
+    if (!this.post) return false;
+    // owner OR admin
+    return !!this.currentUser && (this.currentUser.id === this.post.authorId || this.isAdmin);
+  }
+  onAdminDeletePost() {
+    if (!this.post) return;
+
+    const ok = window.confirm('Admin action:\n\nDelete this post?\nThis cannot be undone.');
+    if (!ok) return;
+
+    this.admin.deletePost(this.post.id).subscribe({
+      next: () => {
+        this.snack.success('Post deleted');
+        this.router.navigate(['/feed']);
+      },
+      error: (err) => {
+        console.error('Admin delete failed', err);
+        this.snack.error('Failed to delete post.');
+      },
     });
   }
 }
