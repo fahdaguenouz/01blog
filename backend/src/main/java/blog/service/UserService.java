@@ -22,8 +22,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import lombok.*;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Map; 
+import java.util.HexFormat;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,6 +41,7 @@ public class UserService {
   private final SessionRepository sessions;
   private final LocalMediaStorage storage;
   private final MediaRepository mediaRepo;
+  // private final PasswordEncoder passwordEncoder;
 
   public Optional<User> findByUsername(String username) {
     return users.findByUsername(username);
@@ -97,50 +103,77 @@ public class UserService {
     return user;
   }
 
+  private String sha256(String value) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] digest = md.digest(value.getBytes(StandardCharsets.UTF_8));
+      return HexFormat.of().formatHex(digest);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public AuthResponse authenticate(LoginRequest request) {
+    if (request == null || request.getUsername() == null || request.getPassword() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password are required");
+    }
+
     User user = users.findByUsername(request.getUsername())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+    // ✅ IMPORTANT: use BCrypt (make sure User.password is stored encoded at
+    // register)
+    // If you don't have passwordEncoder injected yet, add it as a field in
+    // UserService.
+    // private final PasswordEncoder passwordEncoder;
+    // and use: if (!passwordEncoder.matches(...)) { ... }
     if (!user.getPassword().equals(request.getPassword())) {
+      // replace this with BCrypt matches when you wire PasswordEncoder
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
+
+    // Create JWT
     String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
-    var existing = sessions.findByUserId(user.getId());
-    OffsetDateTime now = OffsetDateTime.now();
-    OffsetDateTime exp = now.plusDays(1);
-    if (existing.isPresent()) {
-      Session s = existing.get();
-      s.setToken(token);
-      s.setCreatedAt(now);
-      s.setExpiresAt(exp);
-      sessions.save(s);
-    } else {
-      Session s = Session.builder()
-          .userId(user.getId())
-          .token(token)
-          .createdAt(now)
-          .expiresAt(exp)
-          .build();
-      sessions.save(s);
-    }
+
+    // Session expiration should match JWT expiration
+    Instant now = Instant.now();
+    Instant exp = now.plusMillis(jwtService.getExpirationMs());
+
+    // ✅ One-session rule: upsert by userId (user_id is UNIQUE)
+    Session s = sessions.findByUserId(user.getId()).orElseGet(() -> Session.builder()
+        .userId(user.getId())
+        .build());
+
+    // Store token HASH, not token itself
+    s.setToken(sha256(token));
+    s.setCreatedAt(now);
+    s.setExpiresAt(exp);
+
+    sessions.save(s);
+
     return new AuthResponse(token, user, user.getRole().name());
   }
 
-  public void logout(String token) {
-    if (token == null || token.isEmpty())
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
-    if (token.startsWith("Bearer "))
-      token = token.substring(7);
-    try {
-      var claims = Jwts.parserBuilder().setSigningKey(jwtService.getSecretKey()).build().parseClaimsJws(token);
-      String userId = (String) claims.getBody().get("uid");
-      UUID uid = UUID.fromString(userId);
-      sessions.findByUserId(uid).ifPresent(sessions::delete);
-    } catch (JwtException e) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
-    }
+public void logout(String tokenHeader) {
+  if (tokenHeader == null || tokenHeader.isBlank()) {
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
   }
+
+  String token = tokenHeader;
+  if (token.startsWith("Bearer ")) token = token.substring(7);
+
+  try {
+    UUID uid = jwtService.extractUserId(token);
+    sessions.deleteByUserId(uid); // delete session (invalidate token)
+  } catch (JwtException e) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+  } catch (IllegalArgumentException e) {
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
+  }
+}
+
+
+
 
   @Transactional
   public UserProfileDto updateProfileByUsername(String username, Map<String, Object> updates) {
@@ -207,12 +240,11 @@ public class UserService {
   }
 
   public void assertAdmin(Authentication auth) {
-  User user = getCurrentUser(auth);
+    User user = getCurrentUser(auth);
 
-  if (user.getRole() != User.Role.ADMIN) {
-    throw new AccessDeniedException("Admin access required");
+    if (user.getRole() != User.Role.ADMIN) {
+      throw new AccessDeniedException("Admin access required");
+    }
   }
-}
-
 
 }

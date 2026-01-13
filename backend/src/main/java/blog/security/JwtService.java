@@ -1,5 +1,6 @@
 package blog.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -45,5 +46,20 @@ public class JwtService {
 
   public SecretKey getSecretKey() {
     return secretKey;
+  }
+
+  public long getExpirationMs() {
+    return expirationMs;
+  }
+
+  public UUID extractUserId(String token) {
+    Claims claims = Jwts.parserBuilder()
+        .setSigningKey(secretKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+
+    String uid = claims.get("uid", String.class);
+    return UUID.fromString(uid);
   }
 }
