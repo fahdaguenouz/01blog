@@ -55,6 +55,10 @@ export class PostDetailComponent implements OnInit {
   comments: Comment[] = [];
   newComment = '';
   currentUser: UserProfile | null = null;
+  postNotFound = false;
+  hiddenByAdmin = false;
+  loadingPost = true;
+
   private dialog = inject(MatDialog);
   private router = inject(Router);
 
@@ -74,12 +78,44 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-  loadPost(id: string) {
-    this.posts.getById(id).subscribe((p) => {
+ loadPost(id: string) {
+  this.loadingPost = true;
+  this.postNotFound = false;
+  this.hiddenByAdmin = false;
+
+  this.posts.getById(id).subscribe({
+    next: (p) => {
       this.post = p;
-      // console.log('Loaded post:', p);
-    });
-  }
+      this.hiddenByAdmin = p.status === 'hidden'; // if you ever return it
+      this.loadingPost = false;
+    },
+    error: (err) => {
+      console.error('loadPost error', err);
+      this.loadingPost = false;
+
+      // ✅ Your backend returns 404 for hidden posts
+      if (err.status === 404) {
+        // if backend includes message "Post not found" even for hidden,
+        // we treat it as hidden banner (because you want that UX)
+        this.hiddenByAdmin = true;
+
+        // optional: also mark notFound if you want a different UI sometimes
+        // this.postNotFound = true;
+      }
+
+      // if you later change backend to 403 for hidden:
+      if (err.status === 403) {
+        this.hiddenByAdmin = true;
+      }
+    },
+  });
+}
+
+
+ get shouldShowHiddenBanner(): boolean {
+  return this.hiddenByAdmin;
+}
+
 
   loadComments(postId: string) {
     this.posts.getComments(postId).subscribe((comments) => (this.comments = comments));

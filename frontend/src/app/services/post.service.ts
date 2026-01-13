@@ -15,8 +15,8 @@ export interface PostMedia {
   url: string;
   description?: string;
   position: number;
-  mediaType: string; 
-  type?: 'image' | 'video'; 
+  mediaType: string;
+  type?: 'image' | 'video';
 }
 export interface Post {
   id: string;
@@ -27,6 +27,8 @@ export interface Post {
   title: string;
   excerpt: string;
   body?: string;
+  status?: 'active' | 'hidden';
+
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   createdAt: string;
@@ -75,44 +77,43 @@ export class PostService {
       .pipe(map((post) => this.normalizePost(post)));
   }
 
-
   createPostFormData(formData: FormData): Observable<any> {
     return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
 
-updatePost(
-  postId: string,
-  title: string,
-  body: string,
-  mediaBlocks: EditMediaBlock[],
-  categoryIds: string[]
-): Observable<Post> {
-  const formData = new FormData();
-  formData.append('title', title);
-  formData.append('body', body);
+  updatePost(
+    postId: string,
+    title: string,
+    body: string,
+    mediaBlocks: EditMediaBlock[],
+    categoryIds: string[]
+  ): Observable<Post> {
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('body', body);
 
-  const existingMediaIds: string[] = [];
-  const removeFlags: boolean[] = [];
+    const existingMediaIds: string[] = [];
+    const removeFlags: boolean[] = [];
 
-  mediaBlocks.forEach(block => {
-    if (block.id) {
-      existingMediaIds.push(block.id);
-      removeFlags.push(!!block.removed);
-    } else if (block.file) {
-      formData.append('mediaFiles', block.file);
-    }
+    mediaBlocks.forEach((block) => {
+      if (block.id) {
+        existingMediaIds.push(block.id);
+        removeFlags.push(!!block.removed);
+      } else if (block.file) {
+        formData.append('mediaFiles', block.file);
+      }
 
-    formData.append('mediaDescriptions', block.description || '');
-  });
+      formData.append('mediaDescriptions', block.description || '');
+    });
 
-  categoryIds.forEach(id => formData.append('categoryId', id));
-  existingMediaIds.forEach(id => formData.append('existingMediaIds', id));
-  removeFlags.forEach(flag => formData.append('removeExistingFlags', flag.toString()));
+    categoryIds.forEach((id) => formData.append('categoryId', id));
+    existingMediaIds.forEach((id) => formData.append('existingMediaIds', id));
+    removeFlags.forEach((flag) => formData.append('removeExistingFlags', flag.toString()));
 
-  return this.getHttp().put<Post>(`${this.apiUrl}/${postId}`, formData)
-    .pipe(map(post => this.normalizePost(post)));
-}
-
+    return this.getHttp()
+      .put<Post>(`${this.apiUrl}/${postId}`, formData)
+      .pipe(map((post) => this.normalizePost(post)));
+  }
 
   deletePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}`);
@@ -182,7 +183,6 @@ updatePost(
         post.media.sort((a, b) => a.position - b.position)[0];
     }
 
-   
     return post;
   }
 }

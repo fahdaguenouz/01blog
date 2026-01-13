@@ -505,3 +505,23 @@
     }
   }
 }
+
+.hidden-post-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 193, 7, 0.14);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  margin: 16px 0;
+
+  mat-icon {
+    margin-top: 2px;
+  }
+
+  p {
+    margin: 4px 0 0 0;
+    opacity: 0.9;
+  }
+}
