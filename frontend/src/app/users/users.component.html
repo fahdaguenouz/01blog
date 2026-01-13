@@ -1,40 +1,123 @@
-<div class="users-page">
-    <div class="search-section">
+<!-- src/app/users/users.component.html -->
+<div class="users-wrapper">
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Users</h1>
+      <p class="page-subtitle">Search and explore user profiles</p>
+    </div>
+  </header>
+
+  <div class="users-content">
+    <div class="search-card">
+      <div class="search-header">
+        <h3 class="search-title">Search users</h3>
+
+        <span class="hint-badge" *ngIf="submittedQuery">
+          Results for “{{ submittedQuery }}”
+        </span>
+      </div>
+
+      <div class="search-row">
         <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Search users by name or username</mat-label>
-            <input matInput [formControl]="searchControl" placeholder="e.g., john doe or johndoe" type="search">
-            <button mat-icon-button matSuffix (click)="clearSearch()" *ngIf="searchControl.value">
-                <mat-icon>close</mat-icon>
-            </button>
+          <mat-label>Search users by name or username</mat-label>
+
+          <input
+            matInput
+            [formControl]="searchControl"
+            placeholder="e.g., john doe or johndoe"
+            type="search"
+            (keydown.enter)="onSearch($event)"
+          />
+
+          <!-- ✅ Clear (NOT submit) -->
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="clearSearch()"
+            *ngIf="searchControl.value?.trim()"
+            aria-label="Clear search"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
         </mat-form-field>
+
+        <!-- ✅ Search (NOT submit) -->
+        <button
+          mat-flat-button
+          color="primary"
+          class="search-btn"
+          type="button"
+          (click)="onSearch()"
+          [disabled]="loading"
+        >
+          <mat-icon>search</mat-icon>
+          Search
+        </button>
+      </div>
     </div>
 
-    <div class="results-section" *ngIf="loading || users.length || noResults">
-        <mat-spinner diameter="24" *ngIf="loading"></mat-spinner>
-
-        <div *ngIf="noResults && !loading" class="no-results">
-            <mat-icon>search_off</mat-icon>
-            <p>No users found matching "{{ searchControl.value }}"</p>
-        </div>
-
-        <div class="users-grid" *ngIf="!loading && users.length">
-            <mat-card *ngFor="let user of users" class="user-card" routerLink="/profile/{{ user.username }}">
-                <mat-card-header>
-                    <img mat-card-avatar [src]="getAvatar(user)" (error)="onImgError($event)"
-                        alt="{{ user.name || user.username }}" />
-
-                    <mat-card-title>{{ user.name || user.username }}</mat-card-title>
-                    <mat-card-subtitle>@{{ user.username }}</mat-card-subtitle>
-                </mat-card-header>
-                <mat-card-content>
-                    <p *ngIf="user.bio" class="bio">{{ user.bio }}</p>
-                    <div class="stats">
-                        <span>{{ user.subscribersCount }} followers</span>
-                        <span>{{ user.subscriptionsCount || 0 }} following</span>
-                    </div>
-                </mat-card-content>
-
-            </mat-card>
-        </div>
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="48" color="primary"></mat-spinner>
+      <p>Searching users...</p>
     </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && !submittedQuery" class="empty-state">
+      <mat-icon class="empty-icon">manage_search</mat-icon>
+      <h3>Search for users</h3>
+      <p>Type a name or username then press Search.</p>
+    </div>
+
+    <!-- No Results -->
+    <div *ngIf="noResults && !loading" class="empty-state">
+      <mat-icon class="empty-icon">search_off</mat-icon>
+      <h3>No users found</h3>
+      <p>No users found matching “{{ submittedQuery }}”.</p>
+    </div>
+
+    <!-- Results -->
+    <div class="users-grid" *ngIf="!loading && users.length">
+      <mat-card
+        *ngFor="let user of users"
+        class="user-card"
+        routerLink="/profile/{{ user.username }}"
+      >
+        <div class="card-top">
+          <img
+            class="user-avatar"
+            [src]="getAvatar(user)"
+            (error)="onImgError($event)"
+            alt="User avatar"
+          />
+
+          <div class="user-meta">
+            <div class="name-row">
+              <h4 class="user-name">{{ user.name || user.username }}</h4>
+              <span class="username">@{{ user.username }}</span>
+            </div>
+
+            <p class="bio" *ngIf="user.bio">{{ user.bio }}</p>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="stat">
+            <span class="stat-number">{{ user.subscribersCount }}</span>
+            <span class="stat-label">followers</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="stat">
+            <span class="stat-number">{{ user.subscriptionsCount || 0 }}</span>
+            <span class="stat-label">following</span>
+          </div>
+
+          <span class="chip" *ngIf="user.role === 'ADMIN'">Admin</span>
+        </div>
+      </mat-card>
+    </div>
+  </div>
 </div>
