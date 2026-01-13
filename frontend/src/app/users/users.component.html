@@ -3,7 +3,6 @@
         <mat-form-field appearance="outline" class="search-field">
             <mat-label>Search users by name or username</mat-label>
             <input matInput [formControl]="searchControl" placeholder="e.g., john doe or johndoe" type="search">
-            <mat-icon matSuffix *ngIf="searchControl.value">close</mat-icon>
             <button mat-icon-button matSuffix (click)="clearSearch()" *ngIf="searchControl.value">
                 <mat-icon>close</mat-icon>
             </button>
@@ -21,8 +20,9 @@
         <div class="users-grid" *ngIf="!loading && users.length">
             <mat-card *ngFor="let user of users" class="user-card" routerLink="/profile/{{ user.username }}">
                 <mat-card-header>
-                    <img mat-card-avatar [src]="user.avatarUrl || 'assets/default-avatar.png'"
-                        alt="{{ user.name || user.username }}">
+                    <img mat-card-avatar [src]="getAvatar(user)" (error)="onImgError($event)"
+                        alt="{{ user.name || user.username }}" />
+
                     <mat-card-title>{{ user.name || user.username }}</mat-card-title>
                     <mat-card-subtitle>@{{ user.username }}</mat-card-subtitle>
                 </mat-card-header>

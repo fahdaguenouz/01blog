@@ -1,7 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl,ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { debounceTime, distinctUntilChanged, switchMap, startWith } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  startWith,
+  map,
+  catchError,
+  of,
+  tap,
+} from 'rxjs';
 import { RouterLink } from '@angular/router';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,12 +26,19 @@ import { MatGridListModule } from '@angular/material/grid-list';
   selector: 'app-users',
   standalone: true,
   imports: [
-    CommonModule, RouterLink, 
-    MatFormFieldModule, MatInputModule, MatCardModule, 
-    MatButtonModule, ReactiveFormsModule, MatProgressSpinnerModule, MatIconModule, MatGridListModule
+    CommonModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCardModule,
+    MatButtonModule,
+    ReactiveFormsModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatGridListModule,
   ],
   templateUrl: './users.component.html',
-  styleUrls: ['./users.component.scss']
+  styleUrls: ['./users.component.scss'],
 })
 export class UsersComponent implements OnInit {
   searchControl = new FormControl('', { nonNullable: true });
@@ -33,35 +49,52 @@ export class UsersComponent implements OnInit {
   constructor(private userService: UserService) {}
 
   ngOnInit() {
-    this.searchControl.valueChanges.pipe(
-      startWith(''),
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(query => {
-        this.loading = true;
-        this.noResults = false;
-        if (!query?.trim()) {
-          this.users = [];
-          this.loading = false;
-          return [];
-        }
-        return this.userService.searchUsers(query);
-      })
-    ).subscribe({
-      next: (results) => {
-        this.users = results;
-        this.noResults = results.length === 0;
+    this.searchControl.valueChanges
+      .pipe(
+        startWith(this.searchControl.value),
+        map((v) => (v || '').trim()),
+        debounceTime(300),
+        distinctUntilChanged(),
+
+        tap(() => {
+          this.loading = true;
+          this.noResults = false;
+        }),
+
+        switchMap((query) => {
+          if (!query) {
+            this.loading = false;
+            this.users = [];
+            this.noResults = false;
+            return of<UserProfile[]>([]);
+          }
+
+          return this.userService.searchUsers(query).pipe(catchError(() => of<UserProfile[]>([])));
+        })
+      )
+      .subscribe((results) => {
+        this.users = results.map((u) => ({
+          ...u,
+          avatarUrl:u.avatarUrl,
+        }));
+        console.log('Search results:', this.users);
+
         this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.users = [];
-        this.noResults = true;
-      }
-    });
+        this.noResults = !this.users.length && !!this.searchControl.value.trim();
+      });
   }
 
   clearSearch() {
     this.searchControl.setValue('');
+  }
+
+
+  getAvatar(user: UserProfile): string {
+    return user.avatarUrl?.trim() ? user.avatarUrl : 'svg/avatar.png';
+  }
+
+  onImgError(ev: Event) {
+    const img = ev.target as HTMLImageElement;
+    img.src = 'svg/avatar.png';
   }
 }
