@@ -16,16 +16,16 @@ export class SvgDonutChartComponent implements OnChanges {
 
   segments: { path: string; color: string; label: string; value: number }[] = [];
   total = 0;
-  
+
   // Updated colors to match theme
   colors = [
-    '#FF9D00',  // Primary orange
-    '#B6771D',  // Secondary gold brown
-    '#26a69a',  // Teal
-    '#66bb6a',  // Green
-    '#ef5350',  // Red
-    '#7e57c2',  // Purple
-    '#FFCF71'   // Light accent
+    '#FF9D00', // Primary orange
+    '#B6771D', // Secondary gold brown
+    '#26a69a', // Teal
+    '#66bb6a', // Green
+    '#ef5350', // Red
+    '#7e57c2', // Purple
+    '#FFCF71', // Light accent
   ];
 
   ngOnChanges(changes: SimpleChanges) {
@@ -33,6 +33,11 @@ export class SvgDonutChartComponent implements OnChanges {
   }
 
   buildSegments() {
+    if (!this.data?.length || !this.labels?.length) {
+      this.segments = [];
+      this.total = 0;
+      return;
+    }
     const values = this.data || [];
     const labels = this.labels || [];
     const total = values.reduce((s, v) => s + v, 0) || 0;
@@ -59,10 +64,9 @@ export class SvgDonutChartComponent implements OnChanges {
     const start = this.polarToCartesian(cx, cy, r, endAngle);
     const end = this.polarToCartesian(cx, cy, r, startAngle);
     const largeArc = endAngle - startAngle <= 180 ? '0' : '1';
-    const outer = [
-      `M ${start.x} ${start.y}`,
-      `A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`,
-    ].join(' ');
+    const outer = [`M ${start.x} ${start.y}`, `A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`].join(
+      ' '
+    );
     const innerR = r - 24;
     const endInner = this.polarToCartesian(cx, cy, innerR, endAngle);
     const startInner = this.polarToCartesian(cx, cy, innerR, startAngle);

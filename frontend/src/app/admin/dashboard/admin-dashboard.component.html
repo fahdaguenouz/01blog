@@ -23,85 +23,57 @@
 
   <!-- Dashboard Content -->
   <div *ngIf="!loading && !error && stats" class="dashboard-content">
-    
+
     <!-- KPI Cards -->
     <section class="kpi-section">
-      <app-kpi-card
-        label="Total Users"
-        [value]="stats.totalUsers"
-        sub="Registered members">
+      <app-kpi-card label="Total Users" [value]="stats.totalUsers" sub="Registered members">
       </app-kpi-card>
 
-      <app-kpi-card
-        label="Total Posts"
-        [value]="stats.totalPosts"
-        sub="Published stories">
+      <app-kpi-card label="Total Posts" [value]="stats.totalPosts" sub="Published stories">
       </app-kpi-card>
 
-      <app-kpi-card
-        label="Open Reports"
-        [value]="stats.openReports"
-        sub="Pending review"
-        [delta]="undefined">
+      <app-kpi-card label="Open Reports" [value]="stats.openReports" sub="Pending review" [delta]="undefined">
       </app-kpi-card>
 
-      <app-kpi-card
-        label="Total Reports"
-        [value]="stats.totalReports"
-        sub="All time reports">
+      <app-kpi-card label="Total Reports" [value]="stats.totalReports" sub="All time reports">
       </app-kpi-card>
 
-      <app-kpi-card
-        label="Categories"
-        [value]="stats.totalCategories"
-        sub="Active topics">
+      <app-kpi-card label="Categories" [value]="stats.totalCategories" sub="Active topics">
       </app-kpi-card>
     </section>
 
     <!-- Charts Grid -->
     <section class="charts-section">
-      
+
       <!-- Posts Trend Chart -->
       <div class="chart-card full-width" *ngIf="trendDataPosts?.length">
         <div class="chart-header">
           <h3 class="chart-title">Posts Activity</h3>
           <div class="period-selector">
-            <button 
-              mat-button 
-              [class.active]="period === '7d'"
-              (click)="setPeriod('7d')">
+            <button mat-button [class.active]="period === '7d'" (click)="setPeriod('7d')">
               7 Days
             </button>
-            <button 
-              mat-button 
-              [class.active]="period === '30d'"
-              (click)="setPeriod('30d')">
+            <button mat-button [class.active]="period === '30d'" (click)="setPeriod('30d')">
               30 Days
             </button>
-            <button 
-              mat-button 
-              [class.active]="period === '6m'"
-              (click)="setPeriod('6m')">
+            <button mat-button [class.active]="period === '6m'" (click)="setPeriod('6m')">
               6 Months
             </button>
           </div>
         </div>
-        
-        <app-svg-line-chart
-          [title]="''"
-          [labels]="trendLabels"
-          [data]="trendDataPosts">
+
+        <app-svg-line-chart [title]="''" [labels]="trendLabels" [data]="trendDataPosts">
         </app-svg-line-chart>
       </div>
 
+  
       <!-- Reports Donut Chart -->
-      <div class="chart-card" *ngIf="reportDonutData?.length">
-        <app-svg-donut-chart
-          [title]="'Reports by Category'"
-          [labels]="reportDonutLabels"
-          [data]="reportDonutData">
+      <div class="chart-card">
+        <app-svg-donut-chart [title]="'Reports by Category'" [labels]="reportDonutLabels" [data]="reportDonutData">
         </app-svg-donut-chart>
       </div>
+
+
 
       <!-- Top Contributors Table -->
       <div class="chart-card" *ngIf="topContributors?.length">

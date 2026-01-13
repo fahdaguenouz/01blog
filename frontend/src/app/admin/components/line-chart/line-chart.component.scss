@@ -191,3 +191,9 @@
     gap: 8px;
   }
 }
+
+
+.chart-card app-svg-donut-chart,
+.chart-card app-top-contributors {
+  margin: 16px 0; // space top & bottom
+}
