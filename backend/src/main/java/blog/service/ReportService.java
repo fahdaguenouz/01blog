@@ -93,6 +93,13 @@ private ReportDto toDto(Report r) {
         .orElse(null);
   }
 
+  String postStatus = null;
+  if (r.getReportedPostId() != null) {
+    postStatus = postRepo.findById(r.getReportedPostId())
+        .map(p -> p.getStatus())
+        .orElse(null);
+  }
+
   return new ReportDto(
       r.getId(),
 
@@ -110,7 +117,9 @@ private ReportDto toDto(Report r) {
       r.getCategory(),
       r.getReason(),
       r.getStatus(),
-      r.getCreatedAt()
+      r.getCreatedAt(),
+      postStatus
+      
   );
 }
 

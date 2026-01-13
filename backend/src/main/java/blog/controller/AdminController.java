@@ -12,6 +12,7 @@ import blog.repository.PostRepository;
 import blog.repository.ReportRepository;
 import blog.repository.UserRepository;
 import blog.service.AdminStatsService;
+import blog.service.PostService;
 import blog.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController // Spring Web
@@ -36,6 +37,7 @@ public class AdminController {
   private final CommentRepository commentRepo;
   private final MediaRepository mediaRepo;
   private final ReportRepository reportRepo;
+  private final PostService postService;
 
   private void assertAdmin(Authentication auth) {
     if (auth == null || !auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
@@ -160,7 +162,6 @@ public class AdminController {
   public record RoleBody(String role) {
   }
 
-
   @DeleteMapping("/posts/{postId}")
   public ResponseEntity<Void> deletePost(@PathVariable UUID postId, Authentication auth) {
     assertAdmin(auth);
@@ -178,6 +179,13 @@ public class AdminController {
     reportRepo.deleteByReportedPostId(postId);
 
     postRepo.delete(post);
+  }
+
+  @PatchMapping("/posts/{postId}/status")
+  public ResponseEntity<?> setStatus(@PathVariable UUID postId, @RequestBody Map<String, String> body) {
+    String status = body.get("status"); // "hidden" or "active"
+    postService.adminSetPostStatus(postId, status);
+    return ResponseEntity.ok().build();
   }
 
 }

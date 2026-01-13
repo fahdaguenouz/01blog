@@ -22,6 +22,8 @@ export interface Report {
   reason: string;
   status: 'waiting' | 'reviewed' | 'resolved';
   createdAt: string;
+
+  reportedPostStatus?: 'active' | 'hidden' | string;
 }
 
 export interface CreatePostReport {

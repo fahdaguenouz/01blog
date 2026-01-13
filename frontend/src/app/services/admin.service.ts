@@ -115,4 +115,12 @@ export class AdminService {
       withCredentials: true,
     });
   }
+
+  setPostStatus(postId: string, status: 'active' | 'hidden') {
+  return this.http.patch<void>(
+    `${this.base}/api/admin/posts/${postId}/status`,
+    { status },
+    { withCredentials: true }
+  );
+}
 }

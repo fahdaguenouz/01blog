@@ -179,7 +179,13 @@ public class PostService {
 
   public PostDetailDto getOne(UUID id, UUID currentUserId) {
     Post p = posts.findById(id)
-        .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    if ("hidden".equalsIgnoreCase(p.getStatus())) {
+      if (currentUserId == null || !p.getAuthor().getId().equals(currentUserId)) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
+      }
+    }
 
     List<CategoryDto> categoryDtos = postCategories.findByPostId(p.getId()).stream()
         .map(pc -> categories.findById(pc.getCategoryId())
@@ -308,18 +314,17 @@ public class PostService {
     });
   }
 
-@Transactional
-public PostDetailDto updatePost(
-    String username,
-    UUID postId,
-    String title,
-    String body,
-    List<MultipartFile> newMediaFiles,
-    List<String> mediaDescriptions,
-    List<UUID> existingMediaIds,
-    List<Boolean> removeExistingFlags,
-    List<UUID> categoryIds
-) {
+  @Transactional
+  public PostDetailDto updatePost(
+      String username,
+      UUID postId,
+      String title,
+      String body,
+      List<MultipartFile> newMediaFiles,
+      List<String> mediaDescriptions,
+      List<UUID> existingMediaIds,
+      List<Boolean> removeExistingFlags,
+      List<UUID> categoryIds) {
 
     User user = users.findByUsername(username)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
@@ -328,7 +333,7 @@ public PostDetailDto updatePost(
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     if (!post.getAuthor().getId().equals(user.getId())) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     post.setTitle(title);
@@ -336,8 +341,7 @@ public PostDetailDto updatePost(
     posts.save(post);
 
     /* ---------- LOAD CURRENT MEDIA ---------- */
-    List<PostMedia> existingMedia =
-        postMediaRepository.findByPostIdOrderByPositionAsc(postId);
+    List<PostMedia> existingMedia = postMediaRepository.findByPostIdOrderByPositionAsc(postId);
 
     Map<UUID, PostMedia> dbMap = existingMedia.stream()
         .collect(Collectors.toMap(PostMedia::getId, pm -> pm));
@@ -346,99 +350,99 @@ public PostDetailDto updatePost(
 
     /* ---------- EXISTING MEDIA ---------- */
     if (existingMediaIds != null) {
-        for (int i = 0; i < existingMediaIds.size(); i++) {
-            UUID id = existingMediaIds.get(i);
-            boolean remove = removeExistingFlags != null
-                && removeExistingFlags.size() > i
-                && Boolean.TRUE.equals(removeExistingFlags.get(i));
+      for (int i = 0; i < existingMediaIds.size(); i++) {
+        UUID id = existingMediaIds.get(i);
+        boolean remove = removeExistingFlags != null
+            && removeExistingFlags.size() > i
+            && Boolean.TRUE.equals(removeExistingFlags.get(i));
 
-            PostMedia pm = dbMap.get(id);
-            if (pm == null) continue;
+        PostMedia pm = dbMap.get(id);
+        if (pm == null)
+          continue;
 
-            if (remove) {
-                postMediaRepository.delete(pm);
-            } else {
-                pm.setDescription(
-                    mediaDescriptions != null && mediaDescriptions.size() > i
-                        ? mediaDescriptions.get(i)
-                        : null
-                );
-                pm.setPosition(position++);
-                postMediaRepository.save(pm);
-            }
+        if (remove) {
+          postMediaRepository.delete(pm);
+        } else {
+          pm.setDescription(
+              mediaDescriptions != null && mediaDescriptions.size() > i
+                  ? mediaDescriptions.get(i)
+                  : null);
+          pm.setPosition(position++);
+          postMediaRepository.save(pm);
         }
+      }
     }
 
     /* ---------- NEW MEDIA ---------- */
     if (newMediaFiles != null) {
-        for (MultipartFile file : newMediaFiles) {
-            if (file.isEmpty()) continue;
+      for (MultipartFile file : newMediaFiles) {
+        if (file.isEmpty())
+          continue;
 
-            var stored = mediaStorage.save(file);
+        var stored = mediaStorage.save(file);
 
-            Media media = new Media();
-            media.setUserId(user.getId());
-            media.setUrl(stored.url());
-            media.setMediaType(file.getContentType());
-            media.setSize((int) file.getSize());
-            mediaRepo.save(media);
+        Media media = new Media();
+        media.setUserId(user.getId());
+        media.setUrl(stored.url());
+        media.setMediaType(file.getContentType());
+        media.setSize((int) file.getSize());
+        mediaRepo.save(media);
 
-            PostMedia pm = new PostMedia();
-            pm.setPostId(postId);
-            pm.setMediaId(media.getId());
-            pm.setPosition(position++);
-            pm.setCreatedAt(Instant.now());
-            postMediaRepository.save(pm);
-        }
+        PostMedia pm = new PostMedia();
+        pm.setPostId(postId);
+        pm.setMediaId(media.getId());
+        pm.setPosition(position++);
+        pm.setCreatedAt(Instant.now());
+        postMediaRepository.save(pm);
+      }
     }
 
     /* ---------- CATEGORIES ---------- */
     postCategories.deleteByPostId(postId);
     if (categoryIds != null) {
-        categoryIds.forEach(cid -> {
-            PostCategory pc = new PostCategory();
-            pc.setPostId(postId);
-            pc.setCategoryId(cid);
-            postCategories.save(pc);
-        });
+      categoryIds.forEach(cid -> {
+        PostCategory pc = new PostCategory();
+        pc.setPostId(postId);
+        pc.setCategoryId(cid);
+        postCategories.save(pc);
+      });
     }
 
     List<CategoryDto> categoryDtos = postCategories.findByPostId(postId).stream()
-    .map(pc -> categories.findById(pc.getCategoryId())
-        .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
-        .orElse(null))
-    .filter(Objects::nonNull)
-    .toList();
+        .map(pc -> categories.findById(pc.getCategoryId())
+            .map(c -> new CategoryDto(c.getId(), c.getName(), c.getSlug()))
+            .orElse(null))
+        .filter(Objects::nonNull)
+        .toList();
 
-List<PostMediaDto> mediaDtos = postMediaRepository
-    .findByPostIdOrderByPositionAsc(postId)
-    .stream()
-    .map(pm -> {
-        Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
-        if (m == null) return null;
+    List<PostMediaDto> mediaDtos = postMediaRepository
+        .findByPostIdOrderByPositionAsc(postId)
+        .stream()
+        .map(pm -> {
+          Media m = mediaRepo.findById(pm.getMediaId()).orElse(null);
+          if (m == null)
+            return null;
 
-        return new PostMediaDto(
-            pm.getId(),
-            m.getId(),
-            m.getUrl(),
-            m.getMediaType(),
-            pm.getDescription(),
-            pm.getPosition()
-        );
-    })
-    .filter(Objects::nonNull)
-    .toList();
+          return new PostMediaDto(
+              pm.getId(),
+              m.getId(),
+              m.getUrl(),
+              m.getMediaType(),
+              pm.getDescription(),
+              pm.getPosition());
+        })
+        .filter(Objects::nonNull)
+        .toList();
 
-return PostMapper.toDetail(
-    post,
-    mediaRepo,
-    categoryDtos,
-    mediaDtos,
-    false,
-    false
-);
+    return PostMapper.toDetail(
+        post,
+        mediaRepo,
+        categoryDtos,
+        mediaDtos,
+        false,
+        false);
 
-}
+  }
 
   public void deletePost(String username, UUID id) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -619,6 +623,18 @@ return PostMapper.toDetail(
               isSaved);
         })
         .toList();
+  }
+
+  public void adminSetPostStatus(UUID postId, String status) {
+    if (!"active".equalsIgnoreCase(status) && !"hidden".equalsIgnoreCase(status)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
+    }
+
+    Post post = posts.findById(postId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    post.setStatus(status.toLowerCase());
+    posts.save(post);
   }
 
 }

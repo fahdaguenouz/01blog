@@ -138,4 +138,62 @@ export class AdminReportsComponent implements OnInit {
       });
     });
   }
+
+  hidePost(report: Report) {
+    const postId = report.reportedPostId;
+    if (!postId) return;
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Hide post',
+        message: 'Hide this post from the app?',
+      },
+    });
+
+    ref.afterClosed().subscribe((yes) => {
+      if (!yes) return;
+
+      this.admin.setPostStatus(postId, 'hidden').subscribe({
+        next: () => {
+          report.reportedPostStatus = 'hidden';
+          this.snack.open('Post hidden', 'Close', { duration: 2500 });
+          // optionally: mark report reviewed/resolved
+          this.reportsApi.updateReportStatus(report.id, 'reviewed').subscribe({
+            next: () => this.load(),
+            error: () => this.load(),
+          });
+        },
+        error: () => this.snack.open('Failed to hide post', 'Close', { duration: 3000 }),
+      });
+    });
+  }
+
+  activatePost(report: Report) {
+    const postId = report.reportedPostId;
+    if (!postId) return;
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Activate post',
+        message: 'Make this post visible again?',
+      },
+    });
+
+    ref.afterClosed().subscribe((yes) => {
+      if (!yes) return;
+
+      this.admin.setPostStatus(postId, 'active').subscribe({
+        next: () => {
+          report.reportedPostStatus = 'active';
+
+          this.snack.open('Post activated', 'Close', { duration: 2500 });
+          this.reportsApi.updateReportStatus(report.id, 'reviewed').subscribe({
+            next: () => this.load(),
+            error: () => this.load(),
+          });
+        },
+        error: () => this.snack.open('Failed to activate post', 'Close', { duration: 3000 }),
+      });
+    });
+  }
 }
