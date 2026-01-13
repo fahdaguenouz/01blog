@@ -2,6 +2,7 @@
 package blog.config;
 
 import blog.repository.SessionRepository;
+import blog.repository.UserRepository;
 import blog.security.JwtAuthFilter;
 import blog.security.JwtService;
 
@@ -20,7 +21,7 @@ import java.util.*;
 public class SecurityConfig {
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService,SessionRepository sessions) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService,SessionRepository sessions, UserRepository users) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -43,7 +44,7 @@ public class SecurityConfig {
             .requestMatchers("/api/posts/user/**").permitAll()
 
             .anyRequest().authenticated())
-       .addFilterBefore(new JwtAuthFilter(jwtService, sessions), UsernamePasswordAuthenticationFilter.class);
+       .addFilterBefore(new JwtAuthFilter(jwtService, sessions,users), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }

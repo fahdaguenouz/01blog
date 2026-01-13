@@ -9,6 +9,7 @@ import { provideToastr } from 'ngx-toastr';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authTokenInterceptor } from './app/core/auth-token.interceptor';
 import { authErrorInterceptor } from './app/core/auth-error.interceptor';
+import { httpErrorSnackInterceptor } from './app/core/http-error-snack.interceptor';
 
 bootstrapApplication(App, {
   providers: [
@@ -17,7 +18,7 @@ bootstrapApplication(App, {
     provideToastr(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authTokenInterceptor,authErrorInterceptor])
-    )
-  ]
-}).catch(err => console.error(err));
+      withInterceptors([authTokenInterceptor,httpErrorSnackInterceptor, authErrorInterceptor])
+    ),
+  ],
+}).catch((err) => console.error(err));

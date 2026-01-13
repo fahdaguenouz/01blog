@@ -1,6 +1,8 @@
+// src/main/java/blog/security/JwtAuthFilter.java
 package blog.security;
 
 import blog.repository.SessionRepository;
+import blog.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -26,10 +28,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
   private final SessionRepository sessions;
+  private final UserRepository users;
 
-  public JwtAuthFilter(JwtService jwtService, SessionRepository sessions) {
+  public JwtAuthFilter(JwtService jwtService, SessionRepository sessions, UserRepository users) {
     this.jwtService = jwtService;
     this.sessions = sessions;
+    this.users = users;
   }
 
   private String sha256(String value) {
@@ -42,6 +46,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
   }
 
+  private void writeJson(HttpServletResponse response, int status, String message) throws IOException {
+    response.setStatus(status);
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+    response.getWriter().write("{\"message\":\"" + message.replace("\"", "\\\"") + "\"}");
+  }
+
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
       throws ServletException, IOException {
@@ -52,7 +63,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       String token = header.substring(7);
 
       try {
-        // Parse JWT
         Jws<Claims> jws = Jwts.parserBuilder()
             .setSigningKey(jwtService.getSecretKey())
             .build()
@@ -66,6 +76,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (username != null && uidStr != null) {
           UUID uid = UUID.fromString(uidStr);
 
+          // ✅ BAN CHECK (kick out immediately)
+          var uOpt = users.findById(uid);
+          if (uOpt.isEmpty() || (uOpt.get().getStatus() != null && uOpt.get().getStatus().equalsIgnoreCase("banned"))) {
+            sessions.deleteByUserId(uid); // kill session
+            writeJson(response, HttpServletResponse.SC_FORBIDDEN,
+                "Your account has been banned. Please contact support.");
+            return;
+          }
+
           // ✅ enforce "one active session per user"
           var sessionOpt = sessions.findByUserId(uid);
           if (sessionOpt.isEmpty()) {
@@ -75,14 +94,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
           var session = sessionOpt.get();
 
-          // Optional: also respect DB expires_at (in addition to JWT exp)
+          // Expired in DB
           if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(Instant.now())) {
             sessions.deleteByUserId(uid);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
           }
 
-          // Compare hashed token with stored hashed token
+          // Token mismatch => logged elsewhere
           if (!session.getToken().equals(sha256(token))) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -92,13 +111,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
               ? List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
               : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-          Authentication auth =
-              new UsernamePasswordAuthenticationToken(username, null, authorities);
-
+          Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
           SecurityContextHolder.getContext().setAuthentication(auth);
         }
       } catch (Exception e) {
-        // invalid token -> leave anonymous
+        // invalid token => anonymous
       }
     }
 

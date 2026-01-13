@@ -53,7 +53,7 @@ export class AuthService {
   }
 
   /** ✅ call this when you receive 401 (session invalidated on server) */
-  forceLogout(reason: 'expired' | 'invalid' | 'conflict' = 'invalid'): void {
+  forceLogout(reason:'banned'| 'expired' | 'invalid' | 'conflict' = 'invalid'): void {
     this.clearAuth();
     // optional: show toast later
     this.router.navigate(['/auth/login'], {

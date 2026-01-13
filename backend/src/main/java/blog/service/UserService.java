@@ -113,46 +113,44 @@ public class UserService {
     }
   }
 
-  public AuthResponse authenticate(LoginRequest request) {
-    if (request == null || request.getUsername() == null || request.getPassword() == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password are required");
-    }
-
-    User user = users.findByUsername(request.getUsername())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-
-    // ✅ IMPORTANT: use BCrypt (make sure User.password is stored encoded at
-    // register)
-    // If you don't have passwordEncoder injected yet, add it as a field in
-    // UserService.
-    // private final PasswordEncoder passwordEncoder;
-    // and use: if (!passwordEncoder.matches(...)) { ... }
-    if (!user.getPassword().equals(request.getPassword())) {
-      // replace this with BCrypt matches when you wire PasswordEncoder
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-    }
-
-    // Create JWT
-    String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
-
-    // Session expiration should match JWT expiration
-    Instant now = Instant.now();
-    Instant exp = now.plusMillis(jwtService.getExpirationMs());
-
-    // ✅ One-session rule: upsert by userId (user_id is UNIQUE)
-    Session s = sessions.findByUserId(user.getId()).orElseGet(() -> Session.builder()
-        .userId(user.getId())
-        .build());
-
-    // Store token HASH, not token itself
-    s.setToken(sha256(token));
-    s.setCreatedAt(now);
-    s.setExpiresAt(exp);
-
-    sessions.save(s);
-
-    return new AuthResponse(token, user, user.getRole().name());
+// inside UserService.java
+public AuthResponse authenticate(LoginRequest request) {
+  if (request == null || request.getUsername() == null || request.getUsername().isBlank()
+      || request.getPassword() == null || request.getPassword().isBlank()) {
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please enter username and password.");
   }
+
+  User user = users.findByUsername(request.getUsername())
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password."));
+
+  // ✅ BAN CHECK (before password is fine)
+  if (user.getStatus() != null && user.getStatus().equalsIgnoreCase("banned")) {
+    throw new ResponseStatusException(
+        HttpStatus.FORBIDDEN,
+        "Your account has been banned. Please contact support if you believe this is a mistake."
+    );
+  }
+
+  // Password check (replace with BCrypt later)
+  if (!user.getPassword().equals(request.getPassword())) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password.");
+  }
+
+  String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+
+  Instant now = Instant.now();
+  Instant exp = now.plusMillis(jwtService.getExpirationMs());
+
+  Session s = sessions.findByUserId(user.getId())
+      .orElseGet(() -> Session.builder().userId(user.getId()).build());
+
+  s.setToken(sha256(token)); // store HASH
+  s.setCreatedAt(now);
+  s.setExpiresAt(exp);
+  sessions.save(s);
+
+  return new AuthResponse(token, user, user.getRole().name());
+}
 
 public void logout(String tokenHeader) {
   if (tokenHeader == null || tokenHeader.isBlank()) {
