@@ -230,11 +230,11 @@ public void logout(String tokenHeader) {
   }
 
   public User getCurrentUser(Authentication auth) {
-    // principal name is username in your auth flow
-    String username = auth.getName();
-    return users.findByUsername(username)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.UNAUTHORIZED, "User not found for authentication"));
+   if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+  }
+  return users.findByUsername(auth.getName())
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
   }
 
   public void assertAdmin(Authentication auth) {

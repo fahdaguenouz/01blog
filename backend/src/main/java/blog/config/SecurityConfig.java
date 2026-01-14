@@ -21,7 +21,8 @@ import java.util.*;
 public class SecurityConfig {
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService,SessionRepository sessions, UserRepository users) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, JwtService jwtService, SessionRepository sessions,
+      UserRepository users) throws Exception {
     http
         .csrf(csrf -> csrf.disable())
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -30,21 +31,30 @@ public class SecurityConfig {
             .requestMatchers("/uploads/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
 
-            // Public profile view
-            .requestMatchers("/api/users/by-username/**").permitAll()
-            // ADMIN ONLY endpoints
+            // ✅ PUBLIC USERS
+            .requestMatchers(HttpMethod.GET, "/api/users/by-username/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/users/search").permitAll()
+
+            // ✅ AUTH USERS
+            .requestMatchers("/api/users/me/**").authenticated()
+            .requestMatchers("/api/users/*/subscribe").authenticated()
+            .requestMatchers(HttpMethod.GET, "/api/users/*/followers").authenticated()
+            .requestMatchers(HttpMethod.GET, "/api/users/*/following").authenticated()
+
+            // ADMIN
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.GET, "/api/reports/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.PATCH, "/api/reports/**").hasRole("ADMIN")
-            .requestMatchers(HttpMethod.DELETE, "/api/reports/**").hasRole("ADMIN")
+            .requestMatchers("/api/reports/**").hasRole("ADMIN")
+
             .requestMatchers("/api/notifications/**").authenticated()
 
-            // Public posts/categories
+            // Public categories
             .requestMatchers("/api/categories/**").permitAll()
+
+            // Public user posts
             .requestMatchers("/api/posts/user/**").permitAll()
 
             .anyRequest().authenticated())
-       .addFilterBefore(new JwtAuthFilter(jwtService, sessions,users), UsernamePasswordAuthenticationFilter.class);
+        .addFilterBefore(new JwtAuthFilter(jwtService, sessions, users), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
