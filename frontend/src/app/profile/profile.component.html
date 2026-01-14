@@ -13,7 +13,7 @@
 
   <!-- Profile Content -->
   <div *ngIf="!loading && !error && user" class="profile-container">
-    
+
     <!-- Profile Header -->
     <div class="profile-header">
       <div class="avatar-container">
@@ -28,7 +28,7 @@
           <h1 class="user-name">{{ user.name }}</h1>
           <div class="username">@{{ user.username }}</div>
         </div>
-        
+
         <div class="profile-meta">
           <span *ngIf="user.age !== null" class="meta-item">Age: {{ user.age }}</span>
           <span *ngIf="user.email" class="meta-item email">{{ user.email }}</span>
@@ -95,7 +95,8 @@
         <!-- Post Content -->
         <div class="post-body">
           <h2 class="post-title">{{ post.title || 'Untitled' }}</h2>
-          <p class="post-excerpt">{{ post.excerpt }}</p>
+          <p class="post-excerpt">{{ snippet(post.body) }}</p>
+
         </div>
 
         <!-- Cover Media -->
@@ -137,28 +138,22 @@
       </div>
 
       <!-- Empty -->
-      <div *ngIf="!(loadingFollowers || loadingFollowing) && (showFollowers ? followers.length === 0 : following.length === 0)"
-           class="modal-empty">
+      <div
+        *ngIf="!(loadingFollowers || loadingFollowing) && (showFollowers ? followers.length === 0 : following.length === 0)"
+        class="modal-empty">
         <mat-icon class="empty-icon">group_off</mat-icon>
         <h4>{{ showFollowers ? 'No followers yet' : 'Not following anyone yet' }}</h4>
-        <p>{{ showFollowers ? 'When people follow you, they’ll appear here.' : 'Users you follow will appear here.' }}</p>
+        <p>{{ showFollowers ? 'When people follow you, they’ll appear here.' : 'Users you follow will appear here.' }}
+        </p>
       </div>
 
       <!-- List -->
       <div *ngIf="!(loadingFollowers || loadingFollowing) && (showFollowers ? followers.length : following.length)"
-           class="users-list">
-        <button
-          type="button"
-          class="user-row"
-          *ngFor="let u of (showFollowers ? followers : following)"
-          (click)="goToUserProfile(u.username)"
-        >
-          <img
-            class="user-avatar"
-            [src]="u.avatarUrl?.trim() ? u.avatarUrl : 'svg/avatar.png'"
-            (error)="onImgError($event)"
-            alt="Avatar"
-          />
+        class="users-list">
+        <button type="button" class="user-row" *ngFor="let u of (showFollowers ? followers : following)"
+          (click)="goToUserProfile(u.username)">
+          <img class="user-avatar" [src]="u.avatarUrl?.trim() ? u.avatarUrl : 'svg/avatar.png'"
+            (error)="onImgError($event)" alt="Avatar" />
 
           <div class="user-info">
             <div class="user-name">{{ u.name || u.username }}</div>

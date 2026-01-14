@@ -25,12 +25,12 @@ export interface Post {
   authorName: string;
   avatarUrl?: string;
   title: string;
-  excerpt: string;
+  // excerpt: string;
   body?: string;
   status?: 'active' | 'hidden';
 
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video';
+  // mediaUrl?: string;
+  // mediaType?: 'image' | 'video';
   createdAt: string;
   likes: number;
   comments: number;
@@ -164,23 +164,27 @@ export class PostService {
   }
 
   private normalizePost(post: Post): Post {
-    // RESET (important to avoid leftovers)
     post.coverMedia = undefined;
 
+    // ✅ derive excerpt from body (since summary dto removed)
+    const body = (post.body || '').trim();
+    (post as any).excerpt = body.length > 160 ? body.slice(0, 160) + '…' : body; // optional if you still want excerpt usage
+
     if (post.media && post.media.length > 0) {
+      // normalize urls + type
       post.media = post.media.map((m) => ({
         ...m,
-        url: m.url.startsWith('http') ? m.url : `${this.base}${m.url}`,
-        type: m.mediaType.startsWith('image')
+        url: m.url?.startsWith('http') ? m.url : `${this.base}${m.url}`,
+        type: m.mediaType?.startsWith('image')
           ? 'image'
-          : m.mediaType.startsWith('video')
+          : m.mediaType?.startsWith('video')
           ? 'video'
           : undefined,
       }));
 
-      post.coverMedia =
-        post.media.find((m) => m.position === 1) ??
-        post.media.sort((a, b) => a.position - b.position)[0];
+      // ✅ always pick smallest position (0 is first)
+      const sorted = [...post.media].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+      post.coverMedia = sorted[0];
     }
 
     return post;

@@ -19,10 +19,10 @@ import { CategoryService } from '../services/category.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSelectModule,
-    MatFormFieldModule
+    MatFormFieldModule,
   ],
   templateUrl: './feed.component.html',
-  styleUrls: ['./feed.component.scss']
+  styleUrls: ['./feed.component.scss'],
 })
 export class FeedComponent implements OnInit {
   posts: Post[] = [];
@@ -56,7 +56,7 @@ export class FeedComponent implements OnInit {
   loadCategories() {
     this.categoryService.list().subscribe({
       next: (cats) => (this.categories = cats),
-      error: () => (this.categories = [])
+      error: () => (this.categories = []),
     });
   }
 
@@ -69,7 +69,7 @@ export class FeedComponent implements OnInit {
         this.posts = posts;
         this.loading = false;
       },
-      error: () => (this.loading = false)
+      error: () => (this.loading = false),
     });
   }
 
@@ -108,6 +108,10 @@ export class FeedComponent implements OnInit {
       });
     }
   }
+  snippet(text?: string, max = 160): string {
+    const t = (text || '').trim();
+    return t.length > max ? t.slice(0, max) + '…' : t;
+  }
 
   goToPostDetail(post: Post) {
     this.router.navigate(['/post', post.id]);
@@ -118,22 +122,20 @@ export class FeedComponent implements OnInit {
   }
 
   formatDate(date: string | Date): string {
-  const d = new Date(date);
-  const now = new Date();
+    const d = new Date(date);
+    const now = new Date();
 
-  // Normalize to midnight (important!)
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const postDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    // Normalize to midnight (important!)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const postDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-  const diffDays =
-    (today.getTime() - postDay.getTime()) / (1000 * 60 * 60 * 24);
+    const diffDays = (today.getTime() - postDay.getTime()) / (1000 * 60 * 60 * 24);
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
 
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
 }

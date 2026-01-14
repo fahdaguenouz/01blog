@@ -16,6 +16,7 @@ public record PostDetailDto(
     int likes,
     int comments,
     Instant createdAt,
+    String status,
     List<PostMediaDto> media,
     List<CategoryDto> categories,
     boolean isLiked,

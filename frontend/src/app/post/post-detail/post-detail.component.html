@@ -68,6 +68,11 @@
             </div>
         </header>
 
+         <!-- Post Content -->
+        <div class="post-content">
+            <p>{{ post.body }}</p>
+        </div>
+
         <!-- Post Media -->
         <div *ngIf="post.media?.length" class="post-media">
             <ng-container *ngFor="let m of post.media | orderByPosition">
@@ -86,10 +91,7 @@
             </ng-container>
         </div>
 
-        <!-- Post Content -->
-        <div class="post-content">
-            <p>{{ post.body }}</p>
-        </div>
+       
 
         <!-- Post Actions -->
         <div class="post-actions">

@@ -1,7 +1,6 @@
 package blog.controller;
 
 import blog.dto.PostDetailDto;
-import blog.dto.PostSummaryDto;
 import blog.mapper.PostMapper;
 import blog.models.Post;
 import blog.models.User;
@@ -40,7 +39,7 @@ private final PostMediaRepository postMediaRepository;
   }
 
  @GetMapping("/feed")
-public List<PostSummaryDto> getFeed(
+public List<PostDetailDto> getFeed(
     @RequestParam(required = false) UUID categoryId,
     @RequestParam(defaultValue = "new") String sort
 ) {
@@ -127,38 +126,30 @@ public PostDetailDto update(
 
   // Likes
   @PostMapping("/{postId}/like")
-  public PostSummaryDto likePost(@PathVariable UUID postId, Authentication authentication) {
-    String username = authentication.getName();
-    postService.likePost(username, postId);
-    Post post = postService.findPostById(postId);
-     boolean isSaved = false;
-    boolean isLiked = postService.isPostLikedByUser(postId, username);
-     return PostMapper.toSummary(post, mediaRepository, postMediaRepository, isLiked, isSaved);
-  }
+public PostDetailDto likePost(@PathVariable UUID postId, Authentication authentication) {
+  String username = authentication.getName();
+  return postService.likeAndReturn(username, postId);
+}
 
-  @DeleteMapping("/{postId}/like")
-  public PostSummaryDto unlikePost(@PathVariable UUID postId, Authentication authentication) {
-    String username = authentication.getName();
-    postService.unlikePost(username, postId);
-    Post post = postService.findPostById(postId);
-    boolean isLiked = postService.isPostLikedByUser(postId, username);
-     boolean isSaved = false;
-    return PostMapper.toSummary(post, mediaRepository, postMediaRepository, isLiked, isSaved);
-  }
+@DeleteMapping("/{postId}/like")
+public PostDetailDto unlikePost(@PathVariable UUID postId, Authentication authentication) {
+  String username = authentication.getName();
+  return postService.unlikeAndReturn(username, postId);
+}
 
 
 @GetMapping("/user/{userId}/posts") 
-public List<PostSummaryDto> getUserPosts(@PathVariable UUID userId) {
+public List<PostDetailDto> getUserPosts(@PathVariable UUID userId) {
   return postService.getPostsByAuthor(userId);
 }
 
 @GetMapping("/user/{userId}/liked")
-public List<PostSummaryDto> getUserLikedPosts(@PathVariable UUID userId) {
+public List<PostDetailDto> getUserLikedPosts(@PathVariable UUID userId) {
   return postService.getLikedPostsForUser(userId);
 }
 
 @GetMapping("/user/{userId}/saved")
-public List<PostSummaryDto> getUserSavedPosts(@PathVariable UUID userId) {
+public List<PostDetailDto> getUserSavedPosts(@PathVariable UUID userId) {
   return postService.getSavedPostsForUser(userId);
 }
 @PostMapping("/{postId}/save")

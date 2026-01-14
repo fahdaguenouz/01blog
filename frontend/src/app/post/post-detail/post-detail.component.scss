@@ -1,4 +1,4 @@
-@import "../../../styles/variables.scss";
+@import '../../../styles/variables.scss';
 
 .post-detail-wrapper {
   min-height: calc(100vh - 64px);
@@ -151,8 +151,18 @@
       margin: 12px 0 0;
       font-size: 14px;
       color: $text-color;
-      text-align: center;
-      font-style: italic;
+      text-align: left;
+      font-style: normal;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+    }
+    .media-caption {
+      padding: 12px 14px;
+      background: rgba(255, 157, 0, 0.05);
+      border-left: 3px solid rgba(255, 157, 0, 0.35);
+      border-radius: 10px;
     }
   }
 }
@@ -525,7 +535,6 @@
     opacity: 0.9;
   }
 }
-
 
 .comment-header {
   display: flex;

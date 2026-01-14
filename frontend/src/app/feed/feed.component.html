@@ -63,7 +63,8 @@
         <!-- Post Content -->
         <div class="post-body">
           <h2 class="post-title">{{ post.title || 'Untitled' }}</h2>
-          <p class="post-excerpt">{{ post.excerpt }}</p>
+          <p class="post-excerpt">{{ snippet(post.body) }}</p>
+
         </div>
 
         <!-- Cover Media (if exists) -->
