@@ -37,6 +37,10 @@ spring.log
 Thumbs.db
 
 
+/backend/uploads/
+
+
+
 # =========================
 # Angular / Frontend
 # =========================
