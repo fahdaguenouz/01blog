@@ -166,6 +166,35 @@ export class PostDetailComponent implements OnInit {
       error: () => alert('Failed to add comment'),
     });
   }
+  canDeleteComment(c: Comment): boolean {
+  if (!this.currentUser || !this.post) return false;
+  return (
+    c.userId === this.currentUser.id ||      // comment owner
+    this.post.authorId === this.currentUser.id || // post owner
+    this.isAdmin                               // optional (remove if you don’t want admins)
+  );
+}
+
+onDeleteComment(c: Comment) {
+  if (!this.post) return;
+
+  const ok = window.confirm('Delete this comment?');
+  if (!ok) return;
+
+  this.posts.deleteComment(this.post.id, c.id).subscribe({
+    next: () => {
+      // remove locally
+      this.comments = this.comments.filter(x => x.id !== c.id);
+
+      // update count UI
+      if (this.post && this.post.comments > 0) this.post.comments--;
+    },
+    error: (err) => {
+      console.error('Delete comment failed', err);
+      alert('Failed to delete comment');
+    },
+  });
+}
 
   onEditPost() {
     if (!this.post) return;

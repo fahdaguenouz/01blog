@@ -1,15 +1,15 @@
 <div class="hidden-post-banner" *ngIf="shouldShowHiddenBanner">
-  <mat-icon>visibility_off</mat-icon>
-  <div>
-    <strong>This post is hidden</strong>
-    <p>This post has been hidden by the admin.</p>
-  </div>
+    <mat-icon>visibility_off</mat-icon>
+    <div>
+        <strong>This post is hidden</strong>
+        <p>This post has been hidden by the admin.</p>
+    </div>
 </div>
 
 
 
-<div class="post-detail-wrapper" >
-    <article class="post-detail-container" *ngIf="post" >
+<div class="post-detail-wrapper">
+    <article class="post-detail-container" *ngIf="post">
         <!-- Post Header -->
         <header class="post-header">
             <h1 class="post-title">{{ post.title }}</h1>
@@ -125,6 +125,10 @@
                             <span class="comment-author">{{ comment.username }}</span>
                             <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
                         </div>
+                        <button *ngIf="canDeleteComment(comment)" mat-icon-button matTooltip="Delete comment"
+                            (click)="onDeleteComment(comment)" class="comment-delete-btn">
+                            <mat-icon color="warn">delete</mat-icon>
+                        </button>
                     </div>
                     <div class="comment-content">
                         <p>{{ comment.text }}</p>

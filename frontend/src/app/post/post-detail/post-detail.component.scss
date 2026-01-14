@@ -525,3 +525,14 @@
     opacity: 0.9;
   }
 }
+
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comment-delete-btn {
+  margin-left: auto;
+}

@@ -490,7 +490,7 @@ public class PostService {
 
           String username = user != null ? user.getUsername() : "user";
 
-          String avatarUrl = "svg/avatar.png"; // ✅ default
+          String avatarUrl = "svg/avatar.png"; 
 
           if (user != null && user.getAvatarMediaId() != null) {
             avatarUrl = mediaRepo.findById(user.getAvatarMediaId())
@@ -501,6 +501,7 @@ public class PostService {
           return new CommentDto(
               c.getId(),
               c.getPostId(),
+              c.getUserId(),  
               username,
               avatarUrl,
               c.getText(),
@@ -509,15 +510,37 @@ public class PostService {
         .toList();
   }
 
-  public void deleteComment(String username, UUID postId, UUID commentId) {
-    User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
-    Comment c = comments.findById(commentId).orElseThrow(() -> new IllegalArgumentException("Comment not found"));
-    if (!c.getUserId().equals(user.getId())) {
-      throw new IllegalArgumentException("Forbidden");
-    }
-    comments.delete(c);
-    // Optionally decrement post.comments_count
+
+public void deleteComment(String username, UUID postId, UUID commentId) {
+  User user = users.findByUsername(username)
+      .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+  Comment c = comments.findById(commentId)
+      .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+
+  // safety: comment must belong to that post
+  if (!c.getPostId().equals(postId)) {
+    throw new IllegalArgumentException("Comment does not belong to this post");
   }
+
+  Post post = posts.findById(postId)
+      .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+
+  boolean isCommentOwner = c.getUserId().equals(user.getId());
+  boolean isPostOwner = post.getAuthor() != null && post.getAuthor().getId().equals(user.getId());
+
+  if (!isCommentOwner && !isPostOwner) {
+    throw new IllegalArgumentException("Forbidden");
+  }
+
+  comments.delete(c);
+
+  // ✅ optional but recommended: decrement post.comments_count safely
+  int current = post.getCommentsCount() == null ? 0 : post.getCommentsCount();
+  post.setCommentsCount(Math.max(0, current - 1));
+  posts.saveAndFlush(post);
+}
+
 
   public void savePost(String username, UUID postId) {
     User user = users.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
