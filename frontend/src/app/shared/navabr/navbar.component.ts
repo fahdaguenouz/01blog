@@ -226,6 +226,8 @@ formatNotification(n: AppNotification): string {
       return `${n.actorUsername} saved your post`;
     case 'USER_FOLLOWED':
       return `${n.actorUsername} started following you`;
+      case 'FOLLOWING_POSTED':
+      return `${n.actorUsername} posted a new story`;
     default:
       return 'New notification';
   }

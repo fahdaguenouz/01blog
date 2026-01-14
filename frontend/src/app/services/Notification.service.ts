@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 export interface AppNotification {
   id: string;
-  type: 'POST_LIKED' | 'POST_COMMENTED' | 'POST_SAVED' | 'USER_FOLLOWED';
+  type: 'POST_LIKED' | 'POST_COMMENTED' | 'POST_SAVED' | 'USER_FOLLOWED'| 'FOLLOWING_POSTED';
   actorUsername: string;
   postId?: string;
   createdAt: string;

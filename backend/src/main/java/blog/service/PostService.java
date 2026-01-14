@@ -37,6 +37,8 @@ public class PostService {
   private final SavedPostRepository savedPosts;
   private final PostMediaRepository postMediaRepository;
   private final NotificationService notificationService;
+  private final SubscriptionRepository subscriptions;
+
 
   public PostService(
       PostRepository posts,
@@ -49,7 +51,8 @@ public class PostService {
       PostCategoryRepository postCategories,
       SavedPostRepository savedPosts,
       PostMediaRepository postMediaRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+    SubscriptionRepository subscriptions) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
@@ -61,6 +64,7 @@ public class PostService {
     this.savedPosts = savedPosts;
     this.postMediaRepository = postMediaRepository;
     this.notificationService = notificationService;
+    this.subscriptions = subscriptions;
   }
 
   /*
@@ -147,6 +151,25 @@ public class PostService {
     post.setBody(body);
     post.setStatus("active");
     post = posts.save(post);
+
+   List<UUID> subscriberIds = subscriptions.findSubscriberIdsBySubscribedToId(user.getId());
+  if (subscriberIds != null && !subscriberIds.isEmpty()) {
+    // load all subscribers as User entities (batch)
+    List<User> subs = users.findAllById(subscriberIds);
+
+    for (User target : subs) {
+      // NotificationService.notify already ignores self-notification,
+      // but extra safety is fine:
+      if (target.getId().equals(user.getId())) continue;
+
+      notificationService.notify(
+          target,
+          user,
+          NotificationType.FOLLOWING_POSTED,
+          post
+      );
+    }
+  }
 
     // -------- MEDIA (positions start at 1) --------
     if (mediaFiles != null && !mediaFiles.isEmpty()) {
@@ -349,86 +372,151 @@ public class PostService {
    * ============================================================
    */
 
-public PostDetailDto updatePost(
-    String username,
-    UUID postId,
-    String title,
-    String body,
-    List<MultipartFile> newMediaFiles, // for new blocks
-    List<String> newDescriptions,
-    List<UUID> existingMediaIds,
-    List<Boolean> removeExistingFlags,
-    List<Boolean> replaceExistingFlags,
-    List<String> existingDescriptions,
-    List<MultipartFile> replacementFiles, // only for replaced existing blocks
-    List<String> replacementDescriptions,
-    List<UUID> categoryIds
-) {
-  User user = requireUser(username);
-  Post post = requirePost(postId);
-  assertOwner(post, user);
+  public PostDetailDto updatePost(
+      String username,
+      UUID postId,
+      String title,
+      String body,
+      List<MultipartFile> newMediaFiles, // for new blocks
+      List<String> newDescriptions,
+      List<UUID> existingMediaIds,
+      List<Boolean> removeExistingFlags,
+      List<Boolean> replaceExistingFlags,
+      List<String> existingDescriptions,
+      List<MultipartFile> replacementFiles, // only for replaced existing blocks
+      List<String> replacementDescriptions,
+      List<UUID> categoryIds) {
+    User user = requireUser(username);
+    Post post = requirePost(postId);
+    assertOwner(post, user);
 
-  if (categoryIds == null || categoryIds.isEmpty()) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post must have at least one category");
-  }
+    if (categoryIds == null || categoryIds.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post must have at least one category");
+    }
 
-  post.setTitle(title);
-  post.setBody(body);
-  posts.save(post);
+    post.setTitle(title);
+    post.setBody(body);
+    posts.save(post);
 
-  // Load current post media
-  List<PostMedia> existingMedia = postMediaRepository.findByPostIdOrderByPositionAsc(postId);
-  Map<UUID, PostMedia> dbMap = existingMedia.stream()
-      .collect(Collectors.toMap(PostMedia::getId, pm -> pm));
+    // Load current post media
+    List<PostMedia> existingMedia = postMediaRepository.findByPostIdOrderByPositionAsc(postId);
+    Map<UUID, PostMedia> dbMap = existingMedia.stream()
+        .collect(Collectors.toMap(PostMedia::getId, pm -> pm));
 
-  Set<UUID> seen = new HashSet<>();
-  List<PostMedia> kept = new ArrayList<>();
+    Set<UUID> seen = new HashSet<>();
+    List<PostMedia> kept = new ArrayList<>();
 
-  int replIdx = 0;
+    int replIdx = 0;
 
-  // ----- EXISTING MEDIA (keep/remove/replace) -----
-  if (existingMediaIds != null) {
-    for (int i = 0; i < existingMediaIds.size(); i++) {
-      UUID pmId = existingMediaIds.get(i);
-      if (pmId == null) continue;
+    // ----- EXISTING MEDIA (keep/remove/replace) -----
+    if (existingMediaIds != null) {
+      for (int i = 0; i < existingMediaIds.size(); i++) {
+        UUID pmId = existingMediaIds.get(i);
+        if (pmId == null)
+          continue;
 
-      PostMedia pm = dbMap.get(pmId);
-      if (pm == null) continue;
+        PostMedia pm = dbMap.get(pmId);
+        if (pm == null)
+          continue;
 
-      seen.add(pmId);
+        seen.add(pmId);
 
-      boolean remove = removeExistingFlags != null && removeExistingFlags.size() > i
-          && Boolean.TRUE.equals(removeExistingFlags.get(i));
+        boolean remove = removeExistingFlags != null && removeExistingFlags.size() > i
+            && Boolean.TRUE.equals(removeExistingFlags.get(i));
 
-      boolean replace = replaceExistingFlags != null && replaceExistingFlags.size() > i
-          && Boolean.TRUE.equals(replaceExistingFlags.get(i));
+        boolean replace = replaceExistingFlags != null && replaceExistingFlags.size() > i
+            && Boolean.TRUE.equals(replaceExistingFlags.get(i));
 
-      String desc = (existingDescriptions != null && existingDescriptions.size() > i)
-          ? existingDescriptions.get(i)
-          : null;
+        String desc = (existingDescriptions != null && existingDescriptions.size() > i)
+            ? existingDescriptions.get(i)
+            : null;
 
-      if (remove) {
-        postMediaRepository.delete(pm);
-        continue;
-      }
-
-      // ✅ validate only for kept media
-      if (desc == null || desc.trim().isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
-      }
-
-      if (replace) {
-        if (replacementFiles == null || replIdx >= replacementFiles.size()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Replacement file missing");
+        if (remove) {
+          postMediaRepository.delete(pm);
+          continue;
         }
 
-        MultipartFile file = replacementFiles.get(replIdx);
+        // ✅ validate only for kept media
+        if (desc == null || desc.trim().isEmpty()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
+        }
 
-        String replDesc = (replacementDescriptions != null && replIdx < replacementDescriptions.size())
-            ? replacementDescriptions.get(replIdx)
-            : desc;
+        if (replace) {
+          if (replacementFiles == null || replIdx >= replacementFiles.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Replacement file missing");
+          }
 
-        if (replDesc == null || replDesc.trim().isEmpty()) {
+          MultipartFile file = replacementFiles.get(replIdx);
+
+          String replDesc = (replacementDescriptions != null && replIdx < replacementDescriptions.size())
+              ? replacementDescriptions.get(replIdx)
+              : desc;
+
+          if (replDesc == null || replDesc.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
+          }
+
+          var stored = mediaStorage.save(file);
+          if (stored == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store media");
+          }
+
+          Media media = new Media();
+          media.setUserId(user.getId());
+          media.setUrl(stored.url());
+          media.setMediaType(file.getContentType());
+          media.setSize((int) file.getSize());
+          media.setUploadedAt(OffsetDateTime.now());
+          Media saved = mediaRepo.save(media);
+
+          pm.setMediaId(saved.getId());
+          pm.setDescription(replDesc);
+          replIdx++;
+        } else {
+          pm.setDescription(desc);
+        }
+
+        kept.add(pm);
+      }
+    }
+
+    // ✅ delete DB media that the client did not send back (extra safety)
+    for (PostMedia pm : existingMedia) {
+      if (!seen.contains(pm.getId())) {
+        postMediaRepository.delete(pm);
+      }
+    }
+
+    // ✅ flush deletions first
+    postMediaRepository.flush();
+
+    // ✅ 2-PHASE POSITION UPDATE (prevents uq_post_media_position conflicts)
+    int tmp = 1000;
+    for (PostMedia pm : kept) {
+      pm.setPosition(tmp++);
+    }
+    postMediaRepository.saveAll(kept);
+    postMediaRepository.flush();
+
+    int position = 1;
+    for (PostMedia pm : kept) {
+      pm.setPosition(position++);
+    }
+    postMediaRepository.saveAll(kept);
+    postMediaRepository.flush();
+
+    // ----- NEW MEDIA (append after kept) -----
+    if (newMediaFiles != null) {
+      for (int i = 0; i < newMediaFiles.size(); i++) {
+        MultipartFile file = newMediaFiles.get(i);
+        if (file == null || file.isEmpty())
+          continue;
+
+        String desc = (newDescriptions != null && newDescriptions.size() > i)
+            ? newDescriptions.get(i)
+            : null;
+
+        if (desc == null || desc.trim().isEmpty()) {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
         }
 
@@ -445,93 +533,32 @@ public PostDetailDto updatePost(
         media.setUploadedAt(OffsetDateTime.now());
         Media saved = mediaRepo.save(media);
 
+        PostMedia pm = new PostMedia();
+        pm.setPostId(postId);
         pm.setMediaId(saved.getId());
-        pm.setDescription(replDesc);
-        replIdx++;
-      } else {
         pm.setDescription(desc);
+        pm.setPosition(position++); // continue positions
+        pm.setCreatedAt(Instant.now());
+        postMediaRepository.save(pm);
       }
-
-      kept.add(pm);
     }
-  }
 
-  // ✅ delete DB media that the client did not send back (extra safety)
-  for (PostMedia pm : existingMedia) {
-    if (!seen.contains(pm.getId())) {
-      postMediaRepository.delete(pm);
+    // ----- CATEGORIES (replace all) -----
+    postCategories.deleteByPostId(postId);
+    for (UUID cid : categoryIds) {
+      if (cid == null)
+        continue;
+      if (!categories.existsById(cid))
+        continue;
+
+      PostCategory pc = new PostCategory();
+      pc.setPostId(postId);
+      pc.setCategoryId(cid);
+      postCategories.save(pc);
     }
+
+    return toDetail(post, user.getId());
   }
-
-  // ✅ flush deletions first
-  postMediaRepository.flush();
-
-  // ✅ 2-PHASE POSITION UPDATE (prevents uq_post_media_position conflicts)
-  int tmp = 1000;
-  for (PostMedia pm : kept) {
-    pm.setPosition(tmp++);
-  }
-  postMediaRepository.saveAll(kept);
-  postMediaRepository.flush();
-
-  int position = 1;
-  for (PostMedia pm : kept) {
-    pm.setPosition(position++);
-  }
-  postMediaRepository.saveAll(kept);
-  postMediaRepository.flush();
-
-  // ----- NEW MEDIA (append after kept) -----
-  if (newMediaFiles != null) {
-    for (int i = 0; i < newMediaFiles.size(); i++) {
-      MultipartFile file = newMediaFiles.get(i);
-      if (file == null || file.isEmpty()) continue;
-
-      String desc = (newDescriptions != null && newDescriptions.size() > i)
-          ? newDescriptions.get(i)
-          : null;
-
-      if (desc == null || desc.trim().isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
-      }
-
-      var stored = mediaStorage.save(file);
-      if (stored == null) {
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store media");
-      }
-
-      Media media = new Media();
-      media.setUserId(user.getId());
-      media.setUrl(stored.url());
-      media.setMediaType(file.getContentType());
-      media.setSize((int) file.getSize());
-      media.setUploadedAt(OffsetDateTime.now());
-      Media saved = mediaRepo.save(media);
-
-      PostMedia pm = new PostMedia();
-      pm.setPostId(postId);
-      pm.setMediaId(saved.getId());
-      pm.setDescription(desc);
-      pm.setPosition(position++); // continue positions
-      pm.setCreatedAt(Instant.now());
-      postMediaRepository.save(pm);
-    }
-  }
-
-  // ----- CATEGORIES (replace all) -----
-  postCategories.deleteByPostId(postId);
-  for (UUID cid : categoryIds) {
-    if (cid == null) continue;
-    if (!categories.existsById(cid)) continue;
-
-    PostCategory pc = new PostCategory();
-    pc.setPostId(postId);
-    pc.setCategoryId(cid);
-    postCategories.save(pc);
-  }
-
-  return toDetail(post, user.getId());
-}
 
   /*
    * ============================================================
