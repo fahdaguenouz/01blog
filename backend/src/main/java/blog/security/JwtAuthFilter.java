@@ -100,9 +100,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
           }
+          String jti = claims.getId(); // ✅ jti from token
+          if (jti == null || jti.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+          }
 
-          // Token mismatch => logged elsewhere
-          if (!session.getToken().equals(sha256(token))) {
+          if (!session.getToken().equals(sha256(jti))) { // ✅ compare hashed jti
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
           }

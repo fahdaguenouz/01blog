@@ -6,6 +6,7 @@ import blog.dto.UserProfileDto;
 import blog.models.Media;
 import blog.models.Session;
 import blog.models.User;
+
 import blog.repository.MediaRepository;
 import blog.repository.SessionRepository;
 import blog.repository.UserRepository;
@@ -22,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -41,7 +43,7 @@ public class UserService {
   private final SessionRepository sessions;
   private final LocalMediaStorage storage;
   private final MediaRepository mediaRepo;
-  // private final PasswordEncoder passwordEncoder;
+   private final PasswordEncoder passwordEncoder;
 
   public Optional<User> findByUsername(String username) {
     return users.findByUsername(username);
@@ -72,7 +74,8 @@ public class UserService {
         .name(name)
         .username(username)
         .email(email)
-        .password(password)
+        .password(passwordEncoder.encode(password))
+
         .bio(bio)
         .age(age)
         .status("active")
@@ -131,25 +134,25 @@ public AuthResponse authenticate(LoginRequest request) {
     );
   }
 
-  // Password check (replace with BCrypt later)
-  if (!user.getPassword().equals(request.getPassword())) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password.");
-  }
+ if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+  throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password.");
+}
 
-  String token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
 
-  Instant now = Instant.now();
-  Instant exp = now.plusMillis(jwtService.getExpirationMs());
+var token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+
+ Instant now = Instant.now();
+  Instant exp = token.exp().toInstant();
 
   Session s = sessions.findByUserId(user.getId())
       .orElseGet(() -> Session.builder().userId(user.getId()).build());
 
-  s.setToken(sha256(token)); // store HASH
+ s.setToken(sha256(token.jti()));
   s.setCreatedAt(now);
   s.setExpiresAt(exp);
   sessions.save(s);
 
-  return new AuthResponse(token, user, user.getRole().name());
+  return new AuthResponse(token.token(), user, user.getRole().name());
 }
 
 public void logout(String tokenHeader) {
