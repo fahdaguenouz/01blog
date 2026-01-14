@@ -10,7 +10,6 @@ import { NavbarComponent } from './shared/navabr/navbar.component';
   imports: [
     RouterOutlet,
     NavbarComponent,
-    
   ]
 })
 export class App {}

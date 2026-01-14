@@ -81,39 +81,74 @@ export class PostService {
     return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
   }
 
-  updatePost(
-    postId: string,
-    title: string,
-    body: string,
-    mediaBlocks: EditMediaBlock[],
-    categoryIds: string[]
-  ): Observable<Post> {
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('body', body);
+ updatePost(
+  postId: string,
+  title: string,
+  body: string,
+  mediaBlocks: EditMediaBlock[],
+  categoryIds: string[]
+): Observable<Post> {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('body', body);
 
-    const existingMediaIds: string[] = [];
-    const removeFlags: boolean[] = [];
+  // categories
+  categoryIds.forEach((id) => formData.append('categoryIds', id));
 
-    mediaBlocks.forEach((block) => {
-      if (block.id) {
-        existingMediaIds.push(block.id);
-        removeFlags.push(!!block.removed);
-      } else if (block.file) {
-        formData.append('mediaFiles', block.file);
+  const existingMediaIds: string[] = [];
+  const removeExistingFlags: string[] = [];
+  const replaceExistingFlags: string[] = [];
+  const existingDescriptions: string[] = [];
+
+  const newDescriptions: string[] = [];
+  const replacementDescriptions: string[] = [];
+
+  for (const block of mediaBlocks) {
+    const desc = (block.description || '').trim();
+
+    // ignore removed NEW blocks
+    if (!block.id && block.removed) continue;
+
+    // existing media row
+    if (block.id) {
+      existingMediaIds.push(block.id);
+
+      const isRemoved = !!block.removed;
+      removeExistingFlags.push(String(isRemoved));
+
+      const isReplacing = !!block.file && !isRemoved;
+      replaceExistingFlags.push(String(isReplacing));
+
+      // backend ignores desc if removed, but still send something safe
+      existingDescriptions.push(isRemoved ? (desc || 'removed') : desc);
+
+      if (isReplacing && block.file) {
+        formData.append('replacementFiles', block.file);
+        replacementDescriptions.push(desc);
       }
+      continue;
+    }
 
-      formData.append('mediaDescriptions', block.description || '');
-    });
-
-    categoryIds.forEach((id) => formData.append('categoryId', id));
-    existingMediaIds.forEach((id) => formData.append('existingMediaIds', id));
-    removeFlags.forEach((flag) => formData.append('removeExistingFlags', flag.toString()));
-
-    return this.getHttp()
-      .put<Post>(`${this.apiUrl}/${postId}`, formData)
-      .pipe(map((post) => this.normalizePost(post)));
+    // new media
+    if (block.file) {
+      formData.append('mediaFiles', block.file);
+      newDescriptions.push(desc);
+    }
   }
+
+  existingMediaIds.forEach((v) => formData.append('existingMediaIds', v));
+  removeExistingFlags.forEach((v) => formData.append('removeExistingFlags', v));
+  replaceExistingFlags.forEach((v) => formData.append('replaceExistingFlags', v));
+  existingDescriptions.forEach((v) => formData.append('existingDescriptions', v));
+
+  newDescriptions.forEach((v) => formData.append('newDescriptions', v));
+  replacementDescriptions.forEach((v) => formData.append('replacementDescriptions', v));
+
+  return this.getHttp()
+    .put<Post>(`${this.apiUrl}/${postId}`, formData)
+    .pipe(map((p) => this.normalizePost(p)));
+}
+
 
   deletePost(postId: string): Observable<void> {
     return this.getHttp().delete<void>(`${this.apiUrl}/${postId}`);

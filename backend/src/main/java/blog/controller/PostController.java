@@ -84,33 +84,48 @@ public PostDetailDto create(
   // Update (multipart to allow media change)
 @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 public PostDetailDto update(
-        @PathVariable UUID id,
-        @RequestParam String title,
-        @RequestParam String body,
-        @RequestParam(required = false) List<MultipartFile> mediaFiles,
-        @RequestParam(required = false) List<String> mediaDescriptions,
-        @RequestParam(required = false) List<UUID> existingMediaIds,
-        @RequestParam(required = false) List<Boolean> removeExistingFlags,
-        @RequestParam(required = false) List<UUID> categoryIds
+    @PathVariable UUID id,
+    @RequestParam String title,
+    @RequestParam String body,
+
+    // new
+    @RequestParam(required = false) List<MultipartFile> mediaFiles,
+    @RequestParam(required = false) List<String> newDescriptions,
+
+    // existing
+    @RequestParam(required = false) List<UUID> existingMediaIds,
+    @RequestParam(required = false) List<Boolean> removeExistingFlags,
+    @RequestParam(required = false) List<Boolean> replaceExistingFlags,
+    @RequestParam(required = false) List<String> existingDescriptions,
+
+    // replacements (aligned by replacementFiles index)
+    @RequestParam(required = false) List<MultipartFile> replacementFiles,
+    @RequestParam(required = false) List<String> replacementDescriptions,
+
+    // categories
+    @RequestParam List<UUID> categoryIds
 ) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null || !auth.isAuthenticated()) {
-        throw new RuntimeException("Unauthorized");
-    }
+  Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+  if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+  }
 
-    return postService.updatePost(
-            auth.getName(),
-            id,
-            title,
-            body,
-            mediaFiles,
-            mediaDescriptions,
-            existingMediaIds, // ✅ correct
-            removeExistingFlags, // ✅ correct
-            categoryIds // ✅ correct
-    );
+  return postService.updatePost(
+      auth.getName(),
+      id,
+      title,
+      body,
+      mediaFiles,
+      newDescriptions,
+      existingMediaIds,
+      removeExistingFlags,
+      replaceExistingFlags,
+      existingDescriptions,
+      replacementFiles,
+      replacementDescriptions,
+      categoryIds
+  );
 }
-
 
 
 
