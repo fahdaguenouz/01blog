@@ -103,7 +103,7 @@
               (click)="toggleLike(post); $event.stopPropagation()"
             >
               <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
-              <span>{{ post.likes ?? 0 }}</span>
+              <span>{{ post.likes  }}</span>
             </button>
 
             <button
@@ -112,7 +112,7 @@
               (click)="goToPostDetail(post); $event.stopPropagation()"
             >
               <mat-icon>chat_bubble_outline</mat-icon>
-              <span>{{ post.comments ?? 0 }}</span>
+              <span>{{ post.comments  }}</span>
             </button>
           </div>
 

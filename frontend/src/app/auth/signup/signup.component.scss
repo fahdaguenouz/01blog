@@ -1,4 +1,5 @@
-@import "../../../styles/variables.scss";
+@use '../../../styles/variables' as *;
+@use "sass:color";
 
 .auth-form {
   width: 100%;
@@ -9,7 +10,6 @@
   .full-width {
     width: 100%;
   }
-
 
   ::ng-deep {
     .mat-mdc-form-field {
@@ -69,16 +69,16 @@
     .mat-mdc-flat-button.mat-primary,
     .mat-mdc-unelevated-button.mat-primary {
       --mdc-filled-button-container-color: #{$primary-color};
-      --mdc-filled-button-label-text-color: #FFFFFF;
+      --mdc-filled-button-label-text-color: #ffffff;
       --mdc-protected-button-container-color: #{$primary-color};
-      --mdc-protected-button-label-text-color: #FFFFFF;
+      --mdc-protected-button-label-text-color: #ffffff;
       background-color: $primary-color !important;
-      color: #FFFFFF !important;
+      color: #ffffff !important;
 
       &:hover:not(:disabled) {
-        --mdc-filled-button-container-color: #{darken($primary-color, 5%)};
-        --mdc-protected-button-container-color: #{darken($primary-color, 5%)};
-        background-color: darken($primary-color, 5%) !important;
+        --mdc-filled-button-container-color: #{color.adjust($primary-color, $lightness: -5%)};
+        --mdc-protected-button-container-color: #{color.adjust($primary-color, $lightness: -5%)};
+        background-color: color.adjust($primary-color, $lightness: -5%) !important;
       }
 
       &:disabled {
@@ -180,7 +180,6 @@
     }
   }
 }
-
 
 :host ::ng-deep .logo-wrapper {
   display: none;

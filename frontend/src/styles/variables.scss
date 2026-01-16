@@ -1,27 +1,26 @@
-
-
+@use 'sass:color';
 
 // Sunset & Coffee Theme Colors
-$primary-color: #FF9D00;        // Sunset Orange
-$secondary-color: #B6771D;      // Gold Brown
-$accent-color: #7B542F;         // Coffee Brown
-$light-accent: #FFCF71;         // Peach Light
+$primary-color: #ff9d00; // Sunset Orange
+$secondary-color: #b6771d; // Gold Brown
+$accent-color: #7b542f; // Coffee Brown
+$light-accent: #ffcf71; // Peach Light
 
 // Text Colors
-$text-color: #555555;           // Main text
-$text-dark: #333333;            // Darker text
-$text-light: #7B542F;           // Coffee brown for labels
+$text-color: #555555; // Main text
+$text-dark: #333333; // Darker text
+$text-light: #7b542f; // Coffee brown for labels
 
 // Background Colors
-$gray-bg: #FFF9F0;              // Light cream background
-$gray-secondary-bg: #FFEFD5;    // Warm peach background
-$white-bg: #FFFFFF;             // Pure white
+$gray-bg: #fff9f0; // Light cream background
+$gray-secondary-bg: #ffefd5; // Warm peach background
+$white-bg: #ffffff; // Pure white
 
 // Status Colors
-$success-color: #4CAF50;
+$success-color: #4caf50;
 $error-color: #d32f2f;
-$warning-color: #FF9D00;
-$info-color: #B6771D;
+$warning-color: #ff9d00;
+$info-color: #b6771d;
 
 // Shadows
 $shadow-sm: 0 2px 4px rgba(123, 84, 47, 0.1);
@@ -45,7 +44,6 @@ $transition-fast: 0.2s ease;
 $transition-normal: 0.3s ease;
 $transition-slow: 0.5s ease;
 
-
 ::ng-deep {
   // Primary Buttons (Flat, Raised, Unelevated)
   .mat-mdc-button.mat-primary,
@@ -53,16 +51,16 @@ $transition-slow: 0.5s ease;
   .mat-mdc-flat-button.mat-primary,
   .mat-mdc-unelevated-button.mat-primary {
     --mdc-filled-button-container-color: #{$primary-color};
-    --mdc-filled-button-label-text-color: #FFFFFF;
+    --mdc-filled-button-label-text-color: #ffffff;
     --mdc-protected-button-container-color: #{$primary-color};
-    --mdc-protected-button-label-text-color: #FFFFFF;
+    --mdc-protected-button-label-text-color: #ffffff;
     background-color: $primary-color !important;
-    color: #FFFFFF !important;
+    color: #ffffff !important;
 
     &:hover:not(:disabled) {
-      --mdc-filled-button-container-color: #{darken($primary-color, 5%)};
-      --mdc-protected-button-container-color: #{darken($primary-color, 5%)};
-      background-color: darken($primary-color, 5%) !important;
+      --mdc-filled-button-container-color: #{color.adjust($primary-color, $lightness: -5%)};
+      --mdc-protected-button-container-color: #{color.adjust($primary-color, $lightness: -5%)};
+      background-color: color.adjust($primary-color, $lightness: -5%) !important;
     }
 
     &:disabled {
@@ -83,16 +81,16 @@ $transition-slow: 0.5s ease;
   .mat-mdc-flat-button.mat-accent,
   .mat-mdc-unelevated-button.mat-accent {
     --mdc-filled-button-container-color: #{$secondary-color};
-    --mdc-filled-button-label-text-color: #FFFFFF;
+    --mdc-filled-button-label-text-color: #ffffff;
     --mdc-protected-button-container-color: #{$secondary-color};
-    --mdc-protected-button-label-text-color: #FFFFFF;
+    --mdc-protected-button-label-text-color: #ffffff;
     background-color: $secondary-color !important;
-    color: #FFFFFF !important;
+    color: #ffffff !important;
 
     &:hover:not(:disabled) {
-      --mdc-filled-button-container-color: #{darken($secondary-color, 5%)};
-      --mdc-protected-button-container-color: #{darken($secondary-color, 5%)};
-      background-color: darken($secondary-color, 5%) !important;
+      --mdc-filled-button-container-color: #{color.adjust($secondary-color, $lightness: -5%)};
+      --mdc-protected-button-container-color: #{color.adjust($secondary-color, $lightness: -5%)};
+      background-color: color.adjust($secondary-color, $lightness: -5%) !important;
     }
 
     .mat-mdc-button-persistent-ripple::before {
@@ -129,7 +127,9 @@ $transition-slow: 0.5s ease;
   }
 
   // Text Buttons
-  .mat-mdc-button:not(.mat-mdc-raised-button):not(.mat-mdc-flat-button):not(.mat-mdc-outlined-button) {
+  .mat-mdc-button:not(.mat-mdc-raised-button):not(.mat-mdc-flat-button):not(
+      .mat-mdc-outlined-button
+    ) {
     &.mat-primary {
       --mdc-text-button-label-text-color: #{$primary-color};
       color: $primary-color !important;
@@ -177,12 +177,12 @@ $transition-slow: 0.5s ease;
   .mat-toolbar {
     &.mat-primary {
       background-color: $primary-color !important;
-      color: #FFFFFF !important;
+      color: #ffffff !important;
     }
 
     &.mat-accent {
       background-color: $secondary-color !important;
-      color: #FFFFFF !important;
+      color: #ffffff !important;
     }
   }
 

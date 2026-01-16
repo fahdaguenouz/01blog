@@ -1,5 +1,6 @@
 /* profile.component.scss */
-@import "../../styles/variables.scss";
+@use "../../styles/variables" as *;
+
 
 .profile-wrapper {
   min-height: calc(100vh - 64px);

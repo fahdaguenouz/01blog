@@ -1,4 +1,5 @@
-@import "../../../../styles/variables.scss";
+@use "../../../../styles/variables" as *;
+
 
 $colors: $primary-color, #26a69a, $secondary-color, #ef5350, #7e57c2, #66bb6a, #ffa726;
 

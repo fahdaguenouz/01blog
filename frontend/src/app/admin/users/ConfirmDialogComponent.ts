@@ -36,7 +36,8 @@ import { MatIconModule } from '@angular/material/icon';
     </div>
   `,
   styles: [`
-    @import "../../../styles/variables.scss";
+    @use "../../../styles/variables" as *;
+
 
     .confirm-dialog {
       padding: 24px;
