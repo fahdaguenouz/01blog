@@ -46,7 +46,7 @@ export class SignUpComponent {
 
   signupForm = new FormGroup<SignupForm>({
     name: new FormControl('', [Validators.required, Validators.minLength(2)]),
-    username: new FormControl('', [Validators.required, Validators.minLength(3)]),
+    username: new FormControl('', [Validators.required, Validators.minLength(4)]),
     email: new FormControl('', [Validators.required, Validators.email]),
     password: new FormControl('', [Validators.required, Validators.minLength(6)]),
     passwordConfirm: new FormControl('', [Validators.required, Validators.minLength(6)]),
@@ -62,14 +62,30 @@ export class SignUpComponent {
   ) {}
 
   // Getters for cleaner template binding
-  get name() { return this.signupForm.get('name'); }
-  get username() { return this.signupForm.get('username'); }
-  get email() { return this.signupForm.get('email'); }
-  get password() { return this.signupForm.get('password'); }
-  get passwordConfirm() { return this.signupForm.get('passwordConfirm'); }
-  get age() { return this.signupForm.get('age'); }
-  get bio() { return this.signupForm.get('bio'); }
-  get avatar() { return this.signupForm.get('avatar'); }
+  get name() {
+    return this.signupForm.get('name');
+  }
+  get username() {
+    return this.signupForm.get('username');
+  }
+  get email() {
+    return this.signupForm.get('email');
+  }
+  get password() {
+    return this.signupForm.get('password');
+  }
+  get passwordConfirm() {
+    return this.signupForm.get('passwordConfirm');
+  }
+  get age() {
+    return this.signupForm.get('age');
+  }
+  get bio() {
+    return this.signupForm.get('bio');
+  }
+  get avatar() {
+    return this.signupForm.get('avatar');
+  }
 
   // Handle avatar upload
   onAvatar(event: Event) {
@@ -107,30 +123,32 @@ export class SignUpComponent {
     }
 
     // Call backend
-    this.loginService.signupMultipart({
-      name: v.name!,
-      username: v.username!,
-      email: v.email!,
-      password: v.password!,
-      age: v.age!,
-      bio: v.bio ?? undefined,
-      avatar: v.avatar ?? null
-    }).subscribe({
-      next: () => {
-        this.snack.success('Account created. Please log in.');
-        this.router.navigate(['/auth/login']);
-      },
-      error: (err) => {
-        const msg = toUserMessage(err, 'Could not create your account.');
-        // Handle 409 conflict (username/email taken)
-        if (err?.status === 409) {
-          const detail = (err?.error?.message || '').toLowerCase();
-          if (detail.includes('username')) this.username?.setErrors({ taken: true });
-          if (detail.includes('email')) this.email?.setErrors({ taken: true });
-        }
-        this.snack.error(msg);
-      }
-    });
+    this.loginService
+      .signupMultipart({
+        name: v.name!,
+        username: v.username!,
+        email: v.email!,
+        password: v.password!,
+        age: v.age!,
+        bio: v.bio ?? undefined,
+        avatar: v.avatar ?? null,
+      })
+      .subscribe({
+        next: () => {
+          this.snack.success('Account created. Please log in.');
+          this.router.navigate(['/auth/login']);
+        },
+        error: (err) => {
+          const msg = toUserMessage(err, 'Could not create your account.');
+          // Handle 409 conflict (username/email taken)
+          if (err?.status === 409) {
+            const detail = (err?.error?.message || '').toLowerCase();
+            if (detail.includes('username')) this.username?.setErrors({ taken: true });
+            if (detail.includes('email')) this.email?.setErrors({ taken: true });
+          }
+          this.snack.error(msg);
+        },
+      });
   }
 
   navigate() {

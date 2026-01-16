@@ -43,19 +43,33 @@ public class UserService {
   private final SessionRepository sessions;
   private final LocalMediaStorage storage;
   private final MediaRepository mediaRepo;
-   private final PasswordEncoder passwordEncoder;
+  private final PasswordEncoder passwordEncoder;
 
   public Optional<User> findByUsername(String username) {
     return users.findByUsername(username);
   }
 
+  private String norm(String v) {
+    return (v == null) ? null : v.trim().toLowerCase();
+  }
+
   public User registerMultipart(String name, String username, String email, String password, Integer age, String bio,
       MultipartFile avatar) {
-    // Validate required fields
+    name = norm(name);
+    username = norm(username);
+    email = norm(email);
+    bio = (bio == null) ? null : norm(bio);
+
     if (name == null || name.isBlank())
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
+
     if (username == null || username.isBlank())
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+
+    // ✅ more than 3 chars => at least 4
+    if (username.length() < 4)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must be at least 4 characters");
+
     if (email == null || email.isBlank())
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
     if (password == null || password.isBlank())
@@ -65,6 +79,7 @@ public class UserService {
     if (age < 15)
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must be at least 15 years old");
 
+    // ✅ now these checks become reliable
     if (users.existsByUsername(username))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
     if (users.existsByEmail(email))
@@ -116,65 +131,61 @@ public class UserService {
     }
   }
 
-// inside UserService.java
-public AuthResponse authenticate(LoginRequest request) {
-  if (request == null || request.getUsername() == null || request.getUsername().isBlank()
-      || request.getPassword() == null || request.getPassword().isBlank()) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please enter username and password.");
+  public AuthResponse authenticate(LoginRequest request) {
+    if (request == null || request.getUsername() == null || request.getUsername().isBlank()
+        || request.getPassword() == null || request.getPassword().isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please enter username and password.");
+    }
+
+    String username = norm(request.getUsername());
+
+    User user = users.findByUsername(username)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password."));
+
+    if (user.getStatus() != null && user.getStatus().equalsIgnoreCase("banned")) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Your account has been banned. Please contact support if you believe this is a mistake.");
+    }
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password.");
+    }
+
+    var token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+
+    Instant now = Instant.now();
+    Instant exp = token.exp().toInstant();
+
+    Session s = sessions.findByUserId(user.getId())
+        .orElseGet(() -> Session.builder().userId(user.getId()).build());
+
+    s.setToken(sha256(token.jti()));
+    s.setCreatedAt(now);
+    s.setExpiresAt(exp);
+    sessions.save(s);
+
+    return new AuthResponse(token.token(), user, user.getRole().name());
   }
 
-  User user = users.findByUsername(request.getUsername())
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password."));
+  public void logout(String tokenHeader) {
+    if (tokenHeader == null || tokenHeader.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
+    }
 
-  // ✅ BAN CHECK (before password is fine)
-  if (user.getStatus() != null && user.getStatus().equalsIgnoreCase("banned")) {
-    throw new ResponseStatusException(
-        HttpStatus.FORBIDDEN,
-        "Your account has been banned. Please contact support if you believe this is a mistake."
-    );
+    String token = tokenHeader;
+    if (token.startsWith("Bearer "))
+      token = token.substring(7);
+
+    try {
+      UUID uid = jwtService.extractUserId(token);
+      sessions.deleteByUserId(uid); // delete session (invalidate token)
+    } catch (JwtException e) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
+    }
   }
-
- if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-  throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong username or password.");
-}
-
-
-var token = jwtService.generateToken(user.getId(), user.getUsername(), user.getRole().name());
-
- Instant now = Instant.now();
-  Instant exp = token.exp().toInstant();
-
-  Session s = sessions.findByUserId(user.getId())
-      .orElseGet(() -> Session.builder().userId(user.getId()).build());
-
- s.setToken(sha256(token.jti()));
-  s.setCreatedAt(now);
-  s.setExpiresAt(exp);
-  sessions.save(s);
-
-  return new AuthResponse(token.token(), user, user.getRole().name());
-}
-
-public void logout(String tokenHeader) {
-  if (tokenHeader == null || tokenHeader.isBlank()) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");
-  }
-
-  String token = tokenHeader;
-  if (token.startsWith("Bearer ")) token = token.substring(7);
-
-  try {
-    UUID uid = jwtService.extractUserId(token);
-    sessions.deleteByUserId(uid); // delete session (invalidate token)
-  } catch (JwtException e) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-  } catch (IllegalArgumentException e) {
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid user ID in token");
-  }
-}
-
-
-
 
   @Transactional
   public UserProfileDto updateProfileByUsername(String username, Map<String, Object> updates) {
@@ -233,11 +244,11 @@ public void logout(String tokenHeader) {
   }
 
   public User getCurrentUser(Authentication auth) {
-   if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
-    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-  }
-  return users.findByUsername(auth.getName())
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+    if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+    }
+    return users.findByUsername(auth.getName())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
   }
 
   public void assertAdmin(Authentication auth) {

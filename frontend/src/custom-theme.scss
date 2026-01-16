@@ -1,35 +1,130 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// src/custom-theme.scss
 @use '@angular/material' as mat;
 
-html {
-  @include mat.theme((
-    color: (
-      primary: mat.$cyan-palette,
-      tertiary: mat.$orange-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
+@include mat.core();
+
+// Define your custom palettes using the M2 format (still supported in v20)
+$custom-primary: (
+  50: #FFF3E0,
+  100: #FFE0B2,
+  200: #FFCC80,
+  300: #FFB74D,
+  400: #FFA726,
+  500: #FF9D00,  // Your primary color
+  600: #FB8C00,
+  700: #F57C00,
+  800: #EF6C00,
+  900: #E65100,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$custom-accent: (
+  50: #F5EFE7,
+  100: #E6D7C3,
+  200: #D5BC9B,
+  300: #C4A173,
+  400: #B88C55,
+  500: #B6771D,  // Your secondary color
+  600: #A96F1A,
+  700: #996415,
+  800: #8A5A11,
+  900: #6D4708,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Create M2 theme (backward compatible)
+$my-primary: mat.m2-define-palette($custom-primary, 500);
+$my-accent: mat.m2-define-palette($custom-accent, 500);
+$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+$my-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+    warn: $my-warn,
+  ),
+  typography: mat.m2-define-typography-config(),
+  density: 0,
+));
+
+@include mat.all-component-themes($my-theme);
+
+// Your custom variables
+$primary-color: #FF9D00;
+$secondary-color: #B6771D;
+$accent-color: #7B542F;
+$light-accent: #FFCF71;
+
+$text-color: #555555;
+$text-dark: #333333;
+$text-light: #7B542F;
+
+$gray-bg: #FFF9F0;
+$gray-secondary-bg: #FFEFD5;
+$white-bg: #FFFFFF;
+
+$success-color: #4CAF50;
+$error-color: #d32f2f;
+$warning-color: #FF9D00;
+$info-color: #B6771D;
+
+$shadow-sm: 0 2px 4px rgba(123, 84, 47, 0.1);
+$shadow-md: 0 4px 12px rgba(123, 84, 47, 0.15);
+$shadow-lg: 0 8px 24px rgba(123, 84, 47, 0.2);
+
+$border-radius-sm: 8px;
+$border-radius-md: 12px;
+$border-radius-lg: 16px;
+
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+
+
+/* =========================
+   Spinner colors (MDC / v20)
+   ========================= */
+
+.mat-mdc-progress-spinner,
+.mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic {
+  stroke: $primary-color !important;
 }
 
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
+.mat-mdc-progress-spinner.mat-accent,
+.mat-mdc-progress-spinner.mat-accent .mdc-circular-progress__indeterminate-circle-graphic {
+  stroke: $secondary-color !important;
+}
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
+.mat-mdc-progress-spinner.mat-warn,
+.mat-mdc-progress-spinner.mat-warn .mdc-circular-progress__indeterminate-circle-graphic {
+  stroke: $error-color !important;
 }
