@@ -33,6 +33,7 @@ import java.util.HexFormat;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Builder
 @Service
@@ -44,6 +45,12 @@ public class UserService {
   private final LocalMediaStorage storage;
   private final MediaRepository mediaRepo;
   private final PasswordEncoder passwordEncoder;
+  private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
+      Pattern.CASE_INSENSITIVE);
+
+  private boolean isValidEmail(String email) {
+    return email != null && EMAIL_PATTERN.matcher(email).matches();
+  }
 
   public Optional<User> findByUsername(String username) {
     return users.findByUsername(username);
@@ -82,7 +89,12 @@ public class UserService {
     // ✅ now these checks become reliable
     if (users.existsByUsername(username))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+    if (!isValidEmail(email))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid email address");
+
     if (users.existsByEmail(email))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
+    if (users.existsByEmailIgnoreCase(email))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
 
     User user = User.builder()
