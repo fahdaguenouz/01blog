@@ -9,7 +9,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -30,6 +30,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { ToastrService } from 'ngx-toastr';
 import { PostService, Category } from '../../services/post.service';
 import { CategoryService } from '../../services/category.service';
+import { noHtmlTags, notBlank } from '../../../helper/text.validator';
 
 interface MediaBlock {
   file: File | null;
@@ -53,7 +54,7 @@ interface MediaBlock {
     MatOptionModule,
   ],
   templateUrl: './create-post.component.html',
-  styleUrls: ['./create-post.component.scss']
+  styleUrls: ['./create-post.component.scss'],
 })
 export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChildren('fileInput') fileInputs!: QueryList<ElementRef<HTMLInputElement>>;
@@ -74,8 +75,8 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.postForm = this.fb.group({
-      title: ['', Validators.required],
-      body: ['', Validators.required],
+      title: ['', [Validators.required, notBlank(), noHtmlTags(), Validators.maxLength(150)]],
+      body: ['', [Validators.required, notBlank(), noHtmlTags(), Validators.maxLength(10000)]],
       categoryIds: [[], [Validators.required, this.atLeastOneValidator()]],
     });
   }
@@ -121,13 +122,13 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
     if (index === 0) return;
     const temp = this.mediaBlocks[index];
     const tempUrl = this.previewUrls[index];
-    
+
     this.mediaBlocks[index] = this.mediaBlocks[index - 1];
     this.previewUrls[index] = this.previewUrls[index - 1];
-    
+
     this.mediaBlocks[index - 1] = temp;
     this.previewUrls[index - 1] = tempUrl;
-    
+
     this.cdr.detectChanges();
   }
 
@@ -135,13 +136,13 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
     if (index === this.mediaBlocks.length - 1) return;
     const temp = this.mediaBlocks[index];
     const tempUrl = this.previewUrls[index];
-    
+
     this.mediaBlocks[index] = this.mediaBlocks[index + 1];
     this.previewUrls[index] = this.previewUrls[index + 1];
-    
+
     this.mediaBlocks[index + 1] = temp;
     this.previewUrls[index + 1] = tempUrl;
-    
+
     this.cdr.detectChanges();
   }
 
@@ -206,10 +207,16 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
     formValue.categoryIds.forEach((id: string) => {
       fd.append('categoryIds', id);
     });
-
     this.mediaBlocks.forEach((block) => {
-      if (block.file) fd.append('mediaFiles', block.file);
-      if (block.description.trim()) fd.append('mediaDescriptions', block.description.trim());
+      const desc = (block.description ?? '').trim();
+      if (desc) {
+        if (/<[^>]*>/.test(desc)) {
+          this.toastr.error('Media description cannot contain HTML.');
+          this.isSubmitting = false;
+          return;
+        }
+        fd.append('mediaDescriptions', desc);
+      }
     });
 
     this.isSubmitting = true;

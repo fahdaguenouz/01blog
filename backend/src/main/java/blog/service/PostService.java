@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +39,7 @@ public class PostService {
   private final PostMediaRepository postMediaRepository;
   private final NotificationService notificationService;
   private final SubscriptionRepository subscriptions;
-
+  private static final Pattern HTML_TAG_PATTERN = Pattern.compile("<[^>]*>");
 
   public PostService(
       PostRepository posts,
@@ -52,7 +53,7 @@ public class PostService {
       SavedPostRepository savedPosts,
       PostMediaRepository postMediaRepository,
       NotificationService notificationService,
-    SubscriptionRepository subscriptions) {
+      SubscriptionRepository subscriptions) {
     this.posts = posts;
     this.users = users;
     this.comments = comments;
@@ -72,6 +73,29 @@ public class PostService {
    * Helpers
    * ============================================================
    */
+
+  private String requireCleanText(String value, String field, int maxLen) {
+    if (value == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is required");
+    }
+
+    String v = value.trim();
+
+    if (v.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " cannot be blank");
+    }
+
+    if (maxLen > 0 && v.length() > maxLen) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is too long");
+    }
+
+    // Reject HTML tags (basic XSS protection)
+    if (HTML_TAG_PATTERN.matcher(v).find()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " cannot contain HTML");
+    }
+
+    return v;
+  }
 
   private User requireUser(String username) {
     return users.findByUsername(username)
@@ -144,7 +168,8 @@ public class PostService {
       List<UUID> categoryIds,
       List<String> mediaDescriptions) {
     User user = requireUser(username);
-
+    title = requireCleanText(title, "Title", 150);
+    body = requireCleanText(body, "Body", 10000);
     Post post = new Post();
     post.setAuthor(user);
     post.setTitle(title);
@@ -152,24 +177,24 @@ public class PostService {
     post.setStatus("active");
     post = posts.save(post);
 
-   List<UUID> subscriberIds = subscriptions.findSubscriberIdsBySubscribedToId(user.getId());
-  if (subscriberIds != null && !subscriberIds.isEmpty()) {
-    // load all subscribers as User entities (batch)
-    List<User> subs = users.findAllById(subscriberIds);
+    List<UUID> subscriberIds = subscriptions.findSubscriberIdsBySubscribedToId(user.getId());
+    if (subscriberIds != null && !subscriberIds.isEmpty()) {
+      // load all subscribers as User entities (batch)
+      List<User> subs = users.findAllById(subscriberIds);
 
-    for (User target : subs) {
-      // NotificationService.notify already ignores self-notification,
-      // but extra safety is fine:
-      if (target.getId().equals(user.getId())) continue;
+      for (User target : subs) {
+        // NotificationService.notify already ignores self-notification,
+        // but extra safety is fine:
+        if (target.getId().equals(user.getId()))
+          continue;
 
-      notificationService.notify(
-          target,
-          user,
-          NotificationType.FOLLOWING_POSTED,
-          post
-      );
+        notificationService.notify(
+            target,
+            user,
+            NotificationType.FOLLOWING_POSTED,
+            post);
+      }
     }
-  }
 
     // -------- MEDIA (positions start at 1) --------
     if (mediaFiles != null && !mediaFiles.isEmpty()) {
@@ -193,8 +218,14 @@ public class PostService {
         Media savedMedia = mediaRepo.save(media);
 
         String description = null;
+
         if (mediaDescriptions != null && mediaDescriptions.size() > i) {
-          description = mediaDescriptions.get(i);
+          String raw = mediaDescriptions.get(i);
+
+          raw = requireCleanText(raw, "Media description", 500);
+        }
+        if (description == null || description.isBlank()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
         }
 
         PostMedia pm = new PostMedia();
@@ -393,7 +424,8 @@ public class PostService {
     if (categoryIds == null || categoryIds.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post must have at least one category");
     }
-
+    title = requireCleanText(title, "Title", 150);
+    body = requireCleanText(body, "Body", 10000);
     post.setTitle(title);
     post.setBody(body);
     posts.save(post);
@@ -436,11 +468,6 @@ public class PostService {
           continue;
         }
 
-        // ✅ validate only for kept media
-        if (desc == null || desc.trim().isEmpty()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
-        }
-
         if (replace) {
           if (replacementFiles == null || replIdx >= replacementFiles.size()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Replacement file missing");
@@ -451,10 +478,6 @@ public class PostService {
           String replDesc = (replacementDescriptions != null && replIdx < replacementDescriptions.size())
               ? replacementDescriptions.get(replIdx)
               : desc;
-
-          if (replDesc == null || replDesc.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
-          }
 
           var stored = mediaStorage.save(file);
           if (stored == null) {
@@ -470,6 +493,8 @@ public class PostService {
           Media saved = mediaRepo.save(media);
 
           pm.setMediaId(saved.getId());
+          desc = requireCleanText(desc, "Media description", 500);
+          replDesc = requireCleanText(replDesc, "Media description", 500);
           pm.setDescription(replDesc);
           replIdx++;
         } else {
@@ -516,10 +541,6 @@ public class PostService {
             ? newDescriptions.get(i)
             : null;
 
-        if (desc == null || desc.trim().isEmpty()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each media must have a description");
-        }
-
         var stored = mediaStorage.save(file);
         if (stored == null) {
           throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store media");
@@ -536,6 +557,7 @@ public class PostService {
         PostMedia pm = new PostMedia();
         pm.setPostId(postId);
         pm.setMediaId(saved.getId());
+        desc = requireCleanText(desc, "Media description", 500);
         pm.setDescription(desc);
         pm.setPosition(position++); // continue positions
         pm.setCreatedAt(Instant.now());

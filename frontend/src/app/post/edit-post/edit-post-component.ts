@@ -11,6 +11,7 @@ import { CategoryService } from '../../services/category.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
+import { noHtmlTags, notBlank } from '../../../helper/text.validator';
 
 export interface EditMediaBlock {
   id?: string;
@@ -77,8 +78,8 @@ export class EditPostDialogComponent implements OnDestroy {
 
   private initializeForm() {
     this.postForm = this.fb.group({
-      title: [this.data.title, [Validators.required]],
-      body: [this.data.body, [Validators.required]],
+     title: [this.data.title, [Validators.required, notBlank(), noHtmlTags()]],
+  body: [this.data.body, [Validators.required, notBlank(), noHtmlTags()]],
       categoryIds: [[...this.data.categoryIds], [Validators.required]],
     });
   }
