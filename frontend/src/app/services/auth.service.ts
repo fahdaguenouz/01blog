@@ -1,133 +1,122 @@
 // src/app/services/auth.service.ts
-import { HttpClient } from '@angular/common/http';
-import { Injectable, Injector } from '@angular/core';
-import { BehaviorSubject, catchError, map, Observable, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
+import { catchError, map, take, tap, timeout } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { environment } from '../../environment/environment';
 
 export interface AuthData {
   token: string;
+}
+
+export interface CurrentUser {
+  id: string;
   username: string;
-  role?: 'USER' | 'ADMIN';
+  role: 'USER' | 'ADMIN';
+  name?: string;
+  avatarUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _isLoggedIn$ = new BehaviorSubject<boolean>(this.hasToken());
-  private _authResolved$ = new BehaviorSubject<boolean>(false);
-  public readonly authResolved$: Observable<boolean> = this._authResolved$.asObservable();
-  public readonly isLoggedIn$: Observable<boolean> = this._isLoggedIn$.asObservable();
+  private readonly TOKEN_KEY = 'auth-token';
+  private readonly meUrl = `${environment.apiUrl}/api/users/me`;
 
-  constructor(private injector: Injector, private router: Router) {
-    this._isLoggedIn$.next(this.hasToken());
-    this._authResolved$.next(true);
+  private _me$ = new BehaviorSubject<CurrentUser | null>(null);
+  readonly me$ = this._me$.asObservable();
+
+  private _isAuthed$ = new BehaviorSubject<boolean>(this.hasToken());
+  readonly isAuthed$ = this._isAuthed$.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {
+
   }
 
-  setAuth(data: AuthData): void {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('auth-token', data.token);
-      if (data.username) window.sessionStorage.setItem('username', data.username);
-      if (data.role) window.sessionStorage.setItem('role', data.role);
-    }
-
-    // ✅ 24h cookie (1 day)
-    this.setCookieHours('auth-token', data.token, 24);
-    if (data.username) this.setCookieHours('username', data.username, 24);
-    if (data.role) this.setCookieHours('role', data.role, 24);
-
-    this._isLoggedIn$.next(true);
-    this._authResolved$.next(true);
+  private readToken(): string | null {
+    return sessionStorage.getItem(this.TOKEN_KEY);
   }
 
-  clearAuth(): void {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('auth-token');
-      window.sessionStorage.removeItem('username');
-      window.sessionStorage.removeItem('role');
-    }
-    this.deleteCookie('auth-token');
-    this.deleteCookie('username');
-    this.deleteCookie('role');
-
-    this._isLoggedIn$.next(false);
-    this._authResolved$.next(true);
+  private writeToken(token: string | null) {
+    if (token) sessionStorage.setItem(this.TOKEN_KEY, token);
+    else sessionStorage.removeItem(this.TOKEN_KEY);
   }
 
-  /** ✅ call this when you receive 401 (session invalidated on server) */
-  forceLogout(reason:'banned'| 'expired' | 'invalid' | 'conflict' = 'invalid'): void {
-    this.clearAuth();
-    // optional: show toast later
-    this.router.navigate(['/auth/login'], {
-      queryParams: { reason },
-    });
-  }
-
-  validateAdminRole(): Observable<boolean> {
-    const token = this.getToken();
-    if (!token) return of(false);
-
-    return this.injector
-      .get(HttpClient)
-      .get<any>('/api/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .pipe(
-        map((response: any) => response.role === 'ADMIN'),
-        catchError(() => of(false))
-      );
+  hasToken(): boolean {
+    return !!this.readToken();
   }
 
   getToken(): string | null {
-    const ss = typeof window !== 'undefined' ? window.sessionStorage.getItem('auth-token') : null;
-    return ss || this.getCookie('auth-token');
+    return this.readToken();
   }
 
-  getUsername(): string | null {
-    const ssUser = typeof window !== 'undefined' ? window.sessionStorage.getItem('username') : null;
-    return ssUser || this.getCookie('username');
+  private setToken(token: string | null) {
+    this.writeToken(token);
+    this._isAuthed$.next(!!token);
+  }
+
+  async setAuth(data: AuthData): Promise<CurrentUser | null> {
+    this.setToken(data.token);
+
+    const me = await firstValueFrom(this.refreshMe().pipe(take(1)));
+    if (!me) this.clearAuth();
+    return me;
+  }
+
+  clearAuth(): void {
+    this.setToken(null);
+    this._me$.next(null);
+  }
+
+  forceLogout(reason: 'banned' | 'expired' | 'invalid' | 'conflict' = 'invalid'): void {
+    this.clearAuth();
+    this.router.navigate(['/auth/login'], { queryParams: { reason } });
+  }
+
+  refreshMe(): Observable<CurrentUser | null> {
+    if (!this.hasToken()) {
+      this._me$.next(null);
+      this._isAuthed$.next(false);
+      return of(null);
+    }
+
+    return this.http.get<CurrentUser>(this.meUrl).pipe(
+      timeout(8000),
+      take(1),
+      tap((me) => {
+        this._me$.next(me ?? null);
+        this._isAuthed$.next(!!me); // ✅ authed only if /me succeeded
+      }),
+      map((me) => me ?? null),
+      catchError((err: unknown) => {
+        // ✅ invalid token => clear it so guards/UI stop thinking logged in
+        if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
+          this.clearAuth();
+          return of(null);
+        }
+        this._me$.next(null);
+        this._isAuthed$.next(false);
+        return of(null);
+      })
+    );
   }
 
   isLoggedIn(): boolean {
-    return this._isLoggedIn$.value;
-  }
-
-  private hasToken(): boolean {
-    return !!this.getToken();
-  }
-
-  /** ✅ 24h cookie helper */
-  private setCookieHours(name: string, value: string, hours: number) {
-    if (typeof document === 'undefined') return;
-    const d = new Date();
-    d.setTime(d.getTime() + hours * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
-  }
-
-  private getCookie(name: string): string | null {
-    if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
-  }
-
-  private deleteCookie(name: string) {
-    if (typeof document === 'undefined') return;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-  }
-
-  getRole(): 'USER' | 'ADMIN' | null {
-    if (typeof window === 'undefined') return null;
-
-    const ssRole = window.sessionStorage.getItem('role') as 'USER' | 'ADMIN' | null;
-    if (ssRole) return ssRole;
-
-    const cookieRole = this.getCookie('role') as 'USER' | 'ADMIN' | null;
-    if (cookieRole) {
-      window.sessionStorage.setItem('role', cookieRole);
-      return cookieRole;
-    }
-    return null;
+    return this._isAuthed$.value;
   }
 
   isAdmin(): boolean {
-    return this.getRole() === 'ADMIN';
+    return this._me$.value?.role === 'ADMIN';
+  }
+
+  getUsername(): string | null {
+    return this._me$.value?.username ?? null;
+  }
+
+  validateAdminRole(): Observable<boolean> {
+    const cached = this._me$.value;
+    if (cached) return of(cached.role === 'ADMIN');
+
+    return this.refreshMe().pipe(map((me) => me?.role === 'ADMIN'));
   }
 }

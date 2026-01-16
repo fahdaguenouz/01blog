@@ -57,26 +57,34 @@ export class LoginComponent {
     return this.loginForm.get('password');
   }
 
-  submit() {
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      this.snack.error('Please enter your username and password.');
-      return;
-    }
-
-    const { username, password } = this.loginForm.getRawValue();
-
-    this.loginService.login(username!, password!).subscribe({
-      next: () => {
-        this.router.navigate(
-          this.auth.isAdmin() ? ['/admin/dashboard'] : ['/feed']
-        );
-      },
-      error: (err) => {
-        this.snack.error(toUserMessage(err, 'Could not log you in.'));
-      }
-    });
+submit() {
+  if (this.loginForm.invalid) {
+    this.loginForm.markAllAsTouched();
+    this.snack.error('Please enter your username and password.');
+    return;
   }
+
+  const { username, password } = this.loginForm.getRawValue();
+
+  this.loginService.login(username!, password!).subscribe({
+    next: async (res) => {
+      // IMPORTANT: wait until /me is loaded and status becomes authenticated
+      const me = await this.auth.setAuth({ token: res.token });
+      console.log('status after setAuth:', this.auth.isLoggedIn(), this.auth.getUsername(), this.auth.isAdmin());
+
+      if (!me) {
+        this.snack.error('Login succeeded but session could not be loaded. Please try again.');
+        return;
+      }
+
+      this.router.navigate([me.role === 'ADMIN' ? '/admin/dashboard' : '/feed']);
+    },
+    error: (err) => {
+      this.snack.error(toUserMessage(err, 'Could not log you in.'));
+    }
+  });
+}
+
 
   navigate() {
     this.router.navigate(['auth/signup']);

@@ -57,24 +57,27 @@ export class PostDetailComponent implements OnInit {
   comments: Comment[] = [];
   newComment = '';
   currentUser: UserProfile | null = null;
+isAdmin = false;
 
   postNotFound = false;
   hiddenByAdmin = false;
   loadingPost = true;
 
-  ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.loadPost(id);
-    this.loadComments(id);
+ngOnInit() {
+  const id = this.route.snapshot.paramMap.get('id')!;
+  this.loadPost(id);
+  this.loadComments(id);
 
-    this.userService.getCurrentUser().subscribe({
-      next: (user) => (this.currentUser = user),
-      error: (err) => {
-        console.error('getCurrentUser error', err);
-        this.currentUser = null;
-      },
-    });
-  }
+  // current user
+  this.userService.getCurrentUser().subscribe({
+    next: (user) => (this.currentUser = user),
+    error: () => (this.currentUser = null),
+  });
+
+  // ✅ admin check from backend (never from storage)
+this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
+}
+
 
   loadPost(id: string) {
     this.loadingPost = true;
@@ -291,9 +294,7 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-  get isAdmin(): boolean {
-    return this.auth.isAdmin();
-  }
+
 
   get canManagePost(): boolean {
     if (!this.post) return false;

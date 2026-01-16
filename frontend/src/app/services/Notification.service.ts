@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { environment } from '../../environment/environment';
 
 export interface AppNotification {
   id: string;
@@ -12,7 +13,7 @@ export interface AppNotification {
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private base = 'http://localhost:8080/api/notifications';
+private base = `${environment.apiUrl}/api/notifications`;
 
   constructor(private http: HttpClient) {}
 

@@ -52,75 +52,61 @@ export class AdminService {
   private http = inject(HttpClient);
 
   getStats(): Observable<StatsPayload> {
-    return this.http.get<StatsPayload>(`${this.base}/api/admin/stats`, { withCredentials: true });
+    return this.http.get<StatsPayload>(`${this.base}/api/admin/stats`);
   }
 
   getDailyStats(period: '7d' | '30d' | '6m' = '30d'): Observable<DailyStats[]> {
     return this.http.get<DailyStats[]>(`${this.base}/api/admin/stats/trends`, {
-      params: { period },
-      withCredentials: true,
+      params: { period }
     });
   }
 
   getReportCategoryStats(): Observable<ReportCategoryStat[]> {
-    return this.http.get<ReportCategoryStat[]>(`${this.base}/api/admin/stats/report-categories`, {
-      withCredentials: true,
-    });
+    return this.http.get<ReportCategoryStat[]>(`${this.base}/api/admin/stats/report-categories`);
   }
 
   getTopContributors(limit = 10): Observable<TopContributor[]> {
     return this.http.get<TopContributor[]>(`${this.base}/api/admin/stats/top-contributors`, {
-      params: { limit },
-      withCredentials: true,
+      params: { limit }
     });
   }
 
   getAllUsers(): Observable<AdminUser[]> {
-    return this.http.get<AdminUser[]>(`${this.base}/api/admin/users`, {
-      withCredentials: true,
-    });
+    return this.http.get<AdminUser[]>(`${this.base}/api/admin/users`);
   }
 
   updateUserStatus(id: string, status: 'active' | 'banned'): Observable<AdminUser> {
     return this.http.patch<AdminUser>(
       `${this.base}/api/admin/users/${id}/status`,
-      { status },
-      { withCredentials: true }
+      { status }
     );
   }
 
   updateUserRole(id: string, role: 'USER' | 'ADMIN'): Observable<AdminUser> {
     return this.http.patch<AdminUser>(
       `${this.base}/api/admin/users/${id}/role`,
-      { role },
-      { withCredentials: true }
+      { role }
     );
   }
 
   deleteUser(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/admin/users/${id}`, {
-      withCredentials: true,
-    });
+    return this.http.delete<void>(`${this.base}/api/admin/users/${id}`);
   }
 
   getCurrentUser(): Observable<{ id: string; username: string; role: string }> {
     return this.http.get<{ id: string; username: string; role: string }>(
-      `${this.base}/api/users/me`,
-      { withCredentials: true }
+      `${this.base}/api/users/me`
     );
   }
 
   deletePost(postId: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/admin/posts/${postId}`, {
-      withCredentials: true,
-    });
+    return this.http.delete<void>(`${this.base}/api/admin/posts/${postId}`);
   }
 
   setPostStatus(postId: string, status: 'active' | 'hidden') {
   return this.http.patch<void>(
     `${this.base}/api/admin/posts/${postId}/status`,
-    { status },
-    { withCredentials: true }
+    { status }
   );
 }
 }

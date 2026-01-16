@@ -11,9 +11,9 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
-        // only if user had a token => session got invalidated (logged elsewhere / expired)
-        if (auth.getToken()) {
-          snack.error('Your session ended (logged in from another browser). Please login again.');
+        // don’t spam logout during startup /me check
+        if (auth.getToken() && !req.url.endsWith('/api/users/me')) {
+          snack.error('Your session ended. Please login again.');
           auth.forceLogout('conflict');
         }
       }

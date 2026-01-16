@@ -1,24 +1,24 @@
 <div class="feed-wrapper">
-  <!-- Loading States -->
-  <div *ngIf="!authResolved || loading" class="loading-container">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
     <mat-spinner diameter="48" color="primary"></mat-spinner>
   </div>
 
   <!-- Main Feed Content -->
   <div *ngIf="authResolved && !loading" class="feed-container">
-
-    <!-- Feed Header -->
     <div class="feed-header">
       <h1 class="feed-title">Your Feed</h1>
-      <p class="feed-subtitle">Discover new stories </p>
+      <p class="feed-subtitle">Discover new stories</p>
     </div>
 
-    <!-- Filter Section -->
     <div class="filter-section">
       <div class="filter-bar">
         <mat-form-field appearance="outline" class="category-field">
           <mat-label>Filter by topic</mat-label>
-          <mat-select [value]="selectedCategoryId" (selectionChange)="onCategoryChange($event.value)">
+          <mat-select
+            [value]="selectedCategoryId"
+            (selectionChange)="onCategoryChange($event.value)"
+          >
             <mat-option value="all">All Topics</mat-option>
             <mat-option *ngFor="let c of categories" [value]="c.id">
               {{ c.name }}
@@ -27,77 +27,106 @@
         </mat-form-field>
 
         <div class="sort-tabs">
-          <button mat-button [class.active]="sort === 'new'" (click)="onSortChange('new')" class="sort-tab">
+          <button
+            mat-button
+            class="sort-tab"
+            [class.active]="sort === 'new'"
+            (click)="onSortChange('new')"
+          >
             Newest
           </button>
-          <button mat-button [class.active]="sort === 'likes'" (click)="onSortChange('likes')" class="sort-tab">
+
+          <button
+            mat-button
+            class="sort-tab"
+            [class.active]="sort === 'likes'"
+            (click)="onSortChange('likes')"
+          >
             Popular
           </button>
-          <button mat-button [class.active]="sort === 'saved'" (click)="onSortChange('saved')" class="sort-tab">
+
+          <button
+            mat-button
+            class="sort-tab"
+            [class.active]="sort === 'saved'"
+            (click)="onSortChange('saved')"
+          >
             Saved
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Posts List -->
     <div class="posts-container">
       <article *ngFor="let post of posts" class="post-card" (click)="open(post)">
-
-        <!-- Post Header -->
         <div class="post-header">
           <div class="author-section">
-            <img class="author-avatar" [src]="post.avatarUrl || 'svg/avatar.png'" alt="author avatar" />
+            <img
+              class="author-avatar"
+              [src]="post.avatarUrl || 'svg/avatar.png'"
+              alt="author avatar"
+            />
 
             <div class="author-info">
               <span class="author-name">{{ post.authorUsername }}</span>
               <div class="post-meta">
                 <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                 <span class="meta-separator">·</span>
-
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Post Content -->
         <div class="post-body">
           <h2 class="post-title">{{ post.title || 'Untitled' }}</h2>
           <p class="post-excerpt">{{ snippet(post.body) }}</p>
-
         </div>
 
-        <!-- Cover Media (if exists) -->
         <div *ngIf="post.coverMedia as media" class="post-media">
-          <img *ngIf="media.type === 'image'" [src]="media.url" [alt]="post.title" class="post-image" />
+          <img
+            *ngIf="media.type === 'image'"
+            [src]="media.url"
+            [alt]="post.title"
+            class="post-image"
+          />
           <video *ngIf="media.type === 'video'" controls class="post-video">
             <source [src]="media.url" />
           </video>
         </div>
 
-        <!-- Post Footer -->
         <div class="post-footer">
           <div class="post-actions">
-            <button mat-button class="action-btn" [class.liked]="post.isLiked"
-              (click)="toggleLike(post); $event.stopPropagation()">
+            <button
+              mat-button
+              class="action-btn"
+              [class.liked]="post.isLiked"
+              (click)="toggleLike(post); $event.stopPropagation()"
+            >
               <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
               <span>{{ post.likes ?? 0 }}</span>
             </button>
 
-            <button mat-button class="action-btn" (click)="goToPostDetail(post); $event.stopPropagation()">
+            <button
+              mat-button
+              class="action-btn"
+              (click)="goToPostDetail(post); $event.stopPropagation()"
+            >
               <mat-icon>chat_bubble_outline</mat-icon>
               <span>{{ post.comments ?? 0 }}</span>
             </button>
           </div>
 
-          <button mat-icon-button class="save-btn" [class.saved]="post.isSaved"
-            (click)="toggleSave(post); $event.stopPropagation()">
+          <button
+            mat-icon-button
+            class="save-btn"
+            [class.saved]="post.isSaved"
+            (click)="toggleSave(post); $event.stopPropagation()"
+          >
             <mat-icon>{{ post.isSaved ? 'bookmark' : 'bookmark_border' }}</mat-icon>
           </button>
         </div>
       </article>
 
-      <!-- Empty State -->
       <div *ngIf="posts.length === 0" class="empty-state">
         <mat-icon class="empty-icon">article</mat-icon>
         <h3>No posts found</h3>

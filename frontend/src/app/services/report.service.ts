@@ -13,7 +13,7 @@ export interface Report {
 
   reportedUserId: string;
   reportedUsername: string;
-  reportedAvatarUrl?: string; 
+  reportedAvatarUrl?: string;
 
   reportedPostId?: string;
   reportedCommentId?: string;
@@ -40,26 +40,25 @@ export class ReportService {
   private apiUrl = `${this.base}/api/reports`;
 
   reportPost(payload: CreatePostReport): Observable<Report> {
-    return this.http.post<Report>(this.apiUrl, payload, { withCredentials: true });
+    return this.http.post<Report>(this.apiUrl, payload);
   }
 
   // admin-only later:
   getReports(): Observable<Report[]> {
-    return this.http.get<Report[]>(this.apiUrl, { withCredentials: true });
+    return this.http.get<Report[]>(this.apiUrl);
   }
 
   updateReportStatus(reportId: string, status: string): Observable<Report> {
     return this.http.patch<Report>(
       `${this.apiUrl}/${reportId}`,
-      { status },
-      { withCredentials: true }
+      { status }
     );
   }
   deletePost(postId: string) {
-    return this.http.delete(`${this.apiUrl}/post/${postId}`, { withCredentials: true });
+    return this.http.delete(`${this.apiUrl}/post/${postId}`);
   }
 
   banUser(userId: string) {
-    return this.http.delete(`${this.apiUrl}/user/${userId}`, { withCredentials: true });
+    return this.http.delete(`${this.apiUrl}/user/${userId}`);
   }
 }

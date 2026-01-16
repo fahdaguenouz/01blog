@@ -1,24 +1,24 @@
-// auth-guard.service.ts snippet
-
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   constructor(private router: Router, private auth: AuthService) {}
 
- // AuthGuard: only checks logged-in
-canActivate(): Observable<boolean | UrlTree> {
-  return this.auth.authResolved$.pipe(
-    switchMap(() => this.auth.isLoggedIn$),
-    map(loggedIn => {
-      if (!loggedIn) return this.router.parseUrl('/auth/login');
-      return true;   // allow any logged-in user (including admin)
-    })
-  );
-}
+  canActivate(): Observable<boolean | UrlTree> {
+    // If no token, redirect immediately
+    if (!this.auth.hasToken()) {
+      return new Observable(observer => {
+        observer.next(this.router.parseUrl('/auth/login'));
+        observer.complete();
+      });
+    }
 
+    // If token exists but me$ is null, wait for refreshMe to complete
+    return this.auth.refreshMe().pipe(
+      map((me) => (me ? true : this.router.parseUrl('/auth/login')))
+    );
+  }
 }

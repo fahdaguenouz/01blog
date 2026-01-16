@@ -28,8 +28,8 @@ interface NavItem {
     RouterLink,
     RouterLinkActive,
     NgIf,
-    RouterOutlet,
     NgClass,
+    RouterOutlet,
     NgFor,
     MatToolbarModule,
     CommonModule,
@@ -69,53 +69,71 @@ notificationTab: 'unseen' | 'seen' = 'unseen';
     private notificationService: NotificationService
   ) {}
 
-  ngOnInit(): void {
-    this.refreshAuthState();
-    this.sub = this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+ngOnInit(): void {
+  this.sub = this.router.events
+    .pipe(filter((e) => e instanceof NavigationEnd))
+    .subscribe(() => {
       this.isAuthPage = this.router.url.startsWith('/auth');
-      this.refreshAuthState();
     });
-   if (this.auth.isLoggedIn()) {
+
+  // ✅ Auth state (token exists)
+  this.auth.isAuthed$.subscribe((authed: boolean) => {
+    this.loggedIn = authed;
+
+    if (!authed) {
+      this.userName = null;
+      this.isAdmin = false;
+      this.avatarUrl = null;
+
+      this.navItems = [
+        { label: 'Home', icon: 'home', route: '/' },
+        { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
+      ];
+
+      this.notifications = [];
+      this.hasUnseen = false;
+
+      this.cd.detectChanges();
+    }
+  });
+
+  // ✅ user info
+  this.auth.me$.subscribe((me) => {
+    if (!me) return;
+
+    this.userName = me.username;
+    this.isAdmin = me.role === 'ADMIN';
+
+    this.navItems = [
+      { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
+      { label: 'Users', icon: 'group', route: '/users' },
+    ];
+
+    if (this.isAdmin) {
+      this.navItems.push({ label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' });
+      this.navItems.push({ label: 'Manage Users', icon: 'group', route: '/admin/users' });
+      this.navItems.push({ label: 'Reports', icon: 'flag', route: '/admin/reports' });
+    }
+
+    // avatar
+    this.userService.getProfileByUsername(me.username).subscribe({
+      next: (u) => (this.avatarUrl = u.avatarUrl || null),
+      error: () => (this.avatarUrl = null),
+    });
+
+    // notifications
     this.loadNotifications();
-  }
-  }
+
+    this.cd.detectChanges();
+  });
+}
+
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }
 
-  private refreshAuthState(): void {
-    this.loggedIn = this.auth.isLoggedIn();
-    this.userName = this.auth.getUsername();
-    if (this.loggedIn) {
-      this.auth.validateAdminRole().subscribe((isAdmin) => {
-        this.isAdmin = isAdmin;
 
-this.navItems = [
-        { label: 'Feed', icon: 'dynamic_feed', route: '/feed' },
-        { label: 'Users', icon: 'group', route: '/users' }  // <-- NEW: Users page for all users
-      ];
-
-        if (this.isAdmin) {
-          this.navItems.push({ label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' });
-          this.navItems.push({ label: 'Manage Users', icon: 'group', route: '/admin/users' });
-          this.navItems.push({ label: 'Reports', icon: 'flag', route: '/admin/reports' });
-        }
-
-        this.cd.detectChanges();
-      });
-
-      if (this.userName) {
-        this.userService.getProfileByUsername(this.userName).subscribe({
-          next: (user) => (this.avatarUrl = user.avatarUrl || null),
-          error: () => (this.avatarUrl = null),
-        });
-      }
-    } else {
-      this.isAdmin = false;
-      this.avatarUrl = null;
-    }
-  }
   goToMyProfile(): void {
     if (this.userName) {
       this.router.navigate(['/profile', this.userName]);
@@ -127,13 +145,13 @@ this.navItems = [
       next: () => {
         this.toastr.success('Logged out successfully');
         this.auth.clearAuth();
-        this.refreshAuthState();
+       
         this.router.navigate(['/auth/login']);
       },
       error: () => {
         this.toastr.error('Error logging out');
         this.auth.clearAuth();
-        this.refreshAuthState();
+      
         this.router.navigate(['/auth/login']);
       },
     });

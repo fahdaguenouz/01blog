@@ -9,12 +9,9 @@ import { environment } from '../../environment/environment';
 export class CategoryService {
   private base = environment.apiUrl;
   private apiUrl = `${this.base}/api/categories`;
-  constructor(private injector: Injector) {}
-  private getHttp(): HttpClient {
-    return this.injector.get(HttpClient);
-  }
+  constructor(private http: HttpClient) {}
 
   list(): Observable<Category[]> {
-    return this.getHttp().get<Category[]>(this.apiUrl);
+    return this.http.get<Category[]>(this.apiUrl);
   }
 }

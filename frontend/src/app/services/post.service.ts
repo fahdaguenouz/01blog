@@ -56,29 +56,26 @@ export class PostService {
   private base = environment.apiUrl;
   private apiUrl = `${this.base}/api/posts`;
 
-  constructor(private injector: Injector) {}
+  constructor(private http: HttpClient) {}
 
-  private getHttp(): HttpClient {
-    return this.injector.get(HttpClient);
-  }
 
   getFeed(categoryId?: string, sort: 'new' | 'likes' | 'saved' = 'new'): Observable<Post[]> {
     const params: any = { sort };
     if (categoryId) params.categoryId = categoryId;
 
-    return this.getHttp()
+    return this.http
       .get<Post[]>(`${this.apiUrl}/feed`, { params })
       .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
   }
 
   getById(postId: string): Observable<Post> {
-    return this.getHttp()
+    return this.http
       .get<Post>(`${this.apiUrl}/${postId}`)
       .pipe(map((post) => this.normalizePost(post)));
   }
 
   createPostFormData(formData: FormData): Observable<any> {
-    return this.getHttp().post<Post>(`${this.apiUrl}`, formData);
+    return this.http.post<Post>(`${this.apiUrl}`, formData);
   }
 
  updatePost(
@@ -144,58 +141,58 @@ export class PostService {
   newDescriptions.forEach((v) => formData.append('newDescriptions', v));
   replacementDescriptions.forEach((v) => formData.append('replacementDescriptions', v));
 
-  return this.getHttp()
+  return this.http
     .put<Post>(`${this.apiUrl}/${postId}`, formData)
     .pipe(map((p) => this.normalizePost(p)));
 }
 
 
   deletePost(postId: string): Observable<void> {
-    return this.getHttp().delete<void>(`${this.apiUrl}/${postId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${postId}`);
   }
 
   likePost(postId: string): Observable<void> {
-    return this.getHttp().post<void>(`${this.apiUrl}/${postId}/like`, {});
+    return this.http.post<void>(`${this.apiUrl}/${postId}/like`, {});
   }
   getUserPosts(userId: string): Observable<Post[]> {
-    return this.getHttp()
+    return this.http
       .get<Post[]>(`${this.apiUrl}/user/${userId}/posts`)
       .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
   }
 
   getLikedPosts(userId: string): Observable<Post[]> {
-    return this.getHttp()
+    return this.http
       .get<Post[]>(`${this.apiUrl}/user/${userId}/liked`)
       .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
   }
 
   getSavedPosts(userId: string): Observable<Post[]> {
-    return this.getHttp()
+    return this.http
       .get<Post[]>(`${this.apiUrl}/user/${userId}/saved`)
       .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
   }
 
   unlikePost(postId: string): Observable<void> {
-    return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/like`);
+    return this.http.delete<void>(`${this.apiUrl}/${postId}/like`);
   }
 
   addComment(postId: string, content: string): Observable<Comment> {
-    return this.getHttp().post<Comment>(`${this.apiUrl}/${postId}/comments`, { content });
+    return this.http.post<Comment>(`${this.apiUrl}/${postId}/comments`, { content });
   }
 
   getComments(postId: string): Observable<Comment[]> {
-    return this.getHttp().get<Comment[]>(`${this.apiUrl}/${postId}/comments`);
+    return this.http.get<Comment[]>(`${this.apiUrl}/${postId}/comments`);
   }
 
   deleteComment(postId: string, commentId: string): Observable<void> {
-    return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/comments/${commentId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${postId}/comments/${commentId}`);
   }
   savePost(postId: string): Observable<void> {
-    return this.getHttp().post<void>(`${this.apiUrl}/${postId}/save`, {});
+    return this.http.post<void>(`${this.apiUrl}/${postId}/save`, {});
   }
 
   unsavePost(postId: string): Observable<void> {
-    return this.getHttp().delete<void>(`${this.apiUrl}/${postId}/save`);
+    return this.http.delete<void>(`${this.apiUrl}/${postId}/save`);
   }
 
   private normalizePost(post: Post): Post {
