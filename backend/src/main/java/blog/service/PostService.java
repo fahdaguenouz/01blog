@@ -596,12 +596,6 @@ public class PostService {
     likes.deleteByPostId(post.getId());
     comments.deleteByPostId(post.getId());
 
-    // Optional: also delete saved posts and post media links if you have repos for
-    // them
-    // savedPosts.deleteByPostId(post.getId());
-    // postMediaRepository.deleteByPostId(post.getId());
-    // postCategories.deleteByPostId(post.getId());
-
     posts.delete(post);
   }
 
