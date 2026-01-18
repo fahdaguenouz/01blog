@@ -8,7 +8,11 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log('[HTTP]', req.method, req.url, 'token?', !!token);
 
-  if (req.url.includes('/api/auth/')) return next(req);
+ const isAuthEndpoint =
+    req.url.includes('/api/auth/login') ||
+    req.url.includes('/api/auth/register');
+
+  if (isAuthEndpoint) return next(req);
   if (!token) return next(req);
 
   return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));
