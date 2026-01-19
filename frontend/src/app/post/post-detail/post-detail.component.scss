@@ -23,6 +23,11 @@
     line-height: 1.2;
     margin: 0 0 32px;
     letter-spacing: -0.5px;
+
+     max-width: 100%;
+    white-space: normal;         // allow wrapping
+    overflow-wrap: anywhere;     // break very long words
+    word-break: break-word;
   }
 
   .author-section {

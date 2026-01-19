@@ -10,10 +10,10 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { ToastrService } from 'ngx-toastr';
 import { LoginService } from '../../auth/services/login.service';
 import { UserService } from '../../services/user.service';
 import { AppNotification, NotificationService } from '../../services/Notification.service';
+import { SnackService } from '../../core/snack.service';
 
 interface NavItem {
   label: string;
@@ -63,7 +63,7 @@ notificationTab: 'unseen' | 'seen' = 'unseen';
     private router: Router,
     private auth: AuthService,
     private loginService: LoginService,
-    private toastr: ToastrService,
+    private snack: SnackService,
     private userService: UserService,
     private cd: ChangeDetectorRef,
     private notificationService: NotificationService
@@ -143,13 +143,13 @@ ngOnInit(): void {
   logout(): void {
     this.loginService.logout().subscribe({
       next: () => {
-        this.toastr.success('Logged out successfully');
+        this.snack.success('Logged out successfully');
         this.auth.clearAuth();
        
         this.router.navigate(['/auth/login']);
       },
       error: () => {
-        this.toastr.error('Error logging out');
+        this.snack.error('Error logging out');
         this.auth.clearAuth();
       
         this.router.navigate(['/auth/login']);
@@ -184,7 +184,7 @@ toggleSeen(n: AppNotification) {
   if (n.seen) {
     this.notificationService.markUnseen(n.id).subscribe({
       next: () => n.seen = false,
-      error: () => this.toastr.error('Failed to mark unread')
+      error: () => this.snack.error('Failed to mark unread')
     });
   } else {
     this.notificationService.markSeen(n.id).subscribe({
@@ -192,7 +192,7 @@ toggleSeen(n: AppNotification) {
         n.seen = true;
         this.hasUnseen = this.notifications.some(x => !x.seen);
       },
-      error: () => this.toastr.error('Failed to mark read')
+      error: () => this.snack.error('Failed to mark read')
     });
   }
 }
@@ -207,7 +207,7 @@ openNotification(n: AppNotification) {
         n.seen = true;
         this.hasUnseen = this.notifications.some(x => !x.seen);
       },
-      error: () => this.toastr.error('Failed to mark notification as seen')
+      error: () => this.snack.error('Failed to mark notification as seen')
     });
   }
 

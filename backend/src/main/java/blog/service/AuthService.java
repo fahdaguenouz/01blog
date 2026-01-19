@@ -79,7 +79,8 @@ public class AuthService {
 
     return new AuthResponse(token.token(), user, user.getRole().name());
   }
- @Transactional
+
+  @Transactional
   public void logout(String tokenHeader) {
     if (tokenHeader == null || tokenHeader.isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token required");

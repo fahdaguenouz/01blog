@@ -20,6 +20,7 @@ import { OrderByPositionPipe } from '../orderByPosition';
 import { AuthService } from '../../services/auth.service';
 import { SnackService } from '../../core/snack.service';
 import { AdminService } from '../../services/admin.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -62,21 +63,37 @@ isAdmin = false;
   postNotFound = false;
   hiddenByAdmin = false;
   loadingPost = true;
+private destroy$ = new Subject<void>();
 
 ngOnInit() {
-  const id = this.route.snapshot.paramMap.get('id')!;
-  this.loadPost(id);
-  this.loadComments(id);
-
   // current user
   this.userService.getCurrentUser().subscribe({
     next: (user) => (this.currentUser = user),
     error: () => (this.currentUser = null),
   });
 
-  // ✅ admin check from backend (never from storage)
-this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
+  // admin check
+  this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
+
+  // ✅ IMPORTANT: react to /post/:id changes
+  this.route.paramMap
+    .pipe(takeUntil(this.destroy$))
+    .subscribe((params) => {
+      const id = params.get('id');
+      if (!id) return;
+
+      // optional: reset state so UI updates immediately
+      this.post = null;
+      this.comments = [];
+      this.loadingPost = true;
+      this.hiddenByAdmin = false;
+      this.postNotFound = false;
+
+      this.loadPost(id);
+      this.loadComments(id);
+    });
 }
+
 
 
   loadPost(id: string) {
@@ -107,14 +124,24 @@ this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
       },
     });
   }
+ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+}
 
   get shouldShowHiddenBanner(): boolean {
     return this.hiddenByAdmin;
   }
 
-  loadComments(postId: string) {
-    this.posts.getComments(postId).subscribe((comments) => (this.comments = comments));
-  }
+loadComments(postId: string) {
+  this.posts.getComments(postId).subscribe({
+    next: (comments) => {
+      this.comments = [...comments];   // ✅ new reference
+      this.cdr.detectChanges();        // ✅ force repaint
+    },
+    error: (err) => console.error('loadComments failed', err),
+  });
+}
 
   toggleLike() {
     if (!this.post) return;
@@ -148,18 +175,46 @@ this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
     }
   }
 
-  addComment() {
-    if (!this.post || !this.newComment.trim()) return;
+addComment() {
+  if (!this.post) return;
 
-    this.posts.addComment(this.post.id, this.newComment.trim()).subscribe({
-      next: () => {
-        this.loadComments(this.post!.id);
-        if (this.post) this.post.comments = (this.post.comments ?? 0) + 1;
-        this.newComment = '';
-      },
-      error: () => alert('Failed to add comment'),
-    });
-  }
+  const text = this.newComment.trim();
+  if (!text) return;
+
+  const tempId = 'temp-' + crypto.randomUUID();
+
+  const temp: Comment = {
+    id: tempId,
+    postId: this.post.id,
+    userId: this.currentUser?.id || 'me',
+    username: this.currentUser?.username || 'you',
+    avatarUrl: this.currentUser?.avatarUrl || 'svg/avatar.png',
+    text,
+    createdAt: new Date().toISOString(),
+  };
+
+  // ✅ optimistic UI
+  this.comments = [temp, ...this.comments];
+  this.post.comments = (this.post.comments ?? 0) + 1;
+  this.newComment = '';
+  this.cdr.detectChanges();
+
+  this.posts.addComment(this.post.id, text).subscribe({
+    next: (created) => {
+      // ✅ replace temp with created (no duplication)
+      this.comments = this.comments.map((c) => (c.id === tempId ? created : c));
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      // rollback
+      this.comments = this.comments.filter((c) => c.id !== tempId);
+      this.post!.comments = Math.max(0, (this.post!.comments ?? 1) - 1);
+
+      this.snack.error(err?.error?.message || 'Failed to add comment');
+      this.cdr.detectChanges();
+    },
+  });
+}
 
   canDeleteComment(c: Comment): boolean {
     if (!this.currentUser || !this.post) return false;

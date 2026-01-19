@@ -1,4 +1,4 @@
-package blog.service;
+package blog.service.users;
 
 import blog.models.User;
 import blog.repository.UserRepository;

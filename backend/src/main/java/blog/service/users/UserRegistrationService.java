@@ -1,9 +1,10 @@
-package blog.service;
+package blog.service.users;
 
 import blog.models.Media;
 import blog.models.User;
 import blog.repository.MediaRepository;
 import blog.repository.UserRepository;
+import blog.service.LocalMediaStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;

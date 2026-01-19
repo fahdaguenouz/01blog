@@ -46,7 +46,7 @@ public class SubscriptionService {
 
     subscriptions.save(s);
 
-    notificationService.notify(target, me, NotificationType.USER_FOLLOWED, null);
+    notificationService.notify(target, me, NotificationType.USER_FOLLOWED, null,null);
 
 return userProfileMapper.toProfileDto(target, true);
   }

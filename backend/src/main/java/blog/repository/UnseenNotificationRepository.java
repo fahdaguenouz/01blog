@@ -18,6 +18,8 @@ public interface UnseenNotificationRepository
 
     Optional<UnseenNotification> findByNotification_IdAndUser_Id(UUID notificationId, UUID userId);
 
+
+
 }
 
 

@@ -20,7 +20,8 @@ export interface Report {
 
   category: string;
   reason: string;
-  status: 'waiting' | 'reviewed' | 'resolved';
+  status: 'waiting' | 'resolved' | 'rejected';
+
   createdAt: string;
 
   reportedPostStatus?: 'active' | 'hidden' | string;
@@ -48,17 +49,14 @@ export class ReportService {
     return this.http.get<Report[]>(this.apiUrl);
   }
 
-  updateReportStatus(reportId: string, status: string): Observable<Report> {
-    return this.http.patch<Report>(
-      `${this.apiUrl}/${reportId}`,
-      { status }
-    );
+  updateReportStatus(reportId: string, status: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${reportId}/status`, { status });
   }
   deletePost(postId: string) {
     return this.http.delete(`${this.apiUrl}/post/${postId}`);
   }
 
-  banUser(userId: string) {
-    return this.http.delete(`${this.apiUrl}/user/${userId}`);
+  banUser(userId: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/users/${userId}/ban`, {});
   }
 }

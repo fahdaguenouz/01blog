@@ -10,8 +10,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import java.time.Instant;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,6 +81,37 @@ public class GlobalExceptionHandler {
     log.error("Unhandled error at {}: {}", req.getRequestURI(), ex.getMessage(), ex);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
         body(HttpStatus.INTERNAL_SERVER_ERROR, "We hit a problem on our side. Please try again.", req));
+  }
+
+  @ExceptionHandler({
+      MethodArgumentTypeMismatchException.class,
+      HttpMessageNotReadableException.class,
+      MissingServletRequestPartException.class,
+      MissingServletRequestParameterException.class
+  })
+  public ResponseEntity<?> handleBadRequest(Exception ex, HttpServletRequest req) {
+    String msg;
+
+    if (ex instanceof MethodArgumentTypeMismatchException e) {
+      msg = "Invalid value for '" + e.getName() + "': " + e.getValue();
+    } else if (ex instanceof MissingServletRequestPartException e) {
+      msg = "Missing multipart part: " + e.getRequestPartName();
+    } else if (ex instanceof MissingServletRequestParameterException e) {
+      msg = "Missing parameter: " + e.getParameterName();
+    } else {
+      msg = "Bad request: " + ex.getMessage();
+    }
+
+    log.warn("Bad request at {}: {}", req.getRequestURI(), ex.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body(HttpStatus.BAD_REQUEST, msg, req));
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  public ResponseEntity<?> handleUnsupported(HttpMediaTypeNotSupportedException ex, HttpServletRequest req) {
+    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(
+        body(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+            "Unsupported Content-Type. This endpoint requires multipart/form-data.",
+            req));
   }
 
 }

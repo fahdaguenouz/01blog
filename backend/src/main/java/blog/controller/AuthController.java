@@ -3,7 +3,7 @@ package blog.controller;
 import blog.dto.AuthResponse;
 import blog.dto.LoginRequest;
 import blog.models.User;
-import blog.service.UserService;
+import blog.service.users.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

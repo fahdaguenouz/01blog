@@ -62,7 +62,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private postService: PostService,
     private router: Router,
     private cd: ChangeDetectorRef,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
 
   ngOnInit() {
@@ -86,6 +86,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         switchMap((params) => {
+          this.closeList(true);
           const username = params.get('username');
           if (!username) {
             this.loading = false;
@@ -101,9 +102,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
             }),
             finalize(() => {
               this.loading = false;
-            })
+            }),
           );
-        })
+        }),
       )
       .subscribe((profile) => {
         this.user = profile ? this.normalizeProfile(profile) : null;
@@ -161,9 +162,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
               } catch (e) {
                 this.cd.markForCheck();
               }
-            })
+            }),
           );
-        })
+        }),
       )
       .subscribe((posts) => {
         this.posts = posts ?? [];
@@ -195,7 +196,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }),
         finalize(() => {
           this.loading = false;
-        })
+        }),
       )
       .subscribe((u) => {
         if (!u) {
@@ -273,7 +274,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .getProfileByUsername(this.user.username)
       .pipe(
         takeUntil(this.destroy$),
-        catchError(() => of(null))
+        catchError(() => of(null)),
       )
       .subscribe((u) => {
         if (u) this.user = this.normalizeProfile(u);
@@ -348,9 +349,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   showFollowersList() {
     if (!this.user) return;
+
     this.loadingFollowers = true;
     this.showFollowers = true;
     this.showFollowing = false;
+
+    // ✅ force DOM update immediately
+    queueMicrotask(() => this.cd.detectChanges());
 
     this.userService
       .getFollowers(this.user.id)
@@ -359,21 +364,28 @@ export class ProfileComponent implements OnInit, OnDestroy {
         catchError((err) => {
           console.error('Failed to load followers', err);
           this.snackBar.open('Failed to load followers', 'Close');
-          this.loadingFollowers = false;
           return of([]);
-        })
+        }),
+        finalize(() => {
+          this.loadingFollowers = false;
+          this.cd.detectChanges();
+        }),
       )
       .subscribe((followers) => {
         this.followers = followers ?? [];
-        this.loadingFollowers = false;
+        this.cd.detectChanges();
       });
   }
 
   showFollowingList() {
     if (!this.user) return;
+
     this.loadingFollowing = true;
     this.showFollowing = true;
     this.showFollowers = false;
+
+    // ✅ force DOM update immediately
+    queueMicrotask(() => this.cd.detectChanges());
 
     this.userService
       .getFollowing(this.user.id)
@@ -382,13 +394,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
         catchError((err) => {
           console.error('Failed to load following', err);
           this.snackBar.open('Failed to load following', 'Close');
-          this.loadingFollowing = false;
           return of([]);
-        })
+        }),
+        finalize(() => {
+          this.loadingFollowing = false;
+          this.cd.detectChanges();
+        }),
       )
       .subscribe((following) => {
         this.following = following ?? [];
-        this.loadingFollowing = false;
+        this.cd.detectChanges();
       });
   }
 
@@ -398,9 +413,27 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFollowing = false;
   }
 
-  closeList() {
+  closeList(force = false) {
     this.showFollowers = false;
     this.showFollowing = false;
+
+    this.loadingFollowers = false;
+    this.loadingFollowing = false;
+
+    // optional: clear lists so old user data doesn’t flash
+    this.followers = [];
+    this.following = [];
+
+    // ✅ ensure UI updates immediately
+    if (force) {
+      queueMicrotask(() => this.cd.detectChanges());
+    } else {
+      try {
+        this.cd.detectChanges();
+      } catch {
+        this.cd.markForCheck();
+      }
+    }
   }
 
   formatDate(date: string | Date): string {

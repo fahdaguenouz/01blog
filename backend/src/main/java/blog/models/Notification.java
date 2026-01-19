@@ -25,6 +25,7 @@ public class Notification {
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post; // nullable (follow has no post)
+    
 
     @Enumerated(EnumType.STRING)
     private NotificationType type;

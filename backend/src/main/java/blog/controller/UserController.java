@@ -11,7 +11,7 @@ import blog.repository.SubscriptionRepository;
 import blog.repository.UserRepository;
 import blog.service.NotificationService;
 import blog.service.SubscriptionService;
-import blog.service.UserService;
+import blog.service.users.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;

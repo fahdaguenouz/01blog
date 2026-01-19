@@ -90,7 +90,7 @@ export class AdminReportsComponent implements OnInit {
       this.admin.deleteUser(report.reportedUserId).subscribe({
         next: () => {
           this.snack.open('User deleted', 'Close', { duration: 2500 });
-          this.resolve(report);
+         this.reports = this.reports.filter(r => r.id !== report.id);
         },
         error: () => this.snack.open('Failed to delete user', 'Close', { duration: 3000 }),
       });
@@ -131,7 +131,7 @@ export class AdminReportsComponent implements OnInit {
       this.admin.deletePost(postId).subscribe({
         next: () => {
           this.snack.open('Post deleted', 'Close', { duration: 2500 });
-          this.resolve(report);
+         this.reports = this.reports.filter(r => r.id !== report.id);
         },
         error: () => this.snack.open('Failed to delete post', 'Close', { duration: 3000 }),
       });
@@ -156,8 +156,8 @@ export class AdminReportsComponent implements OnInit {
         next: () => {
           report.reportedPostStatus = 'hidden';
           this.snack.open('Post hidden', 'Close', { duration: 2500 });
-          // optionally: mark report reviewed/resolved
-          this.reportsApi.updateReportStatus(report.id, 'reviewed').subscribe({
+          // optionally: mark report resolved/resolved
+          this.reportsApi.updateReportStatus(report.id, 'resolved').subscribe({
             next: () => this.load(),
             error: () => this.load(),
           });
@@ -186,7 +186,7 @@ export class AdminReportsComponent implements OnInit {
           report.reportedPostStatus = 'active';
 
           this.snack.open('Post activated', 'Close', { duration: 2500 });
-          this.reportsApi.updateReportStatus(report.id, 'reviewed').subscribe({
+          this.reportsApi.updateReportStatus(report.id, 'resolved').subscribe({
             next: () => this.load(),
             error: () => this.load(),
           });

@@ -1,4 +1,4 @@
-package blog.service;
+package blog.service.users;
 
 import blog.dto.UserProfileDto;
 import blog.mapper.UserProfileMapper;

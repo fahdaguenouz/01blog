@@ -1,9 +1,11 @@
-package blog.service;
+package blog.service.users;
 
 import blog.dto.AuthResponse;
 import blog.dto.LoginRequest;
 import blog.dto.UserProfileDto;
 import blog.models.User;
+import blog.service.AuthService;
+import blog.service.AvatarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
