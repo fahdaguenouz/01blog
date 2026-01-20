@@ -114,7 +114,3 @@ INSERT INTO subscriptions (id, subscriber_id, subscribed_to_id, created_at) VALU
   ('aa0e8400-e29b-41d4-a716-446655440007', '550e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440002', CURRENT_TIMESTAMP - INTERVAL '5 days'),
   ('aa0e8400-e29b-41d4-a716-446655440008', '550e8400-e29b-41d4-a716-446655440005', '550e8400-e29b-41d4-a716-446655440001', CURRENT_TIMESTAMP - INTERVAL '3 days');
 
--- 8. Insert reports (some reported content)
-INSERT INTO reports (id, reporter_id, reported_user_id, reported_post_id, reported_comment_id, category, reason, status, created_at) VALUES
-  ('bb0e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440006', NULL, NULL, 'inappropriate_content', 'User is spamming the feed', 'waiting', CURRENT_TIMESTAMP - INTERVAL '3 days');
-

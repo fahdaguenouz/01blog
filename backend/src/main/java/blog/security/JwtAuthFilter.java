@@ -1,4 +1,3 @@
-// src/main/java/blog/security/JwtAuthFilter.java
 package blog.security;
 
 import blog.repository.SessionRepository;
@@ -15,7 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -118,8 +117,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
           SecurityContextHolder.getContext().setAuthentication(auth);
         }
-      } catch (Exception e) {
-        // invalid token => anonymous
+      } catch (JwtException | IllegalArgumentException e) {
+        writeJson(response,
+            HttpServletResponse.SC_UNAUTHORIZED,
+            "Invalid or expired token");
+        return;
       }
     }
 

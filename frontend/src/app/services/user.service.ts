@@ -30,7 +30,7 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getProfileByUsername(username: string): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.base}/api/users/by-username/${username}`);
+    return this.http.get<UserProfile>(`${this.base}/api/users/username/${username}`);
   }
 
   getCurrentUser(): Observable<any> {

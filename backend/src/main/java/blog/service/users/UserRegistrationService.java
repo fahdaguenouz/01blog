@@ -37,7 +37,7 @@ public class UserRegistrationService {
     return email != null && EMAIL_PATTERN.matcher(email).matches();
   }
 
-  public User registerMultipart(String name, String username, String email, String password,
+  public void registerMultipart(String name, String username, String email, String password,
                                 Integer age, String bio, MultipartFile avatar) {
 
     name = norm(name);
@@ -97,6 +97,6 @@ public class UserRegistrationService {
       users.save(user);
     }
 
-    return user;
+   
   }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,7 +19,7 @@ public class AuthController {
 
   // Multipart to allow optional avatar at signup
   @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public User register(
+  public ResponseEntity<Void> register(
       @RequestParam String name,
       @RequestParam String username,
       @RequestParam String email,
@@ -27,7 +28,8 @@ public class AuthController {
       @RequestParam(required = false) String bio,
       @RequestPart(required = false) MultipartFile avatar
   ) {
-    return userService.registerMultipart(name, username, email, password, age, bio, avatar);
+     userService.registerMultipart(name, username, email, password, age, bio, avatar);
+     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   @PostMapping("/login")

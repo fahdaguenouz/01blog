@@ -20,7 +20,7 @@ import org.springframework.web.cors.*;
 import java.util.List;
 
 @Configuration
-@EnableMethodSecurity // ✅ optional but recommended for @PreAuthorize later
+@EnableMethodSecurity
 public class SecurityConfig {
 
   @Bean
@@ -28,45 +28,28 @@ public class SecurityConfig {
       HttpSecurity http,
       JwtService jwtService,
       SessionRepository sessions,
-      UserRepository users
-  ) throws Exception {
+      UserRepository users) throws Exception {
 
     http
-      .csrf(csrf -> csrf.disable())
-      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-      .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // ✅ stateless
-      .formLogin(f -> f.disable())
-      .httpBasic(b -> b.disable())
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/error").permitAll()
-        .requestMatchers("/uploads/**").permitAll()
-        .requestMatchers("/api/auth/**").permitAll()
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // ✅ stateless
+        .formLogin(f -> f.disable())
+        .httpBasic(b -> b.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
 
-        // PUBLIC USERS
-        .requestMatchers(HttpMethod.GET, "/api/users/by-username/**").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/users/search").permitAll()
+            // optional: keep uploads public if you want
+            .requestMatchers("/uploads/**").permitAll()
 
-        // AUTH USERS
-        .requestMatchers("/api/users/me/**").authenticated()
-        .requestMatchers("/api/users/*/subscribe").authenticated()
-        .requestMatchers(HttpMethod.GET, "/api/users/*/followers").authenticated()
-        .requestMatchers(HttpMethod.GET, "/api/users/*/following").authenticated()
+            // ADMIN (must be before anyRequest)
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-        // ADMIN
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
-         .requestMatchers(HttpMethod.GET, "/api/reports").hasRole("ADMIN")
-    .requestMatchers(HttpMethod.PATCH, "/api/reports/**").hasRole("ADMIN")
-    
-        .requestMatchers("/api/notifications/**").authenticated()
-
-        .requestMatchers("/api/categories/**").permitAll()
-        .requestMatchers("/api/posts/user/**").permitAll()
-
-        .anyRequest().authenticated()
-      )
-      .addFilterBefore(new JwtAuthFilter(jwtService, sessions, users),
-          UsernamePasswordAuthenticationFilter.class);
+            // everything else requires login
+            .anyRequest().authenticated())
+        .addFilterBefore(new JwtAuthFilter(jwtService, sessions, users),
+            UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }

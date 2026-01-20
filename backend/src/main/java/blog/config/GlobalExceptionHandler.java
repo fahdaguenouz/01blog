@@ -1,4 +1,4 @@
-// src/main/java/blog/config/GlobalExceptionHandler.java
+
 package blog.config;
 
 import io.jsonwebtoken.JwtException;

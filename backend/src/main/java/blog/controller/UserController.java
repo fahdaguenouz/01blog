@@ -31,7 +31,7 @@ public class UserController {
   private final UserService userService;
   private final SubscriptionService subscriptionService;
 
-  @GetMapping("/by-username/{username}")
+  @GetMapping("/username/{username}")
   public UserProfileDto getByUsername(@PathVariable String username, Authentication auth) {
     return userService.getProfileByUsername(username, auth);
   }

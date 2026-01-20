@@ -4,6 +4,8 @@ import blog.dto.AuthResponse;
 import blog.dto.LoginRequest;
 import blog.dto.UserProfileDto;
 import blog.models.User;
+import blog.repository.MediaRepository;
+import blog.repository.UserRepository;
 import blog.service.AuthService;
 import blog.service.AvatarService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +26,8 @@ public class UserService {
   private final UserProfileService userProfileService;
   private final AvatarService avatarService;
   private final CurrentUserService currentUserService;
-
-
+  private final UserRepository users;
+  private final MediaRepository mediaRepo;
 
   public AuthResponse authenticate(LoginRequest request) {
     return authService.authenticate(request);
@@ -35,13 +37,13 @@ public class UserService {
     authService.logout(tokenHeader);
   }
 
-  public User registerMultipart(String name, String username, String email, String password,
-                                Integer age, String bio, MultipartFile avatar) {
-    return registrationService.registerMultipart(name, username, email, password, age, bio, avatar);
+  public void registerMultipart(String name, String username, String email, String password,
+      Integer age, String bio, MultipartFile avatar) {
+    registrationService.registerMultipart(name, username, email, password, age, bio, avatar);
   }
 
   public Optional<User> findByUsername(String username) {
-    return registrationService != null ? Optional.empty() : Optional.empty(); // remove if not needed
+   return users.findByUsername(username);
   }
 
   public UserProfileDto getProfileByUsername(String username, Authentication auth) {

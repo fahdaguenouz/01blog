@@ -1,4 +1,3 @@
-// src/main/java/blog/security/JwtService.java
 package blog.security;
 
 import io.jsonwebtoken.*;
@@ -70,3 +69,16 @@ public class JwtService {
   // small record helper
   public record TokenBundle(String token, String jti, Date exp) {}
 }
+
+
+
+
+
+// {
+//   "uid": "770e8400-e29b-41d4-a716-446655440003",
+//   "role": "ADMIN",
+//   "sub": "fahd",
+//   "jti": "1d3f5c9e-....",
+//   "iat": 1768940000,
+//   "exp": 1769026400
+// }
