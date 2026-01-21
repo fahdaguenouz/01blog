@@ -43,7 +43,7 @@ export class FeedComponent implements OnInit {
     private router: Router,
     private categoryService: CategoryService,
     private cd: ChangeDetectorRef,
-    private zone: NgZone
+    private zone: NgZone,
   ) {}
 
   ngOnInit() {
@@ -106,7 +106,7 @@ export class FeedComponent implements OnInit {
         catchError((err) => {
           console.error('[Feed] categories ERROR:', err);
           return of([] as Category[]);
-        })
+        }),
       )
       .subscribe((cats) => {
         console.log('[Feed] categories OK:', cats.length);
@@ -124,8 +124,7 @@ export class FeedComponent implements OnInit {
     this.loading = true;
     this.forceRender();
 
-    const categoryId =
-      this.selectedCategoryId === 'all' ? undefined : this.selectedCategoryId;
+    const categoryId = this.selectedCategoryId === 'all' ? undefined : this.selectedCategoryId;
 
     this.postService
       .getFeed(categoryId, this.sort)
@@ -139,7 +138,7 @@ export class FeedComponent implements OnInit {
           console.log('[Feed] loadFeed finalize => stop loading');
           this.loading = false;
           this.forceRender();
-        })
+        }),
       )
       .subscribe((posts) => {
         console.log('[Feed] feed OK:', posts.length);
@@ -159,19 +158,22 @@ export class FeedComponent implements OnInit {
   }
 
   toggleLike(post: Post) {
-    if (post.isLiked) {
-      this.postService.unlikePost(post.id).subscribe(() => {
-        post.isLiked = false;
-        post.likes = Math.max((post.likes ?? 1) - 1, 0);
+    const req$ = post.isLiked
+      ? this.postService.unlikePost(post.id)
+      : this.postService.likePost(post.id);
+
+    req$.subscribe({
+      next: (updated) => {
+        // update the same object so the UI changes immediately
+        post.isLiked = updated.isLiked;
+        post.likes = updated.likes;
         this.forceRender();
-      });
-    } else {
-      this.postService.likePost(post.id).subscribe(() => {
-        post.isLiked = true;
-        post.likes = (post.likes ?? 0) + 1;
+      },
+      error: (err) => {
+        console.error('toggleLike failed', err);
         this.forceRender();
-      });
-    }
+      },
+    });
   }
 
   toggleSave(post: Post) {
@@ -208,8 +210,7 @@ export class FeedComponent implements OnInit {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const postDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-    const diffDays =
-      (today.getTime() - postDay.getTime()) / (1000 * 60 * 60 * 24);
+    const diffDays = (today.getTime() - postDay.getTime()) / (1000 * 60 * 60 * 24);
 
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
