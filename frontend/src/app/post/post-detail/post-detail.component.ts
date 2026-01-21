@@ -21,6 +21,7 @@ import { AuthService } from '../../services/auth.service';
 import { SnackService } from '../../core/snack.service';
 import { AdminService } from '../../services/admin.service';
 import { Subject, takeUntil } from 'rxjs';
+import { ConfirmDialogComponent } from '../../admin/users/ConfirmDialogComponent';
 
 @Component({
   standalone: true,
@@ -58,27 +59,25 @@ export class PostDetailComponent implements OnInit {
   comments: Comment[] = [];
   newComment = '';
   currentUser: UserProfile | null = null;
-isAdmin = false;
+  isAdmin = false;
 
   postNotFound = false;
   hiddenByAdmin = false;
   loadingPost = true;
-private destroy$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
 
-ngOnInit() {
-  // current user
-  this.userService.getCurrentUser().subscribe({
-    next: (user) => (this.currentUser = user),
-    error: () => (this.currentUser = null),
-  });
+  ngOnInit() {
+    // current user
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => (this.currentUser = user),
+      error: () => (this.currentUser = null),
+    });
 
-  // admin check
-  this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
+    // admin check
+    this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
 
-  // ✅ IMPORTANT: react to /post/:id changes
-  this.route.paramMap
-    .pipe(takeUntil(this.destroy$))
-    .subscribe((params) => {
+    // ✅ IMPORTANT: react to /post/:id changes
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('id');
       if (!id) return;
 
@@ -92,9 +91,7 @@ ngOnInit() {
       this.loadPost(id);
       this.loadComments(id);
     });
-}
-
-
+  }
 
   loadPost(id: string) {
     this.loadingPost = true;
@@ -124,24 +121,24 @@ ngOnInit() {
       },
     });
   }
-ngOnDestroy(): void {
-  this.destroy$.next();
-  this.destroy$.complete();
-}
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   get shouldShowHiddenBanner(): boolean {
     return this.hiddenByAdmin;
   }
 
-loadComments(postId: string) {
-  this.posts.getComments(postId).subscribe({
-    next: (comments) => {
-      this.comments = [...comments];   // ✅ new reference
-      this.cdr.detectChanges();        // ✅ force repaint
-    },
-    error: (err) => console.error('loadComments failed', err),
-  });
-}
+  loadComments(postId: string) {
+    this.posts.getComments(postId).subscribe({
+      next: (comments) => {
+        this.comments = [...comments]; // ✅ new reference
+        this.cdr.detectChanges(); // ✅ force repaint
+      },
+      error: (err) => console.error('loadComments failed', err),
+    });
+  }
 
   toggleLike() {
     if (!this.post) return;
@@ -175,73 +172,75 @@ loadComments(postId: string) {
     }
   }
 
-addComment() {
-  if (!this.post) return;
+  addComment() {
+    if (!this.post) return;
 
-  const text = this.newComment.trim();
-  if (!text) return;
+    const text = this.newComment.trim();
+    if (!text) return;
 
-  const tempId = 'temp-' + crypto.randomUUID();
+    const tempId = 'temp-' + crypto.randomUUID();
 
-  const temp: Comment = {
-    id: tempId,
-    postId: this.post.id,
-    userId: this.currentUser?.id || 'me',
-    username: this.currentUser?.username || 'you',
-    avatarUrl: this.currentUser?.avatarUrl || 'svg/avatar.png',
-    text,
-    createdAt: new Date().toISOString(),
-  };
+    const temp: Comment = {
+      id: tempId,
+      postId: this.post.id,
+      userId: this.currentUser?.id || 'me',
+      username: this.currentUser?.username || 'you',
+      avatarUrl: this.currentUser?.avatarUrl || 'svg/avatar.png',
+      text,
+      createdAt: new Date().toISOString(),
+    };
 
-  // ✅ optimistic UI
-  this.comments = [temp, ...this.comments];
-  this.post.comments = (this.post.comments ?? 0) + 1;
-  this.newComment = '';
-  this.cdr.detectChanges();
+    // ✅ optimistic UI
+    this.comments = [temp, ...this.comments];
+    this.post.comments = (this.post.comments ?? 0) + 1;
+    this.newComment = '';
+    this.cdr.detectChanges();
 
-  this.posts.addComment(this.post.id, text).subscribe({
-    next: (created) => {
-      // ✅ replace temp with created (no duplication)
-      this.comments = this.comments.map((c) => (c.id === tempId ? created : c));
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      // rollback
-      this.comments = this.comments.filter((c) => c.id !== tempId);
-      this.post!.comments = Math.max(0, (this.post!.comments ?? 1) - 1);
+    this.posts.addComment(this.post.id, text).subscribe({
+      next: (created) => {
+        // ✅ replace temp with created (no duplication)
+        this.comments = this.comments.map((c) => (c.id === tempId ? created : c));
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        // rollback
+        this.comments = this.comments.filter((c) => c.id !== tempId);
+        this.post!.comments = Math.max(0, (this.post!.comments ?? 1) - 1);
 
-      this.snack.error(err?.error?.message || 'Failed to add comment');
-      this.cdr.detectChanges();
-    },
-  });
-}
+        this.snack.error(err?.error?.message || 'Failed to add comment');
+        this.cdr.detectChanges();
+      },
+    });
+  }
 
   canDeleteComment(c: Comment): boolean {
     if (!this.currentUser || !this.post) return false;
     return (
-      c.userId === this.currentUser.id ||
-      this.post.authorId === this.currentUser.id ||
-      this.isAdmin
+      c.userId === this.currentUser.id || this.post.authorId === this.currentUser.id || this.isAdmin
     );
   }
 
-  onDeleteComment(c: Comment) {
-    if (!this.post) return;
+ onDeleteComment(c: Comment) {
+  if (!this.post) return;
 
-    const ok = window.confirm('Delete this comment?');
-    if (!ok) return;
+  this.confirm('Delete comment', 'Do you really want to delete this comment?')
+    .subscribe((ok) => {
+      if (!ok || !this.post) return;
 
-    this.posts.deleteComment(this.post.id, c.id).subscribe({
-      next: () => {
-        this.comments = this.comments.filter((x) => x.id !== c.id);
-        if (this.post) this.post.comments = Math.max(0, (this.post.comments ?? 0) - 1);
-      },
-      error: (err) => {
-        console.error('Delete comment failed', err);
-        alert('Failed to delete comment');
-      },
+      this.posts.deleteComment(this.post.id, c.id).subscribe({
+        next: () => {
+          this.comments = this.comments.filter((x) => x.id !== c.id);
+          this.post!.comments = Math.max(0, (this.post!.comments ?? 0) - 1);
+          this.snack.success('Comment deleted');
+        },
+        error: (err) => {
+          console.error('Delete comment failed', err);
+          this.snack.error(err?.error?.message || 'Failed to delete comment');
+        },
+      });
     });
-  }
+}
+
 
   // ✅ FIXED: avoid NG0100 by updating post on next tick + normalize media
   onEditPost() {
@@ -264,7 +263,7 @@ addComment() {
             })) || [],
           categoryIds: (this.post.categories || []).map((c) => c.id),
         },
-      }
+      },
     );
 
     dialogRef.afterClosed().subscribe((updatedPost) => {
@@ -275,7 +274,7 @@ addComment() {
         this.post = {
           ...this.post!,
           ...updatedPost,
-          media: updatedPost.media ?? [],     // ✅ key when deleting all media
+          media: updatedPost.media ?? [], // ✅ key when deleting all media
           coverMedia: updatedPost.coverMedia ?? undefined,
         };
 
@@ -287,30 +286,36 @@ addComment() {
     });
   }
 
-  onDeletePost() {
-    if (!this.post) return;
+ onDeletePost() {
+  if (!this.post) return;
 
-    const confirmed = window.confirm(
-      'Do you really want to delete your post?\n\nWarning: all comments and likes will be removed.'
-    );
-    if (!confirmed) return;
+  this.confirm(
+    'Delete post',
+    'Do you really want to delete your post?\n\nWarning: all comments and likes will be removed.'
+  ).subscribe((ok) => {
+    if (!ok || !this.post) return;
 
     this.posts.deletePost(this.post.id).subscribe({
-      next: () => this.router.navigate(['/feed']),
+      next: () => {
+        this.snack.success('Post deleted');
+        this.router.navigate(['/feed']);
+      },
       error: (err) => {
         console.error('Delete failed', err);
-        alert('Failed to delete post: ' + (err.status || 'unknown error'));
+        this.snack.error(err?.error?.message || 'Failed to delete post');
       },
     });
-  }
+  });
+}
+
 
   openReportDialog() {
     if (!this.post || !this.currentUser) {
-      alert('You must be logged in to report a post.');
+      this.snack.error('You must be logged in to report a post.');
       return;
     }
 
-    const dialogRef = this.dialog.open<
+    const reportRef = this.dialog.open<
       ReportPostDialogComponent,
       { authorName: string; postTitle: string },
       ReportPostDialogResult
@@ -322,20 +327,40 @@ addComment() {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (!result) return;
+    reportRef.afterClosed().subscribe((result) => {
+      if (!result || !this.post) return;
 
-      this.reports
-        .reportPost({
-          reportedUserId: this.post!.authorId,
-          reportedPostId: this.post!.id,
-          category: result.category,
-          reason: result.reason,
-        })
-        .subscribe({
-          next: () => alert('Thank you. Your report has been submitted.'),
-          error: () => alert('Failed to submit report. Please try again later.'),
-        });
+      // ✅ confirm before sending report
+      const confirmRef = this.dialog.open<
+        ConfirmDialogComponent,
+        { title: string; message: string },
+        boolean
+      >(ConfirmDialogComponent, {
+        width: '420px',
+        data: {
+          title: 'Confirm report',
+          message:
+            `Are you sure you want to report this post?\n\n` +
+            `Category: ${result.category}\n` +
+            `Reason: ${result.reason}`,
+        },
+      });
+
+      confirmRef.afterClosed().subscribe((confirmed) => {
+        if (!confirmed || !this.post) return;
+
+        this.reports
+          .reportPost({
+            reportedUserId: this.post.authorId,
+            reportedPostId: this.post.id,
+            category: result.category,
+            reason: result.reason,
+          })
+          .subscribe({
+            next: () => this.snack.success('Report submitted. Thank you.'),
+            error: (err) => this.snack.error(err?.error?.message || 'Failed to submit report.'),
+          });
+      });
     });
   }
 
@@ -349,18 +374,19 @@ addComment() {
     });
   }
 
-
-
   get canManagePost(): boolean {
     if (!this.post) return false;
     return !!this.currentUser && (this.currentUser.id === this.post.authorId || this.isAdmin);
   }
 
   onAdminDeletePost() {
-    if (!this.post) return;
+  if (!this.post) return;
 
-    const ok = window.confirm('Admin action:\n\nDelete this post?\nThis cannot be undone.');
-    if (!ok) return;
+  this.confirm(
+    'Delete post (Admin)',
+    'Admin action:\n\nDelete this post?\nThis cannot be undone.'
+  ).subscribe((ok) => {
+    if (!ok || !this.post) return;
 
     this.admin.deletePost(this.post.id).subscribe({
       next: () => {
@@ -369,8 +395,25 @@ addComment() {
       },
       error: (err) => {
         console.error('Admin delete failed', err);
-        this.snack.error('Failed to delete post.');
+        this.snack.error(err?.error?.message || 'Failed to delete post');
       },
     });
+  });
+}
+
+
+  private confirm(title: string, message: string) {
+    return this.dialog
+      .open<ConfirmDialogComponent, { title: string; message: string }, boolean>(
+        ConfirmDialogComponent,
+        {
+          width: '420px',
+          maxWidth: '92vw',
+          autoFocus: false,
+          restoreFocus: true,
+          data: { title, message },
+        },
+      )
+      .afterClosed();
   }
 }

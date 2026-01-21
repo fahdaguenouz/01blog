@@ -36,95 +36,96 @@ import { MatIconModule } from '@angular/material/icon';
     </div>
   `,
   styles: [`
-    @use "../../../styles/variables" as *;
+  @use "../../../styles/variables" as *;
 
+  .confirm-dialog {
+    padding: 20px 22px;
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+    overflow: hidden; /* ✅ prevents weird scroll */
+  }
 
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+
+    .dialog-icon {
+      font-size: 30px;
+      width: 30px;
+      height: 30px;
+      color: $primary-color;
+
+      &.warning {
+        color: #e74c3c;
+      }
+    }
+
+    .dialog-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+      line-height: 1.2;
+    }
+  }
+
+  .dialog-content {
+    margin-bottom: 18px;
+    max-height: 220px;     /* ✅ if message is long, scroll inside content only */
+    overflow: auto;
+    padding-right: 6px;    /* ✅ avoids scrollbar overlay */
+
+    p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #555;
+      margin: 0;
+      white-space: pre-line; /* ✅ keeps \n in message */
+      word-break: break-word;
+    }
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    .cancel-btn {
+      color: #555;
+      padding: 0 16px;
+
+      &:hover {
+        background-color: rgba(123, 84, 47, 0.05);
+      }
+    }
+
+    .confirm-btn {
+      padding: 0 18px;
+      height: 38px;
+      border-radius: 18px;
+      font-weight: 500;
+    }
+  }
+
+  @media (max-width: 480px) {
     .confirm-dialog {
-      padding: 24px;
-      min-width: 400px;
-    }
-
-    .dialog-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 20px;
-
-      .dialog-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-        color: $primary-color;
-
-        &.warning {
-          color: #e74c3c;
-        }
-      }
-
-      .dialog-title {
-        font-size: 22px;
-        font-weight: 600;
-        color: #333333;
-        margin: 0;
-      }
-    }
-
-    .dialog-content {
-      margin-bottom: 24px;
-
-      p {
-        font-size: 15px;
-        line-height: 1.6;
-        color: #555555;
-        margin: 0;
-      }
+      max-width: 100%;
+      padding: 18px;
     }
 
     .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
+      flex-direction: column;
 
-      .cancel-btn {
-        color: #555555;
-        padding: 0 20px;
-
-        &:hover {
-          background-color: rgba(123, 84, 47, 0.05);
-        }
-      }
-
+      .cancel-btn,
       .confirm-btn {
-        padding: 0 24px;
-        height: 40px;
-        border-radius: 20px;
-        font-weight: 500;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .confirm-dialog {
-        min-width: auto;
         width: 100%;
-        padding: 20px;
-      }
-
-      .dialog-header {
-        .dialog-title {
-          font-size: 20px;
-        }
-      }
-
-      .dialog-actions {
-        flex-direction: column;
-
-        .cancel-btn,
-        .confirm-btn {
-          width: 100%;
-        }
       }
     }
-  `],
+  }
+`],
   imports: [MatDialogModule, MatButtonModule, MatIconModule],
 })
 export class ConfirmDialogComponent {
