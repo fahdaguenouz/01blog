@@ -72,8 +72,9 @@
     <!-- Tab Navigation -->
     <div class="profile-menu">
       <button mat-button [class.active]="selectedTab === 'my'" (click)="onTabChange('my')">
-        My posts
+        {{ isMyProfile ? 'My posts' : 'Posts' }}
       </button>
+
       <button mat-button [class.active]="selectedTab === 'saved'" (click)="onTabChange('saved')">
         Saved
       </button>
@@ -89,7 +90,10 @@
       <div *ngIf="!loadingPosts && posts.length === 0" class="empty-state">
         <mat-icon class="empty-icon">article</mat-icon>
         <h3>No posts found</h3>
-        <p *ngIf="selectedTab === 'my'">You haven't published anything yet.</p>
+        <p *ngIf="selectedTab === 'my'">
+          {{ isMyProfile ? "You haven't published anything yet." : "This user hasn't published anything yet." }}
+        </p>
+
         <p *ngIf="selectedTab === 'saved'">No saved posts yet.</p>
         <p *ngIf="selectedTab === 'liked'">No liked posts yet.</p>
       </div>

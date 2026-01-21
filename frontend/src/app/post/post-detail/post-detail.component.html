@@ -1,5 +1,3 @@
-
-
 <div class="post-detail-wrapper">
   <!-- Loading -->
   <div *ngIf="loadingPost" class="loading-container">
@@ -46,7 +44,8 @@
 
         <!-- Action Buttons -->
         <div class="header-actions">
-          <button mat-icon-button class="report-btn" matTooltip="Report this post" (click)="openReportDialog()">
+          <button *ngIf="currentUser && p && p.authorId !== currentUser.id" mat-icon-button class="report-btn"
+            matTooltip="Report this post" (click)="openReportDialog()">
             <mat-icon>flag</mat-icon>
           </button>
 
@@ -65,7 +64,7 @@
               <mat-icon>edit</mat-icon>
               <span>Edit Post</span>
             </button>
-            <button mat-menu-item (click)="onDeletePost()" class="delete-item">
+            <button *ngIf="!isAdmin" mat-menu-item (click)="onDeletePost()" class="delete-item">
               <mat-icon>delete</mat-icon>
               <span>Delete Post</span>
             </button>

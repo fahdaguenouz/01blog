@@ -228,11 +228,13 @@
   margin-bottom: 16px;
   border-radius: $border-radius-md;
   overflow: hidden;
-
+   aspect-ratio: 16 / 9;
+  background: rgba(0, 0, 0, 0.04);
   .post-image,
   .post-video {
     width: 100%;
-    height: auto;
+    height: 100%;        // ✅ fill the ratio box
+    object-fit: cover;
     max-height: 400px;
     object-fit: cover;
     display: block;

@@ -437,6 +437,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFollowers = false;
     this.showFollowing = false;
   }
+  get isMyProfile(): boolean {
+  return !!this.user && !!this.currentUserId && this.user.id === this.currentUserId;
+}
+
 
   closeList(force = false) {
     this.showFollowers = false;
