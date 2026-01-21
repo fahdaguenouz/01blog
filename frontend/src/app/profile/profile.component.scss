@@ -22,6 +22,15 @@
   min-height: 60vh;
   padding: 40px;
   text-align: center;
+  position: relative; /* REQUIRED */
+  z-index: 5;
+
+  /* ✅ nicer card look like post not found */
+  max-width: 680px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: rgba(255, 157, 0, 0.05);
+  border: 1px solid rgba(123, 84, 47, 0.12);
 
   .error-icon {
     font-size: 64px;
@@ -33,10 +42,33 @@
 
   h3 {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 700;
     color: $text-dark;
     margin: 0 0 8px;
   }
+
+  /* ✅ new */
+  p {
+    margin: 0 0 18px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: $text-color;
+    max-width: 460px;
+  }
+
+  /* ✅ new */
+  button {
+    border-radius: 22px;
+    padding: 0 22px;
+    height: 40px;
+  }
+}
+
+.error-container .back-btn {
+  height: 42px;
+  border-radius: 999px;
+  padding: 0 26px;
+  font-weight: 600;
 }
 
 .profile-container {
@@ -148,29 +180,42 @@
 }
 
 // Buttons
-.follow-btn-container,
-.edit-profile-btn {
+.follow-btn-container {
   text-align: center;
   margin-bottom: 40px;
 }
 
 .follow-btn {
-  min-width: 120px;
-  height: 40px;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 15px;
-  padding: 0 24px;
-}
-
-.edit-profile-btn {
   min-width: 140px;
-  height: 40px;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 15px;
+  height: 42px;
+  border-radius: 999px;
+  padding: 0 26px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  // ✅ ensure label is always readable even if primary is yellow
+  color: white !important; // dark text on yellow
 }
 
+/* Optional: make Unfollow look different (more “danger/neutral”) */
+.follow-btn.unfollow {
+  background: rgba(123, 84, 47, 0.1) !important; // soft brown/neutral
+  border: 1px solid rgba(123, 84, 47, 0.25) !important;
+  color: #ff9d00 !important;
+}
+
+.follow-btn.unfollow:hover {
+  background: rgba(123, 84, 47, 0.14) !important;
+}
+
+.follow-btn.edit-btn {
+  color: white !important;
+}
+
+/* Optional: if you want a small icon spacing later */
+.follow-btn.edit-btn mat-icon {
+  margin-right: 8px;
+}
 // Profile Menu
 .profile-menu {
   display: flex;

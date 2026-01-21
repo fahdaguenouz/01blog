@@ -22,6 +22,7 @@ import { SnackService } from '../../core/snack.service';
 import { AdminService } from '../../services/admin.service';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmDialogComponent } from '../../admin/users/ConfirmDialogComponent';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   standalone: true,
@@ -36,6 +37,7 @@ import { ConfirmDialogComponent } from '../../admin/users/ConfirmDialogComponent
     MatMenuModule,
     MatDialogModule,
     RouterModule,
+    MatProgressSpinnerModule,
     MatInputModule,
     MatTooltipModule,
     OrderByPositionPipe,
@@ -87,7 +89,11 @@ export class PostDetailComponent implements OnInit {
       this.loadingPost = true;
       this.hiddenByAdmin = false;
       this.postNotFound = false;
-
+      if (!this.isUuid(id)) {
+        this.loadingPost = false;
+        this.postNotFound = true;
+        return;
+      }
       this.loadPost(id);
       this.loadComments(id);
     });
@@ -111,13 +117,16 @@ export class PostDetailComponent implements OnInit {
       error: (err) => {
         console.error('loadPost error', err);
         this.loadingPost = false;
-
-        if (err.status === 404) {
-          this.hiddenByAdmin = true;
+        if (err.status === 404 || err.status === 400) {
+          this.postNotFound = true;
+          this.hiddenByAdmin = false;
+          return;
         }
         if (err.status === 403) {
           this.hiddenByAdmin = true;
+          return;
         }
+        this.snack.error('Failed to load post');
       },
     });
   }
@@ -136,7 +145,11 @@ export class PostDetailComponent implements OnInit {
         this.comments = [...comments]; // ✅ new reference
         this.cdr.detectChanges(); // ✅ force repaint
       },
-      error: (err) => console.error('loadComments failed', err),
+     error: (err) => {
+      // ✅ ignore 400/404 (invalid or missing post)
+      if (err.status === 400 || err.status === 404) return;
+      console.error('loadComments failed', err);
+    },
     });
   }
 
@@ -220,11 +233,10 @@ export class PostDetailComponent implements OnInit {
     );
   }
 
- onDeleteComment(c: Comment) {
-  if (!this.post) return;
+  onDeleteComment(c: Comment) {
+    if (!this.post) return;
 
-  this.confirm('Delete comment', 'Do you really want to delete this comment?')
-    .subscribe((ok) => {
+    this.confirm('Delete comment', 'Do you really want to delete this comment?').subscribe((ok) => {
       if (!ok || !this.post) return;
 
       this.posts.deleteComment(this.post.id, c.id).subscribe({
@@ -239,8 +251,7 @@ export class PostDetailComponent implements OnInit {
         },
       });
     });
-}
-
+  }
 
   // ✅ FIXED: avoid NG0100 by updating post on next tick + normalize media
   onEditPost() {
@@ -286,28 +297,31 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
- onDeletePost() {
-  if (!this.post) return;
+  onDeletePost() {
+    if (!this.post) return;
 
-  this.confirm(
-    'Delete post',
-    'Do you really want to delete your post?\n\nWarning: all comments and likes will be removed.'
-  ).subscribe((ok) => {
-    if (!ok || !this.post) return;
+    this.confirm(
+      'Delete post',
+      'Do you really want to delete your post?\n\nWarning: all comments and likes will be removed.',
+    ).subscribe((ok) => {
+      if (!ok || !this.post) return;
 
-    this.posts.deletePost(this.post.id).subscribe({
-      next: () => {
-        this.snack.success('Post deleted');
-        this.router.navigate(['/feed']);
-      },
-      error: (err) => {
-        console.error('Delete failed', err);
-        this.snack.error(err?.error?.message || 'Failed to delete post');
-      },
+      this.posts.deletePost(this.post.id).subscribe({
+        next: () => {
+          this.snack.success('Post deleted');
+          this.router.navigate(['/feed']);
+        },
+        error: (err) => {
+          console.error('Delete failed', err);
+          this.snack.error(err?.error?.message || 'Failed to delete post');
+        },
+      });
     });
-  });
-}
+  }
 
+  private isUuid(v: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  }
 
   openReportDialog() {
     if (!this.post || !this.currentUser) {
@@ -380,27 +394,26 @@ export class PostDetailComponent implements OnInit {
   }
 
   onAdminDeletePost() {
-  if (!this.post) return;
+    if (!this.post) return;
 
-  this.confirm(
-    'Delete post (Admin)',
-    'Admin action:\n\nDelete this post?\nThis cannot be undone.'
-  ).subscribe((ok) => {
-    if (!ok || !this.post) return;
+    this.confirm(
+      'Delete post (Admin)',
+      'Admin action:\n\nDelete this post?\nThis cannot be undone.',
+    ).subscribe((ok) => {
+      if (!ok || !this.post) return;
 
-    this.admin.deletePost(this.post.id).subscribe({
-      next: () => {
-        this.snack.success('Post deleted');
-        this.router.navigate(['/feed']);
-      },
-      error: (err) => {
-        console.error('Admin delete failed', err);
-        this.snack.error(err?.error?.message || 'Failed to delete post');
-      },
+      this.admin.deletePost(this.post.id).subscribe({
+        next: () => {
+          this.snack.success('Post deleted');
+          this.router.navigate(['/feed']);
+        },
+        error: (err) => {
+          console.error('Admin delete failed', err);
+          this.snack.error(err?.error?.message || 'Failed to delete post');
+        },
+      });
     });
-  });
-}
-
+  }
 
   private confirm(title: string, message: string) {
     return this.dialog

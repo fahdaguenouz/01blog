@@ -7,6 +7,54 @@
   padding: 60px 24px 80px;
 }
 
+.loading-container,
+.error-container {
+  max-width: 680px;
+  margin: 0 auto;
+  min-height: 55vh;              /* gives vertical centering space */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;        /* vertical center */
+  align-items: center;            /* horizontal center */
+  text-align: center;
+}
+
+.error-container {
+  padding: 28px 22px;
+  border-radius: 16px;
+  background: rgba(255, 157, 0, 0.05);
+  border: 1px solid rgba(123, 84, 47, 0.12);
+
+  .error-icon {
+    font-size: 54px;
+    width: 54px;
+    height: 54px;
+    color: rgba(123, 84, 47, 0.28);
+    margin-bottom: 14px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-dark;
+  }
+
+  p {
+    margin: 0 0 18px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: $text-color;
+    max-width: 460px;            /* keeps it neat */
+  }
+
+  button {
+    border-radius: 22px;
+    padding: 0 22px;
+    height: 40px;
+  }
+}
+
 .post-detail-container {
   max-width: 680px;
   margin: 0 auto;

@@ -7,7 +7,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UserService, UserProfile } from '../services/user.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -19,6 +19,7 @@ import { EditProfileDialogComponent } from './edit-profile.component';
 import { Post, PostService } from '../services/post.service';
 import { Observable, of, Subject, BehaviorSubject, combineLatest } from 'rxjs';
 import { switchMap, distinctUntilChanged, takeUntil, catchError, finalize } from 'rxjs/operators';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-profile',
@@ -27,6 +28,8 @@ import { switchMap, distinctUntilChanged, takeUntil, catchError, finalize } from
     CommonModule,
     MatCardModule,
     MatIconModule,
+    RouterModule, // ✅ needed for routerLink
+    MatButtonModule,
     MatProgressSpinnerModule,
     MatDialogModule,
     MatSnackBarModule,
@@ -88,27 +91,49 @@ export class ProfileComponent implements OnInit, OnDestroy {
         switchMap((params) => {
           this.closeList(true);
           const username = params.get('username');
+          this.error = null;
+          this.user = null;
+          this.profileUser$.next(null);
+          this.posts = [];
+
           if (!username) {
             this.loading = false;
-            this.user = null;
-            this.profileUser$.next(null);
             return of(null);
           }
+
           this.loading = true;
           return this.userService.getProfileByUsername(username).pipe(
             catchError((err) => {
               this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
+              this.showFollowers = false;
+              this.showFollowing = false;
+
+              // ✅ optional: clear lists
+              this.followers = [];
+              this.following = [];
+
               return of(null);
             }),
             finalize(() => {
               this.loading = false;
+              try {
+                this.cd.detectChanges();
+              } catch {
+                this.cd.markForCheck();
+              }
             }),
           );
         }),
       )
       .subscribe((profile) => {
-        this.user = profile ? this.normalizeProfile(profile) : null;
-        this.profileUser$.next(this.user);
+        if (profile) {
+          this.error = null; 
+          this.user = this.normalizeProfile(profile);
+          this.profileUser$.next(this.user);
+        } else {
+          this.user = null;
+          this.profileUser$.next(null);
+        }
       });
 
     // Reactive posts loader
