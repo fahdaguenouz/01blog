@@ -31,8 +31,7 @@ public class PostLikeService {
       UserRepository users,
       LikeRepository likes,
       NotificationService notificationService,
-      PostAssembler assembler
-  ) {
+      PostAssembler assembler) {
     this.posts = posts;
     this.users = users;
     this.likes = likes;
@@ -53,8 +52,11 @@ public class PostLikeService {
   public void likePost(String username, UUID postId) {
     User user = requireUser(username);
     Post post = requirePost(postId);
-
-    if (likes.findByUserIdAndPostId(user.getId(), postId).isPresent()) return;
+    if ("hidden".equalsIgnoreCase(post.getStatus())) {
+      throw new ResponseStatusException(HttpStatus.GONE, "Post is hidden");
+    }
+    if (likes.findByUserIdAndPostId(user.getId(), postId).isPresent())
+      return;
 
     Like like = new Like();
     like.setUserId(user.getId());
@@ -65,13 +67,15 @@ public class PostLikeService {
     post.setLikesCount(Math.max(newCount, 0));
     posts.saveAndFlush(post);
 
-    notificationService.notify(post.getAuthor(), user, NotificationType.POST_LIKED, post,null);
+    notificationService.notify(post.getAuthor(), user, NotificationType.POST_LIKED, post, null);
   }
 
   public void unlikePost(String username, UUID postId) {
     User user = requireUser(username);
     Post post = requirePost(postId);
-
+    if ("hidden".equalsIgnoreCase(post.getStatus())) {
+      throw new ResponseStatusException(HttpStatus.GONE, "Post is hidden");
+    }
     likes.findByUserIdAndPostId(user.getId(), postId).ifPresent(like -> {
       likes.delete(like);
 
@@ -83,8 +87,10 @@ public class PostLikeService {
 
   public PostDetailDto likeAndReturn(String username, UUID postId) {
     User user = requireUser(username);
-    likePost(username, postId);
     Post post = requirePost(postId);
+
+    likePost(username, postId);
+
     return assembler.toDetail(post, user.getId());
   }
 

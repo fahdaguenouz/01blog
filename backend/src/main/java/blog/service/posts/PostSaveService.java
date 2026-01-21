@@ -49,7 +49,10 @@ public class PostSaveService {
 
   public void savePost(String username, UUID postId) {
     User user = requireUser(username);
-
+    Post post = requirePost(postId);
+      if ("hidden".equalsIgnoreCase(post.getStatus())) {
+      throw new ResponseStatusException(HttpStatus.GONE, "Post is hidden");
+    }
     Optional<SavedPost> existing = savedPosts.findByUserIdAndPostId(user.getId(), postId);
     if (existing.isPresent()) return;
 
@@ -58,7 +61,6 @@ public class PostSaveService {
     savedPost.setPostId(postId);
     savedPosts.save(savedPost);
 
-    Post post = requirePost(postId);
     notificationService.notify(post.getAuthor(), user, NotificationType.POST_SAVED, post,null);
   }
 

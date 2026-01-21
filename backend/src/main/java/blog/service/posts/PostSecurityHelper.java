@@ -1,6 +1,5 @@
 package blog.service.posts;
 
-
 import blog.models.Post;
 import blog.models.User;
 import org.springframework.http.HttpStatus;
@@ -29,4 +28,7 @@ public class PostSecurityHelper {
       }
     }
   }
+
+
+
 }

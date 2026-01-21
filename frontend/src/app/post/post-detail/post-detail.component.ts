@@ -145,47 +145,53 @@ export class PostDetailComponent implements OnInit {
         this.comments = [...comments]; // ✅ new reference
         this.cdr.detectChanges(); // ✅ force repaint
       },
-     error: (err) => {
-      // ✅ ignore 400/404 (invalid or missing post)
-      if (err.status === 400 || err.status === 404) return;
-      console.error('loadComments failed', err);
-    },
+      error: (err) => {
+        // ✅ ignore 400/404 (invalid or missing post)
+        if (err.status === 400 || err.status === 404) return;
+        console.error('loadComments failed', err);
+      },
     });
   }
 
   toggleLike() {
     if (!this.post) return;
-     const req$ = this.post.isLiked
-    ? this.posts.unlikePost(this.post.id)
-    : this.posts.likePost(this.post.id);
-      req$.subscribe({
-    next: (updated) => {
-      if (!this.post) return;
-      // keep UI in sync with server truth
-      this.post.isLiked = updated.isLiked;
-      this.post.likes = updated.likes;
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('toggleLike failed', err);
-      this.snack.error(err?.error?.message || 'Failed to update like');
-    },
-  });
-   
+    const req$ = this.post.isLiked
+      ? this.posts.unlikePost(this.post.id)
+      : this.posts.likePost(this.post.id);
+    req$.subscribe({
+      next: (updated) => {
+        if (!this.post) return;
+        // keep UI in sync with server truth
+        this.post.isLiked = updated.isLiked;
+        this.post.likes = updated.likes;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        if (this.handleHidden(err)) return;
+        this.snack.error(err?.error?.message || 'Failed to update like');
+        console.error('toggleLike failed', err);
+      },
+    });
   }
 
   toggleSave() {
     if (!this.post) return;
 
-    if (this.post.isSaved) {
-      this.posts.unsavePost(this.post.id).subscribe(() => {
-        if (this.post) this.post.isSaved = false;
-      });
-    } else {
-      this.posts.savePost(this.post.id).subscribe(() => {
-        if (this.post) this.post.isSaved = true;
-      });
-    }
+  const req$ = this.post.isSaved
+    ? this.posts.unsavePost(this.post.id)
+    : this.posts.savePost(this.post.id);
+
+  req$.subscribe({
+    next: () => {
+      if (!this.post) return;
+      this.post.isSaved = !this.post.isSaved;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      if (this.handleHidden(err)) return;
+      this.snack.error(err?.error?.message || 'Failed to update save');
+    },
+  });
   }
 
   addComment() {
@@ -219,7 +225,7 @@ export class PostDetailComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        // rollback
+        if (this.handleHidden(err)) return;
         this.comments = this.comments.filter((c) => c.id !== tempId);
         this.post!.comments = Math.max(0, (this.post!.comments ?? 1) - 1);
 
@@ -431,5 +437,16 @@ export class PostDetailComponent implements OnInit {
         },
       )
       .afterClosed();
+  }
+
+  private handleHidden(err: any): boolean {
+    // if you use 410 GONE
+    if (err?.status === 410) {
+      this.snack.error('This post is hidden');
+      this.router.navigate(['/feed']);
+      return true;
+    }
+
+    return false;
   }
 }

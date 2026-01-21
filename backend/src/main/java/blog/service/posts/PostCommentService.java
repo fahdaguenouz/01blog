@@ -62,7 +62,9 @@ public class PostCommentService {
     public CommentDto addComment(String username, UUID postId, String content) {
         User user = requireUser(username);
         Post post = requirePost(postId);
-
+        if ("hidden".equalsIgnoreCase(post.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.GONE, "Post is hidden");
+        }
         content = validator.requireCleanText(content, "Comment", 2000);
 
         Comment c = new Comment();
