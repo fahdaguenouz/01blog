@@ -151,9 +151,18 @@ export class PostService {
     return this.http.delete<void>(`${this.apiUrl}/${postId}`);
   }
 
-  likePost(postId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${postId}/like`, {});
-  }
+likePost(postId: string): Observable<Post> {
+  return this.http
+    .post<Post>(`${this.apiUrl}/${postId}/like`, {})
+    .pipe(map((p) => this.normalizePost(p)));
+}
+
+unlikePost(postId: string): Observable<Post> {
+  return this.http
+    .delete<Post>(`${this.apiUrl}/${postId}/like`)
+    .pipe(map((p) => this.normalizePost(p)));
+}
+
   getUserPosts(userId: string): Observable<Post[]> {
     return this.http
       .get<Post[]>(`${this.apiUrl}/user/${userId}/posts`)
@@ -172,9 +181,6 @@ export class PostService {
       .pipe(map((posts) => posts.map((p) => this.normalizePost(p))));
   }
 
-  unlikePost(postId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${postId}/like`);
-  }
 
   addComment(postId: string, content: string): Observable<Comment> {
     return this.http.post<Comment>(`${this.apiUrl}/${postId}/comments`, { content });

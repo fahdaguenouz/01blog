@@ -155,20 +155,23 @@ export class PostDetailComponent implements OnInit {
 
   toggleLike() {
     if (!this.post) return;
-
-    if (this.post.isLiked) {
-      this.posts.unlikePost(this.post.id).subscribe(() => {
-        if (!this.post) return;
-        this.post.isLiked = false;
-        this.post.likes = Math.max(0, (this.post.likes ?? 0) - 1);
-      });
-    } else {
-      this.posts.likePost(this.post.id).subscribe(() => {
-        if (!this.post) return;
-        this.post.isLiked = true;
-        this.post.likes = (this.post.likes ?? 0) + 1;
-      });
-    }
+     const req$ = this.post.isLiked
+    ? this.posts.unlikePost(this.post.id)
+    : this.posts.likePost(this.post.id);
+      req$.subscribe({
+    next: (updated) => {
+      if (!this.post) return;
+      // keep UI in sync with server truth
+      this.post.isLiked = updated.isLiked;
+      this.post.likes = updated.likes;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('toggleLike failed', err);
+      this.snack.error(err?.error?.message || 'Failed to update like');
+    },
+  });
+   
   }
 
   toggleSave() {
