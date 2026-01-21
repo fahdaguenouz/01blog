@@ -5,6 +5,7 @@ import blog.models.Post;
 import blog.models.User;
 import blog.repository.PostRepository;
 import blog.repository.SavedPostRepository;
+import blog.repository.SubscriptionRepository;
 import blog.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,9 +25,12 @@ public class PostFeedService {
   private final UserRepository users;
   private final SavedPostRepository savedPosts;
   private final PostAssembler assembler;
+  private final SubscriptionRepository subs;
 
-  public PostFeedService(PostRepository posts, UserRepository users, SavedPostRepository savedPosts, PostAssembler assembler) {
+  public PostFeedService(PostRepository posts, SubscriptionRepository subs, UserRepository users,
+      SavedPostRepository savedPosts, PostAssembler assembler) {
     this.posts = posts;
+    this.subs = subs;
     this.users = users;
     this.savedPosts = savedPosts;
     this.assembler = assembler;
@@ -41,12 +45,22 @@ public class PostFeedService {
     User user = requireUser(username);
     UUID userId = user.getId();
 
+    // ✅ ids of people I follow
+    List<UUID> subscribedToIds = subs.findSubscribedToIdsBySubscriberId(userId);
+
+    // ✅ If I follow nobody → empty feed
+    if (subscribedToIds.isEmpty()) {
+      return List.of();
+    }
+
+    // ✅ ONLY active posts from followed users + exclude my posts
     List<Post> base = (categoryId != null)
-        ? posts.findByCategoryAndStatus(categoryId, "active")
-        : posts.findByStatus("active");
+        ? posts.findFeedByAuthorsCategoryAndStatusExcludeMe(subscribedToIds, categoryId, "active", userId)
+        : posts.findFeedByAuthorsAndStatusExcludeMe(subscribedToIds, "active", userId);
 
     Comparator<Post> comparator = switch (sort) {
-      case "likes" -> Comparator.comparing(p -> Optional.ofNullable(p.getLikesCount()).orElse(0), Comparator.reverseOrder());
+      case "likes" ->
+        Comparator.comparing(p -> Optional.ofNullable(p.getLikesCount()).orElse(0), Comparator.reverseOrder());
       case "saved" -> Comparator.comparing(p -> savedPosts.countByPostId(p.getId()), Comparator.reverseOrder());
       case "new" -> Comparator.comparing(Post::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
       default -> Comparator.comparing(Post::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()));

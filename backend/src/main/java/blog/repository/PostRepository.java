@@ -32,6 +32,33 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
       """)
   List<Post> findByCategoryAndStatus(@Param("categoryId") UUID categoryId, @Param("status") String status);
 
+  @Query("""
+        SELECT p FROM Post p
+        WHERE p.status = :status
+          AND p.author.id <> :userId
+          AND p.author.id IN :authorIds
+        ORDER BY p.createdAt DESC
+      """)
+  List<Post> findFeedByAuthorsAndStatusExcludeMe(
+      @Param("authorIds") List<UUID> authorIds,
+      @Param("status") String status,
+      @Param("userId") UUID userId);
+
+  @Query("""
+        SELECT p FROM Post p
+        JOIN PostCategory pc ON pc.postId = p.id
+        WHERE pc.categoryId = :categoryId
+          AND p.status = :status
+          AND p.author.id <> :userId
+          AND p.author.id IN :authorIds
+        ORDER BY p.createdAt DESC
+      """)
+  List<Post> findFeedByAuthorsCategoryAndStatusExcludeMe(
+      @Param("authorIds") List<UUID> authorIds,
+      @Param("categoryId") UUID categoryId,
+      @Param("status") String status,
+      @Param("userId") UUID userId);
+
   @Modifying
   @Transactional
   @Query("update Post p set p.status = :status where p.id = :postId")
