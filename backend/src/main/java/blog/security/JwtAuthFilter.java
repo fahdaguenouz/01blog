@@ -78,7 +78,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
           // ✅ BAN CHECK (kick out immediately)
           var uOpt = users.findById(uid);
           if (uOpt.isEmpty() || (uOpt.get().getStatus() != null && uOpt.get().getStatus().equalsIgnoreCase("banned"))) {
-            sessions.deleteByUserId(uid); // kill session
+            // sessions.deleteByUserId(uid); // kill session
             writeJson(response, HttpServletResponse.SC_FORBIDDEN,
                 "Your account has been banned. Please contact support.");
             return;

@@ -19,13 +19,18 @@ export const httpErrorSnackInterceptor: HttpInterceptorFn = (req, next) => {
         const canShow = now - lastShown > 1200;
 
         // ✅ banned: show message + logout + redirect
-        if (err.status === 403 && auth.getToken()) {
-          const msg = toUserMessage(err, 'Your account has been banned.');
+        if ((err.status === 401 || err.status === 403) && auth.getToken()) {
+          const msg = toUserMessage(
+            err,
+            err.status === 403
+              ? 'Your account has been banned.'
+              : 'Your session ended. Please login again.',
+          );
           if (canShow) {
             lastShown = now;
             snack.error(msg);
           }
-          auth.forceLogout('banned');
+           auth.forceLogout(err.status === 403 ? 'banned' : 'expired');
           return throwError(() => err);
         }
 
@@ -37,6 +42,6 @@ export const httpErrorSnackInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       return throwError(() => err);
-    })
+    }),
   );
 };

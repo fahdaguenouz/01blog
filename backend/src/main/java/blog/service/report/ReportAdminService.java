@@ -5,6 +5,7 @@ import blog.mapper.ReportMapper;
 import blog.models.Report;
 import blog.models.User;
 import blog.repository.ReportRepository;
+import blog.repository.SessionRepository;
 import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ public class ReportAdminService {
   private final ReportRepository reports;
   private final UserRepository users;
   private final ReportMapper mapper;
+  private final SessionRepository sessions;
+
 
   @Transactional(readOnly = true)
   public List<ReportDto> getAll() {
@@ -51,5 +54,6 @@ public class ReportAdminService {
     // ✅ your old code didn't change anything; this fixes it:
     u.setStatus("banned");
     users.save(u);
+    sessions.deleteByUserId(userId);
   }
 }
