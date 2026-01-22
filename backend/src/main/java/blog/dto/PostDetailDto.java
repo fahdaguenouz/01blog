@@ -1,4 +1,3 @@
-// src/main/java/blog/dto/PostDetailDto.java
 package blog.dto;
 
 import java.time.Instant;

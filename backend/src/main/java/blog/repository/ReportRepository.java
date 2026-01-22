@@ -1,4 +1,3 @@
-// src/main/java/blog/repository/ReportRepository.java
 package blog.repository;
 
 import blog.models.Report;

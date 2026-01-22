@@ -22,7 +22,7 @@ public class DailyStatsDto {
     public long getPosts() { return posts; }
     public long getReports() { return reports; }
 
-    // Optional: setters if needed
+
     public void setDate(LocalDate date) { this.date = date; }
     public void setUsers(long users) { this.users = users; }
     public void setPosts(long posts) { this.posts = posts; }

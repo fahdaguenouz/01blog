@@ -1,11 +1,10 @@
-// src/main/java/blog/models/Post.java
 package blog.models;
 
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
-@Data
+
 @Entity
 @Table(name = "posts", indexes = {
     @Index(name = "idx_posts_user_created", columnList = "user_id, created_at DESC")
@@ -52,7 +51,7 @@ public class Post {
       id = UUID.randomUUID();
   }
 
-  // getters/setters
+
   public UUID getId() {
     return id;
   }

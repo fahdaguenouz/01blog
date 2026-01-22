@@ -1,4 +1,3 @@
-// src/main/java/blog/models/Report.java
 package blog.models;
 
 import jakarta.persistence.Column;
@@ -13,7 +12,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "reports")
-@Data
+@Getter 
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

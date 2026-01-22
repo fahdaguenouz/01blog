@@ -6,5 +6,5 @@ public record RegisterRequest(
   String email,
   String password,
   Integer age,
-  String bio // optional
+  String bio 
 ) {}

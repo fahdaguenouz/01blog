@@ -35,7 +35,7 @@ public class UserProfileDto {
 }
 
 
-  // getters and setters for all fields
+
 
   public UUID getId() { return id; }
   public void setId(UUID id) { this.id = id; }

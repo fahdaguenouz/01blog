@@ -1,12 +1,14 @@
 package blog.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import java.time.Instant;
 import java.util.UUID;
 @Entity
 @Table(name = "post_media")
-@Data  // Lombok generates getters/setters
+@Getter
+@Setter
+ 
 public class PostMedia {
 
   @Id
@@ -29,5 +31,5 @@ public class PostMedia {
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
-    // No uniqueConstraints in @Table - handled by DB
+
 }

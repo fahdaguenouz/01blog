@@ -1,4 +1,3 @@
-// src/main/java/blog/repository/AdminStatsRepository.java
 package blog.repository;
 
 import blog.dto.DailyStatsDto;

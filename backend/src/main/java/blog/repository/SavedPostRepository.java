@@ -1,4 +1,3 @@
-// src/main/java/blog/repository/SavedPostRepository.java
 package blog.repository;
 
 import blog.models.SavedPost;

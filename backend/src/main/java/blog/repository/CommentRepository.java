@@ -1,4 +1,3 @@
-// src/main/java/blog/repository/CommentRepository.java
 package blog.repository;
 
 import blog.models.Comment;

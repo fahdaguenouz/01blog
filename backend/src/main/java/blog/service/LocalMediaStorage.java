@@ -19,11 +19,15 @@ public class LocalMediaStorage {
   ) {
     this.root = Paths.get(uploadDir).toAbsolutePath().normalize();
     this.publicBaseUrl = baseUrl;
-    try { Files.createDirectories(root); } catch (Exception ignored) {}
+    try {
+      Files.createDirectories(root);
+    } catch (Exception ignored) {
+    }
   }
 
   public SavedFile save(MultipartFile file) {
-    if (file == null || file.isEmpty()) return null;
+    if (file == null || file.isEmpty())
+      return null;
     String ext = getExt(file.getOriginalFilename());
     String name = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
     Path target = root.resolve(name);
@@ -37,37 +41,41 @@ public class LocalMediaStorage {
   }
 
   public void deleteByUrl(String url) {
-    if (url == null || url.isBlank()) return;
+    if (url == null || url.isBlank())
+      return;
 
     // supports "/uploads/name.png" or "/uploads/name.png?x=y"
     String clean = url.split("\\?")[0];
 
     // Only delete files that live under our publicBaseUrl
     String base = publicBaseUrl.endsWith("/") ? publicBaseUrl : publicBaseUrl + "/";
-    if (!clean.startsWith(base)) return;
+    if (!clean.startsWith(base))
+      return;
 
     String filename = clean.substring(base.length());
-    if (filename.isBlank()) return;
+    if (filename.isBlank())
+      return;
 
     Path target = root.resolve(filename).normalize();
 
     // Safety: ensure it doesn't escape root
-    if (!target.startsWith(root)) return;
+    if (!target.startsWith(root))
+      return;
 
     try {
       Files.deleteIfExists(target);
-    } catch (Exception ignored) {
-      // optional: log.warn("Failed deleting {}", target, e);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to delete media file: " + target.getFileName(), e);
     }
   }
 
-  
   private static String getExt(String fn) {
-    if (fn == null) return "";
+    if (fn == null)
+      return "";
     int dot = fn.lastIndexOf('.');
     return dot > 0 ? fn.substring(dot + 1) : "";
   }
 
-  public record SavedFile(String url, Integer size, String contentType) {}
+  public record SavedFile(String url, Integer size, String contentType) {
+  }
 }
-  

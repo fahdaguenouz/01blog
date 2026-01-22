@@ -1,4 +1,3 @@
-// src/main/java/blog/models/SavedPost.java
 package blog.models;
 
 import jakarta.persistence.*;
@@ -6,7 +5,6 @@ import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 @Entity
-@Data
 @Table(name = "saved_posts", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "post_id"})
 })

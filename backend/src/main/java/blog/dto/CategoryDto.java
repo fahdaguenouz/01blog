@@ -1,4 +1,3 @@
-// src/main/java/blog/dto/CategoryDto.java
 package blog.dto;
 
 import java.util.UUID;

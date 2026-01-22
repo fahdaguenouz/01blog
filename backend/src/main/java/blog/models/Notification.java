@@ -1,7 +1,7 @@
 package blog.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import java.time.Instant;
 import java.util.*;
 
@@ -11,7 +11,9 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "notifications")
-@Data // Lombok generates getters/setters
+@Getter
+@Setter
+ 
 public class Notification {
 
     @Id

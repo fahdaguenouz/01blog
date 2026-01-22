@@ -1,12 +1,14 @@
 package blog.models;
 
 import java.util.UUID;
-import lombok.Data;
+import lombok.*;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "unseen_notifications")
-@Data
+@Getter
+@Setter
+
 public class UnseenNotification {
 
     @Id

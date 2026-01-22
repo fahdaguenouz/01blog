@@ -1,4 +1,3 @@
-// src/main/java/blog/repository/CategoryRepository.java
 package blog.repository;
 
 import blog.models.Category;
