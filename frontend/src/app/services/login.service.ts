@@ -1,7 +1,7 @@
 // src/app/auth/services/login.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environment/environment';
+import { environment } from '../../environment/environment';
 
 @Injectable({ providedIn: 'root' })
 export class LoginService {

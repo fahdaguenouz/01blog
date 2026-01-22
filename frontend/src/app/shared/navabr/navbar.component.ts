@@ -10,7 +10,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { LoginService } from '../../auth/services/login.service';
+import { LoginService } from '../../services/login.service';
 import { UserService } from '../../services/user.service';
 import { AppNotification, NotificationService } from '../../services/Notification.service';
 import { SnackService } from '../../core/snack.service';

@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DefaultLoginLayoutComponent } from '../components/default-login-layout/default-login-layout.component';
-import { LoginService } from '../services/login.service';
+import { LoginService } from '../../services/login.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';

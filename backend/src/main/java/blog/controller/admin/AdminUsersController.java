@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class AdminUsersController {
 
   private final UserRepository userRepo;

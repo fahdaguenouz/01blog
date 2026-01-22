@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/stats")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class AdminStatsController {
 
   private final AdminStatsService service;

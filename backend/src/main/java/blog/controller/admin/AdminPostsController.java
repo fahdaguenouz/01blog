@@ -18,7 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin/posts")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+
 public class AdminPostsController {
 
   private final PostRepository postRepo;
@@ -29,7 +29,6 @@ public class AdminPostsController {
   @DeleteMapping("/{postId}")
   @Transactional
   public ResponseEntity<Void> deletePost(@PathVariable UUID postId) {
-    // ensure exists (better error message)
     postRepo.findById(postId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
@@ -47,8 +46,6 @@ public class AdminPostsController {
     if (status == null || status.isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing status");
     }
-
-    // keep your existing business logic
     postAdminService.adminSetPostStatus(postId, status);
 
     return ResponseEntity.ok().build();

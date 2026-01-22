@@ -29,9 +29,6 @@ public class ReportController {
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
     public ReportDto create(@Valid @RequestBody CreateReportRequest body, Authentication auth) {
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
         return userService.create(auth.getName(), body);
     }
 

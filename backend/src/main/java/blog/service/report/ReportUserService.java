@@ -26,7 +26,6 @@ public class ReportUserService {
     User reporter = users.findByUsername(reporterUsername)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
-    // basic validation (keep it simple)
     if (req.reportedUserId() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reportedUserId is required");
     }

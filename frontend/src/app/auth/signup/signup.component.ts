@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DefaultLoginLayoutComponent } from '../components/default-login-layout/default-login-layout.component';
-import { LoginService } from '../services/login.service';
+import { LoginService } from '../../services/login.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -42,7 +42,8 @@ export class SignUpComponent {
   hidePw = true;
   hidePw2 = true;
   avatarName: string | null = null;
-  readonly MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2 MB
+  avatarPreview: string | null = null;
+  readonly MAX_AVATAR_SIZE = 10 * 1024 * 1024; // 10 MB
 
   signupForm = new FormGroup<SignupForm>({
     name: new FormControl('', [Validators.required, Validators.minLength(2)]),
@@ -58,7 +59,7 @@ export class SignUpComponent {
   constructor(
     private router: Router,
     private loginService: LoginService,
-    private snack: SnackService
+    private snack: SnackService,
   ) {}
 
   // Getters for cleaner template binding
@@ -89,15 +90,33 @@ export class SignUpComponent {
 
   // Handle avatar upload
   onAvatar(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (file && file.size > this.MAX_AVATAR_SIZE) {
-      this.snack.error('Selected image is too large (max 2 MB).');
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
       this.avatar?.setValue(null);
       this.avatarName = null;
+      this.avatarPreview = null;
       return;
     }
+
+    if (file.size > this.MAX_AVATAR_SIZE) {
+      this.snack.error('Selected image is too large (max 10 MB).');
+      this.avatar?.setValue(null);
+      this.avatarName = null;
+      this.avatarPreview = null;
+      return;
+    }
+
     this.avatar?.setValue(file);
-    this.avatarName = file?.name ?? null;
+    this.avatarName = file.name;
+
+    // ✅ Create preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.avatarPreview = reader.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
   submit() {
