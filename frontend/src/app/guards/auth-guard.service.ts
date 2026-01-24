@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { map, Observable } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
@@ -10,10 +10,7 @@ export class AuthGuard implements CanActivate {
   canActivate(): Observable<boolean | UrlTree> {
     // If no token, redirect immediately
     if (!this.auth.hasToken()) {
-      return new Observable(observer => {
-        observer.next(this.router.parseUrl('/auth/login'));
-        observer.complete();
-      });
+      return of(this.router.parseUrl('/auth/login'));
     }
 
     // If token exists but me$ is null, wait for refreshMe to complete

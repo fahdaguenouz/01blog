@@ -9,7 +9,7 @@ export class AdminGuard implements CanActivate {
 
   canActivate(): Observable<boolean | UrlTree> {
     if (!this.auth.hasToken()) {
-      return of(this.router.parseUrl('/feed'));
+      return of(this.router.parseUrl('/auth/login'));
     }
     
     return this.auth.validateAdminRole().pipe(

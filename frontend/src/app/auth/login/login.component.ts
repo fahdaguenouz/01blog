@@ -30,7 +30,6 @@ interface LoginForm {
     MatInputModule,
     MatIconModule
   ],
-  providers: [LoginService],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -65,12 +64,14 @@ submit() {
   }
 
   const { username, password } = this.loginForm.getRawValue();
-
+  if (!username?.trim() || !password?.trim() || password.trim().length < 6|| username.trim().length < 2) {
+    this.snack.error('Please enter your username and password.');
+    return;
+  }
   this.loginService.login(username!, password!).subscribe({
     next: async (res) => {
       // IMPORTANT: wait until /me is loaded and status becomes authenticated
       const me = await this.auth.setAuth({ token: res.token });
-      console.log('status after setAuth:', this.auth.isLoggedIn(), this.auth.getUsername(), this.auth.isAdmin());
 
       if (!me) {
         this.snack.error('Login succeeded but session could not be loaded. Please try again.');

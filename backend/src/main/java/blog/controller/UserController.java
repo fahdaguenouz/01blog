@@ -43,7 +43,7 @@ public class UserController {
 
   @GetMapping("/me")
   public Map<String, Object> getMe(Authentication auth) {
-    return userService.getMe(auth); // controller no longer hits repositories
+    return userService.getMe(auth); 
   }
 
   @PutMapping("/me")
