@@ -13,11 +13,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PostLikeService {
 
   private final PostRepository posts;
@@ -26,18 +27,7 @@ public class PostLikeService {
   private final NotificationService notificationService;
   private final PostAssembler assembler;
 
-  public PostLikeService(
-      PostRepository posts,
-      UserRepository users,
-      LikeRepository likes,
-      NotificationService notificationService,
-      PostAssembler assembler) {
-    this.posts = posts;
-    this.users = users;
-    this.likes = likes;
-    this.notificationService = notificationService;
-    this.assembler = assembler;
-  }
+
 
   private User requireUser(String username) {
     return users.findByUsername(username)

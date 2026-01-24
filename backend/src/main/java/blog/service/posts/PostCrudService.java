@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PostCrudService {
 
   private final PostRepository posts;
@@ -42,38 +43,7 @@ public class PostCrudService {
   private final PostSecurityHelper security;
   private final PostAssembler assembler;
 
-  public PostCrudService(
-      PostRepository posts,
-      UserRepository users,
-      LikeRepository likes,
-      CommentRepository comments,
-      SavedPostRepository savedPosts,
-      MediaRepository mediaRepo,
-      LocalMediaStorage mediaStorage,
-      PostMediaRepository postMediaRepository,
-      CategoryRepository categories,
-      PostCategoryRepository postCategories,
-      NotificationService notificationService,
-      SubscriptionRepository subscriptions,
-      PostValidator validator,
-      PostSecurityHelper security,
-      PostAssembler assembler) {
-    this.posts = posts;
-    this.users = users;
-    this.likes = likes;
-    this.comments = comments;
-    this.savedPosts = savedPosts;
-    this.mediaRepo = mediaRepo;
-    this.mediaStorage = mediaStorage;
-    this.postMediaRepository = postMediaRepository;
-    this.categories = categories;
-    this.postCategories = postCategories;
-    this.notificationService = notificationService;
-    this.subscriptions = subscriptions;
-    this.validator = validator;
-    this.security = security;
-    this.assembler = assembler;
-  }
+
 
   private User requireUser(String username) {
     return users.findByUsername(username)

@@ -15,13 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PostCommentService {
 
     private final UserRepository users;
@@ -32,22 +33,7 @@ public class PostCommentService {
     private final PostValidator validator;
     private final PostSecurityHelper security;
 
-    public PostCommentService(
-            UserRepository users,
-            PostRepository posts,
-            CommentRepository comments,
-            MediaRepository mediaRepo,
-            NotificationService notificationService,
-            PostValidator validator,
-            PostSecurityHelper security) {
-        this.users = users;
-        this.posts = posts;
-        this.comments = comments;
-        this.mediaRepo = mediaRepo;
-        this.notificationService = notificationService;
-        this.validator = validator;
-        this.security = security;
-    }
+  
 
     private User requireUser(String username) {
         return users.findByUsername(username)

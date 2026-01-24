@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class PostFeedService {
 
   private final PostRepository posts;
@@ -27,14 +28,7 @@ public class PostFeedService {
   private final PostAssembler assembler;
   private final SubscriptionRepository subs;
 
-  public PostFeedService(PostRepository posts, SubscriptionRepository subs, UserRepository users,
-      SavedPostRepository savedPosts, PostAssembler assembler) {
-    this.posts = posts;
-    this.subs = subs;
-    this.users = users;
-    this.savedPosts = savedPosts;
-    this.assembler = assembler;
-  }
+
 
   private User requireUser(String username) {
     return users.findByUsername(username)

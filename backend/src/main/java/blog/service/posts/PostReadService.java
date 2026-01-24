@@ -9,12 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class PostReadService {
 
   private final PostRepository posts;
@@ -23,19 +24,7 @@ public class PostReadService {
   private final PostSecurityHelper security;
   private final PostAssembler assembler;
 
-  public PostReadService(
-      PostRepository posts,
-      LikeRepository likes,
-      SavedPostRepository savedPosts,
-      PostSecurityHelper security,
-      PostAssembler assembler
-  ) {
-    this.posts = posts;
-    this.likes = likes;
-    this.savedPosts = savedPosts;
-    this.security = security;
-    this.assembler = assembler;
-  }
+
 
   private Post requirePost(UUID postId) {
     return posts.findById(postId)

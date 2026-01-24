@@ -6,12 +6,13 @@ import blog.mapper.PostMapper;
 import blog.models.Post;
 import blog.repository.*;
 import org.springframework.stereotype.Component;
-
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class PostAssembler {
 
   private final LikeRepository likes;
@@ -21,22 +22,7 @@ public class PostAssembler {
   private final MediaRepository mediaRepo;
   private final PostMediaRepository postMediaRepo;
 
-  public PostAssembler(
-      LikeRepository likes,
-      SavedPostRepository savedPosts,
-      CategoryRepository categories,
-      PostCategoryRepository postCategories,
-      MediaRepository mediaRepo,
-      PostMediaRepository postMediaRepo
-  ) {
-    this.likes = likes;
-    this.savedPosts = savedPosts;
-    this.categories = categories;
-    this.postCategories = postCategories;
-    this.mediaRepo = mediaRepo;
-    this.postMediaRepo = postMediaRepo;
-  }
-
+ 
   private List<CategoryDto> getCategoryDtos(UUID postId) {
     return postCategories.findByPostId(postId).stream()
         .map(pc -> categories.findById(pc.getCategoryId())

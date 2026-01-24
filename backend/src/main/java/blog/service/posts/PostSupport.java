@@ -7,19 +7,15 @@ import blog.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class PostSupport {
 
   private final UserRepository users;
   private final PostRepository posts;
-
-  public PostSupport(UserRepository users, PostRepository posts) {
-    this.users = users;
-    this.posts = posts;
-  }
 
   public User requireUser(String username) {
     return users.findByUsername(username)

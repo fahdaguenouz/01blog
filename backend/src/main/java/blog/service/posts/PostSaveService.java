@@ -12,12 +12,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import lombok.RequiredArgsConstructor;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PostSaveService {
 
   private final UserRepository users;
@@ -25,17 +26,6 @@ public class PostSaveService {
   private final SavedPostRepository savedPosts;
   private final NotificationService notificationService;
 
-  public PostSaveService(
-      UserRepository users,
-      PostRepository posts,
-      SavedPostRepository savedPosts,
-      NotificationService notificationService
-  ) {
-    this.users = users;
-    this.posts = posts;
-    this.savedPosts = savedPosts;
-    this.notificationService = notificationService;
-  }
 
   private User requireUser(String username) {
     return users.findByUsername(username)
