@@ -126,7 +126,7 @@ export class AdminDashboardComponent implements OnInit {
  loadTopContributors() {
   this.admin.getTopContributors(10).subscribe({
     next: (rows) => {
-      console.log('top contributors rows:', rows);
+      // console.log('top contributors rows:', rows);
       this.topContributors = rows;
     },
     error: (err) => console.error('Failed to load top contributors', err),

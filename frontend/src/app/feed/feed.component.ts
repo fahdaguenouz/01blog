@@ -47,7 +47,7 @@ export class FeedComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    console.log('[Feed] ngOnInit');
+    // console.log('[Feed] ngOnInit');
 
     // Start in loading until auth + feed done
     this.loading = true;
@@ -59,7 +59,7 @@ export class FeedComponent implements OnInit {
       .pipe(take(1), timeout(8000))
       .subscribe({
         next: (me) => {
-          console.log('[Feed] refreshMe result:', me);
+          // console.log('[Feed] refreshMe result:', me);
 
           // ✅ IMPORTANT: mark auth as resolved so template can show
           this.authResolved = true;
@@ -98,7 +98,7 @@ export class FeedComponent implements OnInit {
   }
 
   loadCategories() {
-    console.log('[Feed] loadCategories...');
+    // console.log('[Feed] loadCategories...');
     this.categoryService
       .list()
       .pipe(
@@ -109,17 +109,17 @@ export class FeedComponent implements OnInit {
         }),
       )
       .subscribe((cats) => {
-        console.log('[Feed] categories OK:', cats.length);
+        // console.log('[Feed] categories OK:', cats.length);
         this.categories = cats ?? [];
         this.forceRender();
       });
   }
 
   loadFeed() {
-    console.log('[Feed] loadFeed start', {
-      selectedCategoryId: this.selectedCategoryId,
-      sort: this.sort,
-    });
+    // console.log('[Feed] loadFeed start', {
+    //   selectedCategoryId: this.selectedCategoryId,
+    //   sort: this.sort,
+    // });
 
     this.loading = true;
     this.forceRender();
@@ -135,13 +135,13 @@ export class FeedComponent implements OnInit {
           return of([] as Post[]);
         }),
         finalize(() => {
-          console.log('[Feed] loadFeed finalize => stop loading');
+          // console.log('[Feed] loadFeed finalize => stop loading');
           this.loading = false;
           this.forceRender();
         }),
       )
       .subscribe((posts) => {
-        console.log('[Feed] feed OK:', posts.length);
+        // console.log('[Feed] feed OK:', posts.length);
         this.posts = posts ?? [];
         this.forceRender();
       });

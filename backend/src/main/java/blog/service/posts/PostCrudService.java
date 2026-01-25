@@ -44,8 +44,6 @@ public class PostCrudService {
   private final PostSecurityHelper security;
   private final PostAssembler assembler;
 
-
-
   private User requireUser(String username) {
     return users.findByUsername(username)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
@@ -61,7 +59,7 @@ public class PostCrudService {
    * CREATE
    * ============================================================
    */
-  
+
   public PostDetailDto createPost(
       String username,
       String title,
@@ -83,6 +81,9 @@ public class PostCrudService {
         : mediaFiles.stream().filter(f -> f != null && !f.isEmpty()).toList();
 
     boolean hasMedia = !files.isEmpty();
+    if (files.size() > 5) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max 5 media files per post");
+    }
 
     // ✅ RULE: post can have no media, but if media exists -> each one MUST have
     // description
@@ -134,7 +135,7 @@ public class PostCrudService {
       for (User target : subs) {
         if (target.getId().equals(user.getId()))
           continue;
-        notificationService.notify(target, user, NotificationType.FOLLOWING_POSTED, post,null);
+        notificationService.notify(target, user, NotificationType.FOLLOWING_POSTED, post, null);
       }
     }
 
@@ -230,7 +231,7 @@ public class PostCrudService {
     List<PostMedia> kept = new ArrayList<>();
 
     int replIdx = 0;
-
+ 
     // ----- EXISTING MEDIA (keep/remove/replace) -----
     if (existingMediaIds != null) {
       for (int i = 0; i < existingMediaIds.size(); i++) {
@@ -295,6 +296,13 @@ public class PostCrudService {
 
         kept.add(pm);
       }
+    }
+       int currentCount = kept.size();
+    int newCount = (newMediaFiles == null) ? 0
+        : (int) newMediaFiles.stream().filter(f -> f != null && !f.isEmpty()).count();
+
+    if (currentCount + newCount > 5) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max 5 media files per post");
     }
 
     // delete DB media that client did not send back (extra safety)
