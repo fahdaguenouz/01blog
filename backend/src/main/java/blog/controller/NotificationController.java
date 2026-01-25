@@ -1,5 +1,6 @@
 package blog.controller;
 
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class NotificationController {
 
         return notificationRepo.findByUser(me.getId())
                 .stream()
-                .map(n -> {
+                .<NotificationDto>map(n -> {
                  boolean seen = !unseenRepo.existsByNotification_Id(n.getId());
 
 
@@ -57,7 +58,7 @@ public class NotificationController {
                             n.getType(),
                             actorUsername,
                             n.getPost() != null ? n.getPost().getId() : null,
-                            n.getCreatedAt(),
+                           n.getCreatedAt().atZone(ZoneOffset.UTC).toInstant(),
                             seen);
                 })
                 .toList();

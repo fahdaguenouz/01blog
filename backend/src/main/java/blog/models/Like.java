@@ -7,6 +7,7 @@ import lombok.*;
 @Table(name = "likes", uniqueConstraints = {@UniqueConstraint(columnNames = {"post_id", "user_id"})})
 public class Like {
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -16,10 +17,7 @@ public class Like {
   @Column(name = "post_id", nullable = false, columnDefinition = "uuid")
   private UUID postId;
 
-  @PrePersist
-  void prePersist() {
-    if (id == null) id = UUID.randomUUID();
-  }
+
 
   public UUID getId() { return id; }
   public void setId(UUID id) { this.id = id; }

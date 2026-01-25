@@ -1,18 +1,12 @@
 package blog.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
-
+import lombok.*;
+import jakarta.persistence.*;
 @Entity
 @Table(name = "reports")
-@Getter 
+@Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -44,5 +38,12 @@ public class Report {
   private String status;
 
   @Column(name = "created_at", nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
+
+  @PrePersist
+  void prePersist() {
+    if (createdAt == null)
+      createdAt = LocalDateTime.now();
+  }
+
 }

@@ -8,6 +8,7 @@ import lombok.*;
 public class Category {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -20,10 +21,6 @@ public class Category {
   @Column
   private String description;
 
-  @PrePersist
-  void prePersist() {
-    if (id == null) id = UUID.randomUUID();
-  }
 
   public UUID getId() {
     return id;

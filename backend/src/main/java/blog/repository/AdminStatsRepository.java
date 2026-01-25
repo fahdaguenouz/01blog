@@ -93,7 +93,7 @@ public class AdminStatsRepository {
         SELECT u.id,
                u.username,
                COUNT(p.id) AS posts_count,
-               COALESCE(SUM(CASE WHEN p.status = 'flagged' THEN 1 ELSE 0 END), 0) AS flagged_count,
+               COALESCE(SUM(CASE WHEN p.status = 'hidden' THEN 1 ELSE 0 END), 0) AS flagged_count,
                COALESCE(MAX(p.created_at), u.created_at) AS last_activity
         FROM users u
         LEFT JOIN posts p ON p.user_id = u.id

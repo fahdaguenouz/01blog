@@ -1,7 +1,7 @@
 package blog.models;
 
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.*;
 @Entity
@@ -10,6 +10,7 @@ import lombok.*;
 })
 public class Comment {
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -23,12 +24,11 @@ public class Comment {
   private String text;
 
   @Column(name = "created_at", nullable = false)
-  private OffsetDateTime createdAt;
+  private LocalDateTime createdAt;
 
   @PrePersist
   void pre() {
-    if (id == null) id = UUID.randomUUID();
-    if (createdAt == null) createdAt = OffsetDateTime.now();
+    if (createdAt == null) createdAt = LocalDateTime.now();
   }
 
   // Getters/setters
@@ -44,6 +44,6 @@ public class Comment {
   public String getText() { return text; }
   public void setText(String text) { this.text = text; }
 
-  public OffsetDateTime getCreatedAt() { return createdAt; }
-  public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+  public LocalDateTime getCreatedAt() { return createdAt; }
+  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

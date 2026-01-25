@@ -11,6 +11,7 @@ import lombok.*;
 })
 public class Post {
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -47,8 +48,6 @@ public class Post {
       likesCount = 0;
     if (commentsCount == null)
       commentsCount = 0;
-    if (id == null)
-      id = UUID.randomUUID();
   }
 
 

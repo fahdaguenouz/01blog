@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -58,7 +60,7 @@ public class PostCommentService {
         c.setPostId(post.getId());
         c.setUserId(user.getId());
         c.setText(content);
-        c.setCreatedAt(OffsetDateTime.now());
+        c.setCreatedAt(LocalDateTime.now());
         comments.saveAndFlush(c);
 
         int current = post.getCommentsCount() == null ? 0 : post.getCommentsCount();

@@ -76,7 +76,7 @@ public class UserRegistrationService {
         .role(User.Role.USER)
         .impressionsCount(0)
         .postsCount(0)
-        .createdAt(OffsetDateTime.now())
+        .createdAt(OffsetDateTime.now().toInstant())
         .build();
 
     user = users.save(user);
@@ -89,7 +89,7 @@ public class UserRegistrationService {
           .mediaType(saved.contentType() != null ? saved.contentType() : "image/*")
           .size(saved.size() != null ? saved.size() : 0)
           .url(saved.url())
-          .uploadedAt(OffsetDateTime.now())
+          .uploadedAt(OffsetDateTime.now().toInstant())
           .build();
 
       m = mediaRepo.save(m);

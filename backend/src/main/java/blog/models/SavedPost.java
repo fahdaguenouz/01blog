@@ -1,7 +1,7 @@
 package blog.models;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.*;
 @Entity
@@ -11,6 +11,7 @@ import lombok.*;
 public class SavedPost {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -21,12 +22,11 @@ public class SavedPost {
   private UUID postId;
 
   @Column(name = "created_at", nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
   @PrePersist
   void prePersist() {
-    if (id == null) id = UUID.randomUUID();
-    if (createdAt == null) createdAt = Instant.now();
+    if (createdAt == null) createdAt = LocalDateTime.now();
   }
 
   public UUID getId() { return id; }
@@ -38,6 +38,6 @@ public class SavedPost {
   public UUID getPostId() { return postId; }
   public void setPostId(UUID postId) { this.postId = postId; }
 
-  public Instant getCreatedAt() { return createdAt; }
-  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+  public LocalDateTime getCreatedAt() { return createdAt; }
+  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

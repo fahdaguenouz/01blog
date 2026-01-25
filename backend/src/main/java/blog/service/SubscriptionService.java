@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.NoSuchElementException;
-
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class SubscriptionService {
     Subscription s = Subscription.builder()
         .subscriberId(me.getId())
         .subscribedToId(targetUserId)
-        .createdAt(OffsetDateTime.now())
+        .createdAt(LocalDateTime.now())
         .build();
 
     subscriptions.save(s);

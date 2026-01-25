@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -155,7 +156,7 @@ public class PostCrudService {
         media.setMediaType(file.getContentType() != null ? file.getContentType() : "application/octet-stream");
         media.setSize((int) file.getSize());
         media.setUrl(stored.url());
-        media.setUploadedAt(OffsetDateTime.now());
+        media.setUploadedAt(OffsetDateTime.now().toInstant());
         Media savedMedia = mediaRepo.save(media);
 
         PostMedia pm = new PostMedia();
@@ -163,7 +164,7 @@ public class PostCrudService {
         pm.setMediaId(savedMedia.getId());
         pm.setDescription(description);
         pm.setPosition(i + 1);
-        pm.setCreatedAt(Instant.now());
+        pm.setCreatedAt(LocalDateTime.now());
         postMediaRepository.save(pm);
       }
     }
@@ -281,7 +282,7 @@ public class PostCrudService {
           media.setUrl(stored.url());
           media.setMediaType(file.getContentType());
           media.setSize((int) file.getSize());
-          media.setUploadedAt(OffsetDateTime.now());
+          media.setUploadedAt(OffsetDateTime.now().toInstant());
           Media saved = mediaRepo.save(media);
 
           pm.setMediaId(saved.getId());
@@ -341,7 +342,7 @@ public class PostCrudService {
         media.setUrl(stored.url());
         media.setMediaType(file.getContentType());
         media.setSize((int) file.getSize());
-        media.setUploadedAt(OffsetDateTime.now());
+        media.setUploadedAt(OffsetDateTime.now().toInstant());
         Media saved = mediaRepo.save(media);
 
         PostMedia pm = new PostMedia();
@@ -349,7 +350,7 @@ public class PostCrudService {
         pm.setMediaId(saved.getId());
         pm.setDescription(desc);
         pm.setPosition(position++);
-        pm.setCreatedAt(Instant.now());
+        pm.setCreatedAt(LocalDateTime.now());
         postMediaRepository.save(pm);
       }
     }

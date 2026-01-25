@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -63,8 +63,14 @@ public class User {
   private String readme;
 
   @Column(name = "created_at", nullable = false)
-  private OffsetDateTime createdAt;
+  private Instant createdAt;
 
- 
+ @PrePersist
+  void prePersist() {
+    if (createdAt == null) createdAt = Instant.now();
+    if (status == null) status = "active";
+    if (impressionsCount == null) impressionsCount = 0;
+    if (postsCount == null) postsCount = 0;
+  }
 
 }

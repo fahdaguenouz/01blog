@@ -2,17 +2,18 @@ package blog.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
+
 @Entity
 @Table(name = "post_media")
 @Getter
 @Setter
- 
+
 public class PostMedia {
 
   @Id
-  @GeneratedValue
+ @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "id", nullable = false)
   private UUID id;
 
@@ -29,7 +30,14 @@ public class PostMedia {
   private int position;
 
   @Column(name = "created_at", nullable = false)
-  private Instant createdAt;
+  private LocalDateTime createdAt;
 
+  @PrePersist
+  void prePersist() {
+    if (position == 0)
+      position = 1;
+    if (createdAt == null)
+      createdAt = LocalDateTime.now();
+  }
 
 }

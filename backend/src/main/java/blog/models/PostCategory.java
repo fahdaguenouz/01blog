@@ -9,6 +9,7 @@ import lombok.*;
 public class PostCategory {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(columnDefinition = "uuid")
   private UUID id;
 
@@ -18,10 +19,6 @@ public class PostCategory {
   @Column(name = "category_id", nullable = false, columnDefinition = "uuid")
   private UUID categoryId;
 
-  @PrePersist
-  void prePersist() {
-    if (id == null) id = UUID.randomUUID();
-  }
 
   public UUID getId() {
     return id;

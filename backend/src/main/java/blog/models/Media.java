@@ -3,7 +3,7 @@ package blog.models;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -15,6 +15,7 @@ import java.util.UUID;
 @Builder
 public class Media {
   @Id
+
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
@@ -31,5 +32,12 @@ public class Media {
   private String url;
 
   @Column(name = "uploaded_at", nullable = false)
-  private OffsetDateTime uploadedAt;
+  private Instant uploadedAt;
+
+  @PrePersist
+  void prePersist() {
+    if (uploadedAt == null)
+      uploadedAt = Instant.now();
+  }
+
 }

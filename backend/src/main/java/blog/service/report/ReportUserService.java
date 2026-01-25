@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +45,7 @@ public class ReportUserService {
     r.setCategory(req.category());
     r.setReason(req.reason().trim());
     r.setStatus("waiting");
-    r.setCreatedAt(Instant.now());
+    r.setCreatedAt(LocalDateTime.now());
 
     return mapper.toDto(reports.save(r));
   }

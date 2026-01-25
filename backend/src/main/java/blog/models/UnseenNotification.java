@@ -1,5 +1,6 @@
 package blog.models;
 
+import java.time.Instant;
 import java.util.UUID;
 import lombok.*;
 import jakarta.persistence.*;
@@ -12,20 +13,31 @@ import jakarta.persistence.*;
 public class UnseenNotification {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
 
-    @ManyToOne
-    private Notification notification;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "notification_id", nullable = false)
+  private Notification notification;
 
-    protected UnseenNotification() {
-    }
+  @Column(name = "created_at", nullable = false)
+  private Instant createdAt;
 
-    public UnseenNotification(User user, Notification notification) {
-        this.user = user;
-        this.notification = notification;
-    }
+   public UnseenNotification(User user, Notification notification) {
+    this.user = user;
+    this.notification = notification;
+    this.createdAt = Instant.now();
+  }
+  protected UnseenNotification() {}
+
+
+  @PrePersist
+  void prePersist() {
+    if (createdAt == null) createdAt = Instant.now();
+  }
+
 }

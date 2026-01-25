@@ -9,6 +9,9 @@ import blog.repository.MediaRepository;
 import blog.repository.PostRepository;
 import blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.time.ZoneOffset;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -48,7 +51,7 @@ public class ReportMapper {
         r.getCategory(),
         r.getReason(),
         r.getStatus(),
-        r.getCreatedAt(),
+        r.getCreatedAt().atZone(ZoneOffset.UTC).toInstant(),
         postStatus
     );
   }

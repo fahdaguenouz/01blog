@@ -2,7 +2,9 @@ package blog.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import blog.enums.NotificationType;
@@ -13,11 +15,11 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "notifications")
 @Getter
 @Setter
- 
+
 public class Notification {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne
@@ -27,8 +29,8 @@ public class Notification {
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post; // nullable (follow has no post)
-    
 
+    @Column(name = "type", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
@@ -36,5 +38,12 @@ public class Notification {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> payload;
 
-    private Instant createdAt = Instant.now();
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (createdAt == null)
+            createdAt = Instant.now();
+    }
 }
