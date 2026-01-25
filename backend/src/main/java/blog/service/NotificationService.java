@@ -1,13 +1,12 @@
 package blog.service;
 
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
-
+import lombok.RequiredArgsConstructor;
 import blog.enums.NotificationType;
 import blog.models.Notification;
 import blog.models.Post;
@@ -16,17 +15,13 @@ import blog.models.User;
 import blog.repository.NotificationRepository;
 import blog.repository.UnseenNotificationRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-
 
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
 
-    @Autowired
-    private NotificationRepository notificationRepo;
-
-    @Autowired
-    private UnseenNotificationRepository unseenRepo;
+    private final NotificationRepository notificationRepo;
+    private final UnseenNotificationRepository unseenRepo;
 
     public void notify(User target, User actor, NotificationType type, Post post, UUID commentId) {
 

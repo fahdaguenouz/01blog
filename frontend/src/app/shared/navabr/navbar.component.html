@@ -2,11 +2,16 @@
   <!-- Sidebar -->
   <mat-sidenav #sidenav mode="side" class="sidenav" fixedInViewport *ngIf="loggedIn">
     <div class="sidenav-header">
-      <div class="logo-section">
-        <mat-icon class="logo-icon">article</mat-icon>
-        <span class="logo-text">01Blog</span>
-      </div>
+      <mat-icon class="context-icon">
+        {{ isAdmin ? 'admin_panel_settings' : 'explore' }}
+      </mat-icon>
+
+      <span class="context-title">
+        {{ isAdmin ? 'Admin Panel' : 'Explore' }}
+      </span>
     </div>
+
+
 
     <mat-nav-list class="nav-list">
       <a mat-list-item *ngFor="let item of navItems" [routerLink]="item.route" routerLinkActive="active"

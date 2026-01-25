@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -45,7 +45,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: './post-detail.component.html',
   styleUrls: ['./post-detail.component.scss'],
 })
-export class PostDetailComponent implements OnInit {
+export class PostDetailComponent implements OnInit , OnDestroy{
   private route = inject(ActivatedRoute);
   private posts = inject(PostService);
   private userService = inject(UserService);
@@ -78,12 +78,10 @@ export class PostDetailComponent implements OnInit {
     // admin check
     this.auth.validateAdminRole().subscribe((v: boolean) => (this.isAdmin = v));
 
-    // ✅ IMPORTANT: react to /post/:id changes
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const id = params.get('id');
       if (!id) return;
 
-      // optional: reset state so UI updates immediately
       this.post = null;
       this.comments = [];
       this.loadingPost = true;
@@ -106,7 +104,7 @@ export class PostDetailComponent implements OnInit {
 
     this.posts.getById(id).subscribe({
       next: (p) => {
-        // ✅ normalize so template never crashes when media becomes empty
+        // normalize so template never crashes when media becomes empty
         this.post = {
           ...p,
           media: p.media ?? [],
@@ -142,11 +140,11 @@ export class PostDetailComponent implements OnInit {
   loadComments(postId: string) {
     this.posts.getComments(postId).subscribe({
       next: (comments) => {
-        this.comments = [...comments]; // ✅ new reference
-        this.cdr.detectChanges(); // ✅ force repaint
+        this.comments = [...comments]; // new reference
+        this.cdr.detectChanges(); // force repaint
       },
       error: (err) => {
-        // ✅ ignore 400/404 (invalid or missing post)
+        //  ignore 400/404 (invalid or missing post)
         if (err.status === 400 || err.status === 404) return;
         console.error('loadComments failed', err);
       },
@@ -212,7 +210,7 @@ export class PostDetailComponent implements OnInit {
       createdAt: new Date().toISOString(),
     };
 
-    // ✅ optimistic UI
+    //  optimistic UI
     this.comments = [temp, ...this.comments];
     this.post.comments = (this.post.comments ?? 0) + 1;
     this.newComment = '';
@@ -220,7 +218,7 @@ export class PostDetailComponent implements OnInit {
 
     this.posts.addComment(this.post.id, text).subscribe({
       next: (created) => {
-        // ✅ replace temp with created (no duplication)
+        //  replace temp with created (no duplication)
         this.comments = this.comments.map((c) => (c.id === tempId ? created : c));
         this.cdr.detectChanges();
       },
@@ -262,7 +260,7 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED: avoid NG0100 by updating post on next tick + normalize media
+  //  FIXED: avoid NG0100 by updating post on next tick + normalize media
   onEditPost() {
     if (!this.post) return;
 
@@ -294,12 +292,9 @@ export class PostDetailComponent implements OnInit {
         this.post = {
           ...this.post!,
           ...updatedPost,
-          media: updatedPost.media ?? [], // ✅ key when deleting all media
+          media: updatedPost.media ?? [], //  key when deleting all media
           coverMedia: updatedPost.coverMedia ?? undefined,
         };
-
-        // optional: refresh comments count if backend returns it
-        // this.post.comments = updatedPost.comments ?? this.post.comments;
 
         this.cdr.detectChanges();
       });
@@ -353,7 +348,7 @@ export class PostDetailComponent implements OnInit {
     reportRef.afterClosed().subscribe((result) => {
       if (!result || !this.post) return;
 
-      // ✅ confirm before sending report
+      //  confirm before sending report
       const confirmRef = this.dialog.open<
         ConfirmDialogComponent,
         { title: string; message: string },

@@ -46,9 +46,9 @@ public class SubscriptionService {
 
     subscriptions.save(s);
 
-    notificationService.notify(target, me, NotificationType.USER_FOLLOWED, null,null);
+    notificationService.notify(target, me, NotificationType.USER_FOLLOWED, null, null);
 
-return userProfileMapper.toProfileDto(target, true);
+    return userProfileMapper.toProfileDto(target, true);
   }
 
   @Transactional
@@ -58,34 +58,34 @@ return userProfileMapper.toProfileDto(target, true);
 
     subscriptions.deleteBySubscriberIdAndSubscribedToId(me.getId(), targetUserId);
 
-return userProfileMapper.toProfileDto(target, false);
+    return userProfileMapper.toProfileDto(target, false);
   }
 
   public List<UserProfileDto> followers(UUID userId, UUID meId) {
     var followerIds = subscriptions.findSubscriberIdsBySubscribedToId(userId);
-    if (followerIds.isEmpty()) return List.of();
+    if (followerIds.isEmpty())
+      return List.of();
 
     var followerUsers = users.findAllById(followerIds);
 
     return followerUsers.stream()
         .map(u -> userProfileMapper.toProfileDto(
             u,
-            subscriptions.existsBySubscriberIdAndSubscribedToId(meId, u.getId())
-        ))
+            subscriptions.existsBySubscriberIdAndSubscribedToId(meId, u.getId())))
         .toList();
   }
 
   public List<UserProfileDto> following(UUID userId, UUID meId) {
     var followingIds = subscriptions.findSubscribedToIdsBySubscriberId(userId);
-    if (followingIds.isEmpty()) return List.of();
+    if (followingIds.isEmpty())
+      return List.of();
 
     var followingUsers = users.findAllById(followingIds);
 
     return followingUsers.stream()
         .map(u -> userProfileMapper.toProfileDto(
             u,
-            subscriptions.existsBySubscriberIdAndSubscribedToId(meId, u.getId())
-        ))
+            subscriptions.existsBySubscriberIdAndSubscribedToId(meId, u.getId())))
         .toList();
   }
 }

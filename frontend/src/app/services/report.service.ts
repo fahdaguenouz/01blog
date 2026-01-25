@@ -1,4 +1,3 @@
-// src/app/services/report.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -44,7 +43,7 @@ export class ReportService {
     return this.http.post<Report>(this.apiUrl, payload);
   }
 
-  // admin-only later:
+  // admin-only
   getReports(): Observable<Report[]> {
     return this.http.get<Report[]>(this.apiUrl);
   }

@@ -59,9 +59,8 @@ export class FeedComponent implements OnInit {
       .pipe(take(1), timeout(8000))
       .subscribe({
         next: (me) => {
-          // console.log('[Feed] refreshMe result:', me);
 
-          // ✅ IMPORTANT: mark auth as resolved so template can show
+          // mark  resolved so template can show
           this.authResolved = true;
           this.forceRender();
 
@@ -98,7 +97,7 @@ export class FeedComponent implements OnInit {
   }
 
   loadCategories() {
-    // console.log('[Feed] loadCategories...');
+   
     this.categoryService
       .list()
       .pipe(
@@ -109,17 +108,12 @@ export class FeedComponent implements OnInit {
         }),
       )
       .subscribe((cats) => {
-        // console.log('[Feed] categories OK:', cats.length);
         this.categories = cats ?? [];
         this.forceRender();
       });
   }
 
   loadFeed() {
-    // console.log('[Feed] loadFeed start', {
-    //   selectedCategoryId: this.selectedCategoryId,
-    //   sort: this.sort,
-    // });
 
     this.loading = true;
     this.forceRender();
@@ -135,13 +129,11 @@ export class FeedComponent implements OnInit {
           return of([] as Post[]);
         }),
         finalize(() => {
-          // console.log('[Feed] loadFeed finalize => stop loading');
           this.loading = false;
           this.forceRender();
         }),
       )
       .subscribe((posts) => {
-        // console.log('[Feed] feed OK:', posts.length);
         this.posts = posts ?? [];
         this.forceRender();
       });
@@ -199,9 +191,6 @@ export class FeedComponent implements OnInit {
     this.router.navigate(['/post', post.id]);
   }
 
-  goToPostDetail(post: Post) {
-    this.router.navigate(['/post', post.id]);
-  }
 
   formatDate(date: string | Date): string {
     const d = new Date(date);

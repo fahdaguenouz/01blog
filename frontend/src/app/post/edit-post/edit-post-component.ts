@@ -55,7 +55,7 @@ export class EditPostDialogComponent implements OnDestroy {
   categories: Category[] = [];
   isSubmitting = false;
 
-  // ✅ cache previews by stable key, not index
+  // cache previews by stable key, not index
   private previewByKey = new Map<string, string>();
 
   @ViewChildren('fileInput') fileInputs!: QueryList<ElementRef<HTMLInputElement>>;

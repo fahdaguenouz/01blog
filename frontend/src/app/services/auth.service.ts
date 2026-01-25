@@ -1,4 +1,3 @@
-// src/app/services/auth.service.ts
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, firstValueFrom, of } from 'rxjs';
@@ -24,7 +23,7 @@ export class AuthService {
   private readonly meUrl = `${environment.apiUrl}/api/users/me`;
 
   private _me$ = new BehaviorSubject<CurrentUser | null>(null);
-  readonly me$ = this._me$.asObservable();
+  readonly me$ = this._me$.asObservable(); //readonly
 
   private _isAuthed$ = new BehaviorSubject<boolean>(this.hasToken());
   readonly isAuthed$ = this._isAuthed$.asObservable();
@@ -79,17 +78,17 @@ export class AuthService {
       this._isAuthed$.next(false);
       return of(null);
     }
-
+    
     return this.http.get<CurrentUser>(this.meUrl).pipe(
       timeout(8000),
       take(1),
       tap((me) => {
         this._me$.next(me ?? null);
-        this._isAuthed$.next(!!me); // ✅ authed only if /me succeeded
+        this._isAuthed$.next(!!me); //  authed only if /me succeeded
       }),
       map((me) => me ?? null),
       catchError((err: unknown) => {
-        // ✅ invalid token => clear it so guards/UI stop thinking logged in
+        // invalid token => clear it so guards/UI stop thinking logged in
         if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403)) {
           this.clearAuth();
           return of(null);

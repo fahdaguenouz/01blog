@@ -229,7 +229,7 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.isSubmitting = true;
     this.postService.createPostFormData(fd).subscribe({
-      next: (response) => {
+      next: () => {
         this.snack.success('Post created successfully!');
         this.router.navigate(['/feed']);
       },

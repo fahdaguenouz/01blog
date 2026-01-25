@@ -34,7 +34,6 @@ export class UserService {
   }
 
   getCurrentUser(): Observable<any> {
-    // ← Change to any
     return this.http.get<any>(`${this.apiUrl}/me`);
   }
 

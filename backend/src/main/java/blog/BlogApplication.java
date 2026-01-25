@@ -1,4 +1,3 @@
-// src/main/java/blog/BlogApplication.java
 package blog;
 
 import org.springframework.boot.SpringApplication;

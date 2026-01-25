@@ -1,5 +1,6 @@
-
 package blog.config;
+
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -104,6 +105,12 @@ public class GlobalExceptionHandler {
 
     log.warn("Bad request at {}: {}", req.getRequestURI(), ex.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body(HttpStatus.BAD_REQUEST, msg, req));
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<?> handleMaxUpload(MaxUploadSizeExceededException ex, HttpServletRequest req) {
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+        body(HttpStatus.PAYLOAD_TOO_LARGE, "That file is too large. Please upload a smaller one.", req));
   }
 
   @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

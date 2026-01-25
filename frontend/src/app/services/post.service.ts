@@ -1,4 +1,3 @@
-// src/app/services/post.service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Injector } from '@angular/core';
 import { map, Observable } from 'rxjs';
@@ -25,12 +24,8 @@ export interface Post {
   authorName: string;
   avatarUrl?: string;
   title: string;
-  // excerpt: string;
   body?: string;
   status?: 'active' | 'hidden';
-
-  // mediaUrl?: string;
-  // mediaType?: 'image' | 'video';
   createdAt: string;
   likes: number;
   comments: number;
@@ -204,7 +199,7 @@ unlikePost(postId: string): Observable<Post> {
   private normalizePost(post: Post): Post {
     post.coverMedia = undefined;
 
-    // ✅ derive excerpt from body (since summary dto removed)
+    // ✅ derive excerpt from body 
     const body = (post.body || '').trim();
     (post as any).excerpt = body.length > 160 ? body.slice(0, 160) + '…' : body; // optional if you still want excerpt usage
 

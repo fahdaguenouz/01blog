@@ -109,7 +109,7 @@
             <button
               mat-button
               class="action-btn"
-              (click)="goToPostDetail(post); $event.stopPropagation()"
+              (click)="open(post); $event.stopPropagation()"
             >
               <mat-icon>chat_bubble_outline</mat-icon>
               <span>{{ post.comments  }}</span>
