@@ -34,6 +34,13 @@ public class UserProfileService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         User me = currentUserService.getCurrentUserOrNull(auth);
+        boolean isOwner = me != null && me.getId().equals(target.getId());
+        boolean isAdmin = me != null && me.getRole() == User.Role.ADMIN;
+
+        if ("banned".equalsIgnoreCase(target.getStatus()) && !isOwner && !isAdmin) {
+            //  return minimal profile info (no email if you want)
+            return userProfileMapper.toProfileDto(target, false); // status will be "banned"
+        }
         boolean isSubscribed = me != null &&
                 subscriptions.existsBySubscriberIdAndSubscribedToId(me.getId(), target.getId());
 
@@ -91,12 +98,13 @@ public class UserProfileService {
                 user.setAge(age);
         }
 
+
         users.save(user);
 
         // if you want avatarUrl here later, let the mapper compute it
         return new UserProfileDto(
                 user.getId(), user.getUsername(), user.getName(), user.getEmail(),
-                user.getBio(), user.getAge(), null);
+                user.getBio(), user.getAge(), null,user.getStatus());
     }
 
     @Transactional

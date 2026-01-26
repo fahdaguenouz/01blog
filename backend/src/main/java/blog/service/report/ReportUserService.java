@@ -30,8 +30,8 @@ public class ReportUserService {
     if (req.reportedUserId() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reportedUserId is required");
     }
-    if (req.reportedPostId() == null && req.reportedCommentId() == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reportedPostId or reportedCommentId is required");
+    if (reporter.getId().equals(req.reportedUserId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot report yourself");
     }
     if (req.reason() == null || req.reason().trim().isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason is required");

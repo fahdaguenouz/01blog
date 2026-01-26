@@ -5,22 +5,33 @@
     <mat-spinner diameter="48" color="primary"></mat-spinner>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="!loading && error" class="error-container">
-    <mat-icon class="error-icon">error_outline</mat-icon>
+  <!-- Banned Profile View -->
+  <div *ngIf="!loading && user?.status === 'banned' && !isMyProfile" class="error-container">
+    <mat-icon class="error-icon">block</mat-icon>
+    <h3>This profile is banned</h3>
+    <p>This account has been banned by the admin.</p>
 
+    <button mat-flat-button color="primary" routerLink="/feed" class="back-btn">
+      Back to feed
+    </button>
+  </div>
+
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error && !user" class="error-container">
+    <mat-icon class="error-icon">error_outline</mat-icon>
     <h3>{{ error }}</h3>
     <p>The profile you’re looking for doesn’t exist or was removed.</p>
 
     <button mat-flat-button color="primary" routerLink="/feed" class="back-btn">
       Back to feed
     </button>
-
   </div>
 
 
+
   <!-- Profile Content -->
-  <div *ngIf="!loading && !error && user" class="profile-container">
+  <div *ngIf="!loading && user?.status !== 'banned'  && !error && user" class="profile-container">
 
     <!-- Profile Header -->
     <div class="profile-header">
@@ -66,6 +77,10 @@
       <button *ngIf="currentUserId && user && user.id === currentUserId" mat-flat-button color="primary"
         class="follow-btn edit-btn" (click)="editProfile()">
         Edit Profile
+      </button>
+      <button *ngIf="user && currentUserId && user.id !== currentUserId" mat-icon-button class="report-user-btn"
+        matTooltip="Report this user" (click)="openReportUserDialog()">
+        <mat-icon>flag</mat-icon>
       </button>
     </div>
 

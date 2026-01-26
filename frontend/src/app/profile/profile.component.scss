@@ -14,6 +14,16 @@
   padding: 40px;
 }
 
+.report-user-btn mat-icon {
+
+  color: #7b542f;
+}
+
+/* hover effect */
+.report-user-btn:hover mat-icon {
+  color: #ff9d00; 
+}
+
 .error-container {
   display: flex;
   flex-direction: column;

@@ -33,6 +33,7 @@ public class UserProfileMapper {
         user.getBio(),
         user.getAge(),
         avatarUrl,
+        user.getStatus(),
         followers,
         following,
         isSubscribed

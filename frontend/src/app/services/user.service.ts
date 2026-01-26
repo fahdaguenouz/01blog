@@ -10,6 +10,7 @@ export interface UserProfile {
   name: string;
   bio?: string;
   avatarUrl?: string;
+  status?: 'active' | 'banned' | string;
   createdAt: string;
   postsCount: number;
   subscribersCount: number; // followers count

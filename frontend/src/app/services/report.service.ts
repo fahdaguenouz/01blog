@@ -32,12 +32,20 @@ export interface CreatePostReport {
   category: string;
   reason: string;
 }
-
+export interface CreateUserReport {
+  reportedUserId: string;
+  category: string;
+  reason: string;
+}
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private base = environment.apiUrl || '';
   private http = inject(HttpClient);
   private apiUrl = `${this.base}/api/reports`;
+
+  reportUser(payload: CreateUserReport): Observable<Report> {
+    return this.http.post<Report>(this.apiUrl, payload);
+  }
 
   reportPost(payload: CreatePostReport): Observable<Report> {
     return this.http.post<Report>(this.apiUrl, payload);

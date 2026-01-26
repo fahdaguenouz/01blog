@@ -28,7 +28,7 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class AdminReportsComponent implements OnInit {
   reports: Report[] = [];
-  cols = ['reporter', 'reported', 'category', 'reason', 'post', 'actions'];
+  cols = ['reporter', 'reported', 'category', 'reason', 'target', 'actions'];
   loading = true;
   private reportsApi = inject(ReportService);
   private admin = inject(AdminService);
@@ -44,8 +44,7 @@ export class AdminReportsComponent implements OnInit {
 
     this.reportsApi.getReports().subscribe({
       next: (r) => {
-        // Filter out reports with no post (already deleted)
-        this.reports = r.filter((report) => report.reportedPostId != null);
+        this.reports = r;
         this.loading = false;
       },
       error: () => {
@@ -90,7 +89,7 @@ export class AdminReportsComponent implements OnInit {
       this.admin.deleteUser(report.reportedUserId).subscribe({
         next: () => {
           this.snack.open('User deleted', 'Close', { duration: 2500 });
-         this.reports = this.reports.filter(r => r.id !== report.id);
+          this.reports = this.reports.filter((r) => r.id !== report.id);
         },
         error: () => this.snack.open('Failed to delete user', 'Close', { duration: 3000 }),
       });
@@ -131,7 +130,7 @@ export class AdminReportsComponent implements OnInit {
       this.admin.deletePost(postId).subscribe({
         next: () => {
           this.snack.open('Post deleted', 'Close', { duration: 2500 });
-         this.reports = this.reports.filter(r => r.id !== report.id);
+          this.reports = this.reports.filter((r) => r.id !== report.id);
         },
         error: () => this.snack.open('Failed to delete post', 'Close', { duration: 3000 }),
       });

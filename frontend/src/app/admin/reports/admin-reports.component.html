@@ -61,51 +61,73 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="post">
-            <th mat-header-cell *matHeaderCellDef>Post</th>
+          <ng-container matColumnDef="target">
+            <th mat-header-cell *matHeaderCellDef>Target</th>
+
             <td mat-cell *matCellDef="let r">
-              <a *ngIf="r.reportedPostId" [routerLink]="['/post', r.reportedPostId]" class="post-link">
-                <mat-icon>visibility</mat-icon>
-                View Post
-              </a>
-              <span *ngIf="!r.reportedPostId" class="no-post">No post</span>
+              <div class="target-links">
+                <!-- ✅ always allow admin to see profile -->
+                <a [routerLink]="['/profile', r.reportedUsername]" class="post-link">
+                  <mat-icon>person</mat-icon>
+                  View Profile
+                </a>
+
+                <!-- only if it's a post report -->
+                <a *ngIf="r.reportedPostId" [routerLink]="['/post', r.reportedPostId]" class="post-link">
+                  <mat-icon>visibility</mat-icon>
+                  View Post
+                </a>
+
+                <!-- user report label -->
+                <span *ngIf="!r.reportedPostId && !r.reportedCommentId" class="no-post">
+                  User report
+                </span>
+              </div>
             </td>
           </ng-container>
 
+
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
+
             <td mat-cell *matCellDef="let r">
               <div class="action-buttons">
+
+                <!-- ✅ always allowed -->
                 <button mat-button class="action-btn warn" (click)="banUser(r)">
                   <mat-icon>block</mat-icon>
                   Ban User
                 </button>
+
                 <button mat-button class="action-btn danger" (click)="deleteUser(r)">
                   <mat-icon>person_remove</mat-icon>
                   Delete User
                 </button>
-                <button mat-button class="action-btn primary" *ngIf="r.reportedPostId" (click)="deletePost(r)">
-                  <mat-icon>delete</mat-icon>
-                  Delete Post
-                </button>
-                <!-- Show Hide only if active -->
-                <button mat-button class="action-btn primary"
-                  *ngIf="r.reportedPostId && (r.reportedPostStatus ?? 'active') === 'active'" (click)="hidePost(r)">
-                  <mat-icon>visibility_off</mat-icon>
-                  Hide Post
-                </button>
 
-                <!-- Show Activate only if hidden -->
-                <button mat-button class="action-btn success"
-                  *ngIf="r.reportedPostId && r.reportedPostStatus === 'hidden'" (click)="activatePost(r)">
-                  <mat-icon>visibility</mat-icon>
-                  Activate Post
-                </button>
+                <!-- ✅ post-only actions (keep if you still want them for post reports) -->
+                <ng-container *ngIf="r.reportedPostId">
+                  <button mat-button class="action-btn primary" (click)="deletePost(r)">
+                    <mat-icon>delete</mat-icon>
+                    Delete Post
+                  </button>
 
+                  <button mat-button class="action-btn primary" *ngIf="(r.reportedPostStatus ?? 'active') === 'active'"
+                    (click)="hidePost(r)">
+                    <mat-icon>visibility_off</mat-icon>
+                    Hide Post
+                  </button>
+
+                  <button mat-button class="action-btn success" *ngIf="r.reportedPostStatus === 'hidden'"
+                    (click)="activatePost(r)">
+                    <mat-icon>visibility</mat-icon>
+                    Activate Post
+                  </button>
+                </ng-container>
 
               </div>
             </td>
           </ng-container>
+
 
           <tr mat-header-row *matHeaderRowDef="cols"></tr>
           <tr mat-row *matRowDef="let row; columns: cols" class="report-row"></tr>

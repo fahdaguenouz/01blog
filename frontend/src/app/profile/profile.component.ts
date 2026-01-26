@@ -20,6 +20,9 @@ import { Post, PostService } from '../services/post.service';
 import { Observable, of, Subject, BehaviorSubject, combineLatest } from 'rxjs';
 import { switchMap, distinctUntilChanged, takeUntil, catchError, finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
+import { ConfirmDialogComponent } from '../admin/users/ConfirmDialogComponent';
+import { ReportPostDialogComponent, ReportPostDialogResult } from '../post/report-dialog.component';
+import { ReportService } from '../services/report.service';
 
 @Component({
   selector: 'app-profile',
@@ -28,7 +31,7 @@ import { MatButtonModule } from '@angular/material/button';
     CommonModule,
     MatCardModule,
     MatIconModule,
-    RouterModule, // ✅ needed for routerLink
+    RouterModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatDialogModule,
@@ -64,6 +67,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar,
     private postService: PostService,
     private router: Router,
+    private reports: ReportService,
     private cd: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
   ) {}
@@ -104,7 +108,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.loading = true;
           return this.userService.getProfileByUsername(username).pipe(
             catchError((err) => {
-              this.error = err?.status === 404 ? 'User not found' : 'Failed to load profile';
+              if (err?.status === 403) {
+                this.error = err?.error?.message || 'This user is banned';
+              } else if (err?.status === 404) {
+                this.error = 'User not found';
+              } else {
+                this.error = 'Failed to load profile';
+              }
+
               this.showFollowers = false;
               this.showFollowing = false;
 
@@ -127,7 +138,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       )
       .subscribe((profile) => {
         if (profile) {
-          this.error = null; 
+          this.error = null;
           this.user = this.normalizeProfile(profile);
           this.profileUser$.next(this.user);
         } else {
@@ -216,7 +227,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((err) => {
           console.error('loadUser error', err);
-          this.error = 'User not found';
+          if (err?.status === 403) {
+            this.error = err?.error?.message || 'This user is banned';
+          } else if (err?.status === 404) {
+            this.error = 'User not found';
+          } else {
+            this.error = 'Failed to load profile';
+          }
+
           return of(null);
         }),
         finalize(() => {
@@ -233,6 +251,66 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.user = this.normalizeProfile(u);
         this.profileUser$.next(this.user);
       });
+  }
+  openReportUserDialog() {
+    if (!this.user || !this.currentUserId) {
+      this.snackBar.open('You must be logged in to report a user.', 'Close', { duration: 3000 });
+      return;
+    }
+
+    // extra safety (UI already hides it)
+    if (this.user.id === this.currentUserId) return;
+
+    const reportRef = this.dialog.open<
+      ReportPostDialogComponent,
+      { authorName: string; postTitle: string },
+      ReportPostDialogResult
+    >(ReportPostDialogComponent, {
+      width: '420px',
+      data: {
+        authorName: this.user.name,
+        postTitle: `@${this.user.username}`, // just display info in the same dialog
+      },
+    });
+
+    reportRef.afterClosed().subscribe((result) => {
+      if (!result || !this.user) return;
+
+      const confirmRef = this.dialog.open<
+        ConfirmDialogComponent,
+        { title: string; message: string },
+        boolean
+      >(ConfirmDialogComponent, {
+        width: '420px',
+        data: {
+          title: 'Confirm report',
+          message:
+            `Are you sure you want to report this user?\n\n` +
+            `User: @${this.user.username}\n` +
+            `Category: ${result.category}\n` +
+            `Reason: ${result.reason}`,
+        },
+      });
+
+      confirmRef.afterClosed().subscribe((confirmed) => {
+        if (!confirmed || !this.user) return;
+
+        this.reports
+          .reportUser({
+            reportedUserId: this.user.id,
+            category: result.category,
+            reason: result.reason,
+          })
+          .subscribe({
+            next: () =>
+              this.snackBar.open('Report submitted. Thank you.', 'Close', { duration: 2500 }),
+            error: (err) =>
+              this.snackBar.open(err?.error?.message || 'Failed to submit report.', 'Close', {
+                duration: 3000,
+              }),
+          });
+      });
+    });
   }
 
   private normalizeProfile(dto: any): UserProfile {
@@ -299,7 +377,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .getProfileByUsername(this.user.username)
       .pipe(
         takeUntil(this.destroy$),
-        catchError(() => of(null)),
+        catchError((err) => {
+          if (err?.status === 403) {
+            this.error = err?.error?.message || 'This user is banned';
+          } else if (err?.status === 404) {
+            this.error = 'User not found';
+          } else {
+            this.error = 'Failed to load profile';
+          }
+          return of(null);
+        }),
       )
       .subscribe((u) => {
         if (u) this.user = this.normalizeProfile(u);
@@ -438,9 +525,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.showFollowing = false;
   }
   get isMyProfile(): boolean {
-  return !!this.user && !!this.currentUserId && this.user.id === this.currentUserId;
-}
-
+    return !!this.user && !!this.currentUserId && this.user.id === this.currentUserId;
+  }
 
   closeList(force = false) {
     this.showFollowers = false;
