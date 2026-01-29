@@ -1,6 +1,3 @@
-
-
-```md
 # 01Blog 📝
 
 01Blog is a **social blogging platform** designed for students to document and share their learning journey.  
@@ -194,4 +191,3 @@ http://localhost:4200
 Fullstack Developer – Spring Boot & Angular
 
 ---
-
