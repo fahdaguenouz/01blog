@@ -19,6 +19,7 @@ import { SvgLineChartComponent } from '../components/line-chart/line-chart.compo
 import { SvgDonutChartComponent } from '../components/donuts-chart/donut-chart.component';
 import { TopContributorsComponent } from '../components/top-contributors/top-contributors.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SnackService } from '../../core/snack.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -41,7 +42,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class AdminDashboardComponent implements OnInit {
   private admin = inject(AdminService);
   private bp = inject(BreakpointObserver);
-
+   private snack = inject(SnackService);
   // time‑series data
   trendDataPosts: number[] = [];
   trendLabels: string[] = [];
@@ -82,7 +83,8 @@ export class AdminDashboardComponent implements OnInit {
       this.period = p;
       this.loadTrends();
     } else {
-      console.warn('Invalid period:', p);
+      // console.warn('Invalid period:', p);
+      this.snack.error('Invalid period selected');
     }
   }
 
@@ -92,7 +94,10 @@ export class AdminDashboardComponent implements OnInit {
         this.trendLabels = data.map((d) => d.date);
         this.trendDataPosts = data.map((d) => d.posts);
       },
-      error: (err) => console.error('Failed to load trends', err),
+      error: (err) => {
+        // console.error('Failed to load trends', err)
+        this.snack.error('Failed to load trends');
+      },
     });
   }
 
@@ -106,7 +111,8 @@ export class AdminDashboardComponent implements OnInit {
         this.loading = false;
       },
       error: (err: unknown) => {
-        console.error('Failed to load admin stats', err);
+        // console.error('Failed to load admin stats', err);
+        this.snack.error('Failed to load admin stats');
         this.error = 'Failed to load stats';
         this.loading = false;
       },
@@ -119,7 +125,10 @@ export class AdminDashboardComponent implements OnInit {
         this.reportDonutLabels = rows.map((r) => r.category);
         this.reportDonutData = rows.map((r) => r.count);
       },
-      error: (err) => console.error('Failed to load report category stats', err),
+      error: (err) => {
+        // console.error('Failed to load report category stats', err);
+        this.snack.error('Failed to load report category stats');
+      },
     });
   }
 
@@ -129,7 +138,10 @@ export class AdminDashboardComponent implements OnInit {
       // console.log('top contributors rows:', rows);
       this.topContributors = rows;
     },
-    error: (err) => console.error('Failed to load top contributors', err),
+    error: (err) => {
+      // console.error('Failed to load top contributors', err);
+      this.snack.error('Failed to load top contributors');
+    }
   });
 }
 

@@ -93,7 +93,10 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
         this.allCategories = cats;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Categories load failed:', err),
+      error: (err) => {
+        // console.error('Categories load failed:', err);
+        this.snack.error('Failed to load categories');
+      },
     });
   }
 
@@ -234,11 +237,12 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
         this.router.navigate(['/feed']);
       },
       error: (error) => {
-        console.error('Post creation failed:', error);
+        // console.error('Post creation failed:', error);
         const msg =
         error?.error?.message ||
         error?.error?.error ||
         'Failed to create post';
+        // this.snack.error(msg);
 
       this.snack.error(msg);
       this.isSubmitting = false;

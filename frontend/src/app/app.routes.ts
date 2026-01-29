@@ -13,6 +13,7 @@ import { AdminDashboardComponent } from './admin/dashboard/admin-dashboard.compo
 import { AdminUsersComponent } from './admin/users/admin-users.component';
 import { AdminReportsComponent } from './admin/reports/admin-reports.component';
 import { UsersComponent } from './users/users.component';
+import { NotFoundRedirectComponent } from '../not-found/not-found';
 
 export const routes: Routes = [
   { path: '', component: Home, canActivate: [GuestGuard] }, // root -> feed
@@ -33,5 +34,5 @@ export const routes: Routes = [
   },
   { path: 'auth/login', component: LoginComponent, canActivate: [GuestGuard] },
   { path: 'auth/signup', component: SignUpComponent, canActivate: [GuestGuard] },
-  { path: '**', redirectTo: '' },
+  { path: '**', component: NotFoundRedirectComponent },
 ];

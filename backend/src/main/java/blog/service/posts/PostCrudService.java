@@ -154,7 +154,7 @@ public class PostCrudService {
 
         Media media = new Media();
         media.setUserId(user.getId());
-        media.setMediaType(file.getContentType() != null ? file.getContentType() : "application/octet-stream");
+        media.setMediaType(stored.contentType() != null ? stored.contentType() : "application/octet-stream");
         media.setSize((int) file.getSize());
         media.setUrl(stored.url());
         media.setUploadedAt(OffsetDateTime.now().toInstant());
@@ -231,7 +231,7 @@ public class PostCrudService {
     List<PostMedia> kept = new ArrayList<>();
 
     int replIdx = 0;
- 
+
     // ----- EXISTING MEDIA (keep/remove/replace) -----
     if (existingMediaIds != null) {
       for (int i = 0; i < existingMediaIds.size(); i++) {
@@ -297,7 +297,7 @@ public class PostCrudService {
         kept.add(pm);
       }
     }
-       int currentCount = kept.size();
+    int currentCount = kept.size();
     int newCount = (newMediaFiles == null) ? 0
         : (int) newMediaFiles.stream().filter(f -> f != null && !f.isEmpty()).count();
 
@@ -348,7 +348,7 @@ public class PostCrudService {
         Media media = new Media();
         media.setUserId(user.getId());
         media.setUrl(stored.url());
-        media.setMediaType(file.getContentType());
+        media.setMediaType(stored.contentType());
         media.setSize((int) file.getSize());
         media.setUploadedAt(OffsetDateTime.now().toInstant());
         Media saved = mediaRepo.save(media);

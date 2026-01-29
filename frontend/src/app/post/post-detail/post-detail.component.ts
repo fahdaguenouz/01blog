@@ -113,7 +113,7 @@ export class PostDetailComponent implements OnInit , OnDestroy{
         this.loadingPost = false;
       },
       error: (err) => {
-        console.error('loadPost error', err);
+        // console.error('loadPost error', err);
         this.loadingPost = false;
         if (err.status === 404 || err.status === 400) {
           this.postNotFound = true;
@@ -146,7 +146,8 @@ export class PostDetailComponent implements OnInit , OnDestroy{
       error: (err) => {
         //  ignore 400/404 (invalid or missing post)
         if (err.status === 400 || err.status === 404) return;
-        console.error('loadComments failed', err);
+        this.snack.error('Failed to load comments');
+        // console.error('loadComments failed', err);
       },
     });
   }
@@ -167,7 +168,7 @@ export class PostDetailComponent implements OnInit , OnDestroy{
       error: (err) => {
         if (this.handleHidden(err)) return;
         this.snack.error(err?.error?.message || 'Failed to update like');
-        console.error('toggleLike failed', err);
+        // console.error('toggleLike failed', err);
       },
     });
   }
@@ -253,7 +254,7 @@ export class PostDetailComponent implements OnInit , OnDestroy{
           this.snack.success('Comment deleted');
         },
         error: (err) => {
-          console.error('Delete comment failed', err);
+          // console.error('Delete comment failed', err);
           this.snack.error(err?.error?.message || 'Failed to delete comment');
         },
       });
@@ -316,7 +317,7 @@ export class PostDetailComponent implements OnInit , OnDestroy{
           this.router.navigate(['/feed']);
         },
         error: (err) => {
-          console.error('Delete failed', err);
+          // console.error('Delete failed', err);
           this.snack.error(err?.error?.message || 'Failed to delete post');
         },
       });
@@ -412,7 +413,7 @@ export class PostDetailComponent implements OnInit , OnDestroy{
           this.router.navigate(['/feed']);
         },
         error: (err) => {
-          console.error('Admin delete failed', err);
+          // console.error('Admin delete failed', err);
           this.snack.error(err?.error?.message || 'Failed to delete post');
         },
       });

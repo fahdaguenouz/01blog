@@ -26,8 +26,7 @@ public class UserRegistrationService {
 
   private static final Pattern EMAIL_PATTERN = Pattern.compile(
       "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
-      Pattern.CASE_INSENSITIVE
-  );
+      Pattern.CASE_INSENSITIVE);
 
   private String norm(String v) {
     return (v == null) ? null : v.trim().toLowerCase();
@@ -38,7 +37,7 @@ public class UserRegistrationService {
   }
 
   public void registerMultipart(String name, String username, String email, String password,
-                                Integer age, String bio, MultipartFile avatar) {
+      Integer age, String bio, MultipartFile avatar) {
 
     name = norm(name);
     username = norm(username);
@@ -84,9 +83,12 @@ public class UserRegistrationService {
     if (avatar != null && !avatar.isEmpty()) {
       var saved = storage.save(avatar);
 
+      if (saved.contentType() == null || !saved.contentType().startsWith("image/")) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Avatar must be an image");
+      }
       Media m = Media.builder()
           .userId(user.getId())
-          .mediaType(saved.contentType() != null ? saved.contentType() : "image/*")
+          .mediaType(saved.contentType())
           .size(saved.size() != null ? saved.size() : 0)
           .url(saved.url())
           .uploadedAt(OffsetDateTime.now().toInstant())
@@ -97,6 +99,5 @@ public class UserRegistrationService {
       users.save(user);
     }
 
-   
   }
 }

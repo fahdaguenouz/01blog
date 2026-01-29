@@ -123,7 +123,7 @@
 
             <!-- Caption -->
             <mat-form-field appearance="outline" class="caption-field" *ngIf="getFileName(i)">
-              <mat-label>Add a caption (optional)</mat-label>
+              <mat-label>Add a caption</mat-label>
               <textarea matInput [(ngModel)]="block.description" [ngModelOptions]="{ standalone: true }" maxlength="500"
                 rows="2" placeholder="Describe this image or video..."></textarea>
               <mat-hint align="end">{{ block.description.length }}/500</mat-hint>

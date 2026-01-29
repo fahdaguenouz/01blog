@@ -161,13 +161,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.selectedTab = tab;
           this.loadingPosts = true;
 
-          // SSR-safe fallback timer
+          // fallback timer
           const fallbackMs = 3000;
           let fallbackTimer: any = undefined;
           if (isPlatformBrowser(this.platformId)) {
             fallbackTimer = window.setTimeout(() => {
               if (this.loadingPosts) {
-                console.warn('[posts.loader] fallback cleared loader after', fallbackMs, 'ms');
+                // console.warn('[posts.loader] fallback cleared loader after', fallbackMs, 'ms');
                 this.loadingPosts = false;
                 try {
                   this.cd.detectChanges();
@@ -185,7 +185,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
           return obs.pipe(
             catchError((err) => {
-              console.error(`[posts.loader] ${tab} posts ERROR:`, err);
+              // console.error(`[posts.loader] ${tab} posts ERROR:`, err);
+              this.snackBar.open(`Failed to load ${tab} posts`, 'Close', { duration: 3000 });
               return of([]);
             }),
             finalize(() => {
@@ -205,7 +206,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe((posts) => {
         this.posts = posts ?? [];
         // console.log("posts in the profile ,", this.posts);
-
+        
         try {
           this.cd.detectChanges();
         } catch (e) {
@@ -226,7 +227,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          console.error('loadUser error', err);
+          // console.error('loadUser error', err);
+          this.snackBar.open('Failed to load profile', 'Close', { duration: 3000 });
+          
           if (err?.status === 403) {
             this.error = err?.error?.message || 'This user is banned';
           } else if (err?.status === 404) {
@@ -390,7 +393,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       )
       .subscribe((u) => {
         if (u) this.user = this.normalizeProfile(u);
-        else console.log('[reloadProfile] No data returned from server');
+        else {
+          this.snackBar.open('Failed to reload profile', 'Close', { duration: 3000 });
+          // console.log('[reloadProfile] No data returned from server');
+        }
       });
   }
 
@@ -474,7 +480,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          console.error('Failed to load followers', err);
+          // console.error('Failed to load followers', err);
           this.snackBar.open('Failed to load followers', 'Close');
           return of([]);
         }),
@@ -504,7 +510,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          console.error('Failed to load following', err);
+          // console.error('Failed to load following', err);
           this.snackBar.open('Failed to load following', 'Close');
           return of([]);
         }),

@@ -54,7 +54,7 @@ export class AdminUsersComponent implements OnInit {
         this.users = u;
       },
       error: (err) => {
-        console.error('Failed to load users', err);
+        // console.error('Failed to load users', err);
         this.snack.open('Failed to load users', 'Close', { duration: 3000 });
       },
     });
@@ -77,7 +77,7 @@ export class AdminUsersComponent implements OnInit {
           this.load();
         },
         error: (err) => {
-          console.error(err);
+          // console.error(err);
           this.snack.open('Failed to ban user', 'Close', { duration: 3000 });
         },
       });
@@ -91,7 +91,7 @@ export class AdminUsersComponent implements OnInit {
         this.load();
       },
       error: (err) => {
-        console.error(err);
+        // console.error(err);
         this.snack.open('Failed to unban user', 'Close', { duration: 3000 });
       },
     });
@@ -115,7 +115,7 @@ export class AdminUsersComponent implements OnInit {
           this.load();
         },
         error: (err) => {
-          console.error(err);
+          // console.error(err);
           this.snack.open('Failed to update role', 'Close', { duration: 3000 });
           this.load();
         },
@@ -140,7 +140,7 @@ export class AdminUsersComponent implements OnInit {
           this.load();
         },
         error: (err) => {
-          console.error(err);
+          // console.error(err);
           this.snack.open('Failed to delete user', 'Close', { duration: 3000 });
         },
       });

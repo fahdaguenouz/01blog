@@ -1,10 +1,13 @@
 package blog.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.*;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -12,7 +15,14 @@ public class LocalMediaStorage {
 
   private final Path root;
   private final String publicBaseUrl;
-
+  private static final Set<String> ALLOWED_MIME = Set.of(
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/webp",
+      "video/mp4"
+      
+  );
   public LocalMediaStorage(
       @Value("${media.upload.dir:uploads}") String uploadDir,
       @Value("${media.public.base-url:/uploads}") String baseUrl // recommend relative
@@ -26,10 +36,15 @@ public class LocalMediaStorage {
   }
 
   public SavedFile save(MultipartFile file) {
-    if (file == null || file.isEmpty())
-      return null;
-    String ext = getExt(file.getOriginalFilename());
-    String name = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
+    if (file == null || file.isEmpty())return null;
+
+    var detected = MediaSniffer.detect(file);
+    if (detected == null || detected.mime() == null || !ALLOWED_MIME.contains(detected.mime())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or unsupported media file");
+    }
+
+    
+     String name = UUID.randomUUID() + "." + detected.ext();
     Path target = root.resolve(name);
     try {
       Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
@@ -69,12 +84,6 @@ public class LocalMediaStorage {
     }
   }
 
-  private static String getExt(String fn) {
-    if (fn == null)
-      return "";
-    int dot = fn.lastIndexOf('.');
-    return dot > 0 ? fn.substring(dot + 1) : "";
-  }
 
   public record SavedFile(String url, Integer size, String contentType) {
   }

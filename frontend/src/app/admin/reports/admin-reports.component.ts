@@ -104,7 +104,8 @@ export class AdminReportsComponent implements OnInit {
       error: (err) => {
         // Ignore "not found" errors - report was likely auto-deleted by FK cascade
         if (err.status === 404 || err.error?.message?.includes('not found')) {
-          console.log('Report auto-resolved by post deletion');
+          // console.log('Report auto-resolved by post deletion');
+          this.snack.open('Report resolved', 'Close', { duration: 2500 });
           this.load();
           return;
         }

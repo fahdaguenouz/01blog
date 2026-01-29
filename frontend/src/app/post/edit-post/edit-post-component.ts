@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { noHtmlTags, notBlank } from '../../../helper/text.validator';
+import { SnackService } from '../../core/snack.service';
 
 export interface EditMediaBlock {
   id?: string;
@@ -65,7 +66,8 @@ export class EditPostDialogComponent implements OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: EditPostData,
     private categoryService: CategoryService,
     private fb: FormBuilder,
-    private postService: PostService
+    private postService: PostService,
+    private snack: SnackService,
   ) {
     this.initializeForm();
     this.loadCategories();
@@ -87,7 +89,10 @@ export class EditPostDialogComponent implements OnDestroy {
   private loadCategories() {
     this.categoryService.list().subscribe({
       next: (cats) => (this.categories = cats),
-      error: (err) => console.error('edit dialog category load error', err),
+      error: (err) => {
+        // console.error('edit dialog category load error', err)
+      this.snack.error('Failed to load categories');
+      },
     });
   }
 
@@ -168,7 +173,7 @@ export class EditPostDialogComponent implements OnDestroy {
     if (!file) return;
 
     if (file.size > 20 * 1024 * 1024) {
-      alert('Max file size is 20MB');
+      this.snack.error('Max file size is 20MB');
       input.value = '';
       return;
     }
@@ -232,13 +237,13 @@ export class EditPostDialogComponent implements OnDestroy {
 
   updatePost() {
     if (this.postForm.invalid || this.hasInvalidMedia) {
-      alert('Please fix form errors');
+      this.snack.error('Please fix form errors');
       return;
     }
 
     const categoryIds: string[] = this.postForm.value.categoryIds || [];
     if (!categoryIds.length) {
-      alert('Post must have at least one category');
+      this.snack.error('Post must have at least one category');
       return;
     }
 
@@ -248,7 +253,7 @@ export class EditPostDialogComponent implements OnDestroy {
     });
 
     if (bad) {
-      alert('Description is required for each media you keep/add.');
+      this.snack.error('Description is required for each media you keep/add.');
       return;
     }
 
@@ -266,8 +271,8 @@ export class EditPostDialogComponent implements OnDestroy {
       .subscribe({
         next: (updatedPost: Post) => this.dialogRef.close(updatedPost),
         error: (err) => {
-          console.error('Update failed:', err);
-          alert(`Update failed: ${err.error?.message || 'Unknown error'}`);
+          // console.error('Update failed:', err);
+          this.snack.error(`Update failed: ${err.error?.message || 'Unknown error'}`);
         },
       });
   }

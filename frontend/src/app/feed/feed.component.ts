@@ -12,6 +12,7 @@ import { AuthService } from '../services/auth.service';
 import { CategoryService } from '../services/category.service';
 
 import { catchError, finalize, of, take, timeout } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-feed',
@@ -44,6 +45,7 @@ export class FeedComponent implements OnInit {
     private categoryService: CategoryService,
     private cd: ChangeDetectorRef,
     private zone: NgZone,
+    private snackbar: MatSnackBar,
   ) {}
 
   ngOnInit() {
@@ -65,7 +67,9 @@ export class FeedComponent implements OnInit {
           this.forceRender();
 
           if (!me) {
-            console.warn('[Feed] no me => redirect to login');
+            // console.warn('[Feed] no me => redirect to login');
+
+            this.snackbar.open('Please log in to view the feed', 'Close', { duration: 3000 });
             this.loading = false;
             this.forceRender();
             this.router.navigate(['/auth/login']);
@@ -76,7 +80,8 @@ export class FeedComponent implements OnInit {
           this.loadFeed();
         },
         error: (err) => {
-          console.error('[Feed] refreshMe ERROR:', err);
+          // console.error('[Feed] refreshMe ERROR:', err);
+          this.snackbar.open('Session expired, please log in again', 'Close', { duration: 3000 });
           this.authResolved = true;
           this.loading = false;
           this.forceRender();
@@ -103,7 +108,8 @@ export class FeedComponent implements OnInit {
       .pipe(
         timeout(8000),
         catchError((err) => {
-          console.error('[Feed] categories ERROR:', err);
+          // console.error('[Feed] categories ERROR:', err);
+          this.snackbar.open('Failed to load categories', 'Close', { duration: 3000 });
           return of([] as Category[]);
         }),
       )
@@ -125,7 +131,8 @@ export class FeedComponent implements OnInit {
       .pipe(
         timeout(10000),
         catchError((err) => {
-          console.error('[Feed] feed ERROR:', err);
+          // console.error('[Feed] feed ERROR:', err);
+          this.snackbar.open('Failed to load feed', 'Close', { duration: 3000 });
           return of([] as Post[]);
         }),
         finalize(() => {
@@ -162,7 +169,8 @@ export class FeedComponent implements OnInit {
         this.forceRender();
       },
       error: (err) => {
-        console.error('toggleLike failed', err);
+        // console.error('toggleLike failed', err);
+        this.snackbar.open('Failed to update like status', 'Close', { duration: 3000 });
         this.forceRender();
       },
     });
