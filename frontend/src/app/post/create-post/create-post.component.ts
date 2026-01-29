@@ -76,7 +76,7 @@ export class CreatePostComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {
     this.postForm = this.fb.group({
       title: ['', [Validators.required, notBlank(), noHtmlTags(), Validators.maxLength(150)]],
-      body: ['', [Validators.required, notBlank(), noHtmlTags(), Validators.maxLength(10000)]],
+      body: ['', [Validators.required, notBlank(), noHtmlTags(), Validators.maxLength(5000)]],
       categoryIds: [[], [Validators.required, this.atLeastOneValidator()]],
     });
   }
